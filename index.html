@@ -1922,9 +1922,12 @@ function updateParty(dt){
     } else { p.target=null; }
     if(tgt){
       const dx=(tgt.x+16)-p.x, dy=(tgt.y+16)-p.y, d=Math.hypot(dx,dy)||1;
-      if(d>44){ const spd=(player.speed||2.4)*1.05*(dt/16.67); const mx=dx/d*spd, my=dy/d*spd; p.x+=mx; p.y+=my;
+      const ranged=(p.cls==='妖精');
+      const engageR=ranged?170:44;
+      if(d>engageR){ const spd=(player.speed||2.4)*1.05*(dt/16.67); const mx=dx/d*spd, my=dy/d*spd; p.x+=mx; p.y+=my;
         const d8a=(typeof dir8of==='function')?dir8of(dx,dy):null; if(d8a) p.dir8=d8a; }
-      else if(p.atkCd<=0){ p.atkCd=700; const dmg=Math.max(1,Math.floor(4+(p.lv||1)*1.6+Math.random()*4));
+      else if(p.atkCd<=0){ p.atkCd=ranged?900:700; const dmg=Math.max(1,Math.floor(4+(p.lv||1)*1.6+Math.random()*4));
+        if(ranged && typeof mobFx!=='undefined' && mobFx.length<40){ mobFx.push({kind:'arrow',x0:p.x,y0:p.y,x:tgt.x+16,y:tgt.y+16,life:150}); }
         if(typeof damageMob==='function') damageMob(tgt,dmg);
         const d8b=(typeof dir8of==='function')?dir8of(dx,dy):null; if(d8b) p.dir8=d8b; }
       continue; }
