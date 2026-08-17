@@ -3257,6 +3257,11 @@ function fitFrame(){ const de=document.documentElement;
   const x=Math.round((vw-1024*s)/2), y=Math.round((vh-768*s)/2);
   frameEl.style.transform='translate('+x+'px,'+y+'px) scale('+s+')'; }
 window.addEventListener('resize',fitFrame);
+window.addEventListener('orientationchange',function(){                 // iOS Safari 旋轉時視窗尺寸不會立刻穩定，多次延遲重新計算
+  fitFrame();
+  setTimeout(fitFrame,60); setTimeout(fitFrame,200); setTimeout(fitFrame,500);
+});
+if(window.visualViewport){ window.visualViewport.addEventListener('resize',fitFrame); }   // iOS Safari 網址列收合/展開也會改變可視區域
 function refreshSettings(){ var wm=SETTINGS.winMode;
   ['1080','600','full'].forEach(function(m){ var b=document.getElementById('setwin_'+m); if(b)b.classList.toggle('seton', wm===m); });
   var bn=document.getElementById('setnight_on'), bd=document.getElementById('setnight_off');
