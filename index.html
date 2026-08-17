@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>天堂經典版 · GBA 復刻</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
@@ -140,7 +140,6 @@
   .socModeBtn{border:1px solid #5a5030;border-radius:4px;padding:7px 0;font-size:14px;cursor:pointer;color:#c9bf9e;background:#1a1a14;}
   .socModeBtn.on{background:#3a6a3a;color:#fff;border-color:#5a9a5a;}
   #partyHud{position:absolute;top:6px;left:6px;z-index:50;display:none;flex-direction:column;gap:5px;pointer-events:none;}
-  body.mobilemode #partyHud{left:162px;}
   .partyCard{width:168px;background:transparent;border:0;border-radius:0;padding:5px 7px;display:flex;gap:7px;align-items:center;box-shadow:none;}
   .partyPortrait{width:34px;height:34px;flex:none;border:0;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;font-size:20px;}
   .partyInfo{flex:1;min-width:0;}
@@ -154,7 +153,7 @@
         .teleRegion:hover{background:rgba(120,96,50,.4);}
         #teleList .teleItem{padding-left:20px;}
   .teleItem:hover{background:#3a3320;color:#f2e2b0;}
-  .invgrid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;align-content:start;gap:3px;padding:6px;flex:1;min-height:0;overflow-y:auto;}
+  .invgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:6px;flex:1;min-height:0;overflow-y:auto;}
   .invgrid::-webkit-scrollbar{width:8px;} .invgrid::-webkit-scrollbar-thumb{background:#6b4d22;border-radius:4px;}
   .islot{aspect-ratio:1;background:#140f08;border:1px solid #5a4020;border-radius:2px;
     display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;cursor:pointer;overflow:hidden;}
@@ -2763,11 +2762,27 @@ function invInfoText(id){ if(!id)return '點一下查看，雙擊使用/裝備';
     if(S.inv[id]>1)s+=' ×'+S.inv[id]; if(d.price)s+=' · 值'+d.price+'g'; }
   if(isEquipped(id)) s+=' <span style="color:#7af07a">（裝備中）</span>';
   return s; }
+const _ISLOT_FALLBACK_COL=70;   // 這類視窗固定300px寬，扣掉內距6px*2、間距3px*3，(300-12-9)/4≈70px：作為保底值，避免依賴非同步量測時機
+function squareGridFix(g){ if(!g)return _ISLOT_FALLBACK_COL;
+  g.style.gridAutoRows=_ISLOT_FALLBACK_COL+'px';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    const cs=getComputedStyle(g);
+    const padL=parseFloat(cs.paddingLeft)||0, padR=parseFloat(cs.paddingRight)||0;
+    const gapPx=parseFloat(cs.columnGap||cs.gap)||0;
+    const cols=4;
+    const innerW=g.clientWidth-padL-padR-gapPx*(cols-1);
+    const colW=Math.round(innerW/cols);
+    if(colW>20 && colW<200){ g.style.gridAutoRows=colW+'px';
+      g.querySelectorAll('.islot').forEach(function(el){ el.style.height=colW+'px'; }); }
+  }); });
+  return _ISLOT_FALLBACK_COL; }
 function refreshInv(){ ensureInvOrder(); const g=document.getElementById('invGrid'); if(!g)return; g.innerHTML='';
+  const FALLBACK_COL=squareGridFix(g);
   const TOTAL=200; const _eqUsed={};
   for(let i=0;i<TOTAL;i++){ const id=S.invOrder[i]||null;
     let eq=false; if(id&&isEquipped(id)){ const _u=_eqUsed[id]||0; if(_u<equippedCount(id)){ eq=true; _eqUsed[id]=_u+1; } }
     const d=document.createElement('div'); d.className='islot'+(invSel===i&&id?' sel':'')+(invMove===i&&id?' moving':'')+(eq?' equipped':''); d.dataset.idx=i;
+    d.style.height=FALLBACK_COL+'px';                    // 直接寫死在每一格本身，不依賴grid列高推算，確保一定是正方形
     if(id){ d.innerHTML=itemIcon(id)+((S.inv[id]>1&&!nonStackItem(id))?'<span class="q">'+S.inv[id]+'</span>':'')+(eq?'<span class="eq">E</span>':''); d.title=itemName(id)+(eq?'（裝備中）':'');
       d.ondblclick=()=>{ useItem(id, eq); };         // 雙擊：使用/裝備（eq=這件是否為裝備中那件）
       d.onpointerdown=ev=>{ touchDragStart(id,i,ev.clientX,ev.clientY,d); };  // 拖曳起點（滑鼠＋觸控通用，取代原生 DnD）
@@ -2984,9 +2999,10 @@ function refreshMagic(){ const g=document.getElementById('magicGrid'); if(!g)ret
                +'<button class="mtab'+(magicTab==='cls'?' on':'')+'" onclick="magicTab=&quot;cls&quot;;refreshMagic()">'+lbl+'</button>';
   } else { tb.style.display='none'; magicTab='all'; }
   g.innerHTML='';
+  const _magFallback=squareGridFix(g);
   const spells=(S.spells||[]).filter(function(sp){ return magicTab==='cls'? isClsExclusive(sp.name) : true; });
   const TOTAL=40;
-  for(let i=0;i<TOTAL;i++){ const sp=spells[i]; const d=document.createElement('div'); d.className='islot';
+  for(let i=0;i<TOTAL;i++){ const sp=spells[i]; const d=document.createElement('div'); d.className='islot'; d.style.height=_magFallback+'px';
     if(sp){ d.innerHTML=spellIcon(sp.name); d.title=sp.name;
       d.onclick=()=>{ const info=document.getElementById('magicInfo'); if(info)info.innerHTML='<b>'+sp.name+'</b>'+(sp.desc?' · '+sp.desc:'')+'<br><span style="font-size:14px;color:#9a8f76">雙擊施放／拖曳至下方快捷欄</span>'; };
       d.ondblclick=()=>{ if(typeof castSpell==='function') castSpell(sp); };
@@ -3254,9 +3270,11 @@ function fitFrame(){ const de=document.documentElement, vv=window.visualViewport
     else { tw=Math.min(vw,1920); th=Math.min(vh,1080); }
   }
   const s=Math.min(tw/1024, th/768);
-  const ox=(vv?vv.offsetLeft:0), oy=(vv?vv.offsetTop:0);            // 視覺視窗相對版面視窗的偏移（iOS Safari 網址列收合時會用到）
-  const x=Math.round(ox+(vw-1024*s)/2), y=Math.round(oy+(vh-768*s)/2);
-  frameEl.style.transform='translate('+x+'px,'+y+'px) scale('+s+')'; }
+  const x=Math.round((vw-1024*s)/2), y=Math.round((vh-768*s)/2);
+  frameEl.style.transform='translate('+x+'px,'+y+'px) scale('+s+')';
+  const invEl=document.getElementById('inv');
+  if(invEl && invEl.classList.contains('on') && typeof refreshInv==='function') refreshInv();   // 縮放比例改變(如旋轉裝置)時，背包列高需要重新量測
+}
 window.addEventListener('resize',fitFrame);
 window.addEventListener('orientationchange',function(){                 // iOS Safari 旋轉時視窗尺寸不會立刻穩定，多次延遲重新計算
   fitFrame();
