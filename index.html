@@ -212,6 +212,10 @@
   #atsw{position:absolute;top:6px;left:6px;width:300px;height:500px;display:none;flex-direction:column;box-sizing:border-box;z-index:96;background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 3px 8px #000;border-radius:4px;color:#e8dcc0;}
   #atsw.on{display:flex;}
   #atsw h2{color:#e8c060;font-size:19px;padding:8px 10px 6px;display:flex;justify-content:space-between;align-items:center;}
+  .atsTabs{display:flex;gap:6px;padding:0 10px 8px;}
+  .atTab{flex:1;background:#1a1a14;color:#c9bf9e;border:1px solid #5a5030;border-radius:4px;padding:6px 0;font-size:15px;cursor:pointer;}
+  .atTab.on{background:#8a6a2a;color:#fff;border-color:#c8a24a;}
+  #atEnhBody{padding:8px 10px;overflow-y:auto;flex:1;min-height:0;}
   #atsw .sx{background:#7a2a1a;color:#fff;border:0;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:16px;}
   #atsBody{padding:0 10px 10px;flex:1;min-height:0;overflow-y:auto;font-size:16px;}
   .atsMain{font-weight:bold;color:#ffd24a;display:flex;justify-content:space-between;align-items:center;padding:4px 0 8px;border-bottom:1px solid #5a5030;margin-bottom:6px;}
@@ -237,6 +241,7 @@
   .atsDis{opacity:.55;}
   body.mobilemode #atsw h2{font-size:22px;}
   body.mobilemode #atsBody{max-height:440px;font-size:18px;}
+  body.mobilemode #atEnhBody{max-height:440px;font-size:18px;}
   body.mobilemode .atsTog{padding:6px 20px;font-size:19px;}
   body.mobilemode .atsSelBtn{font-size:18px;padding:5px 8px;max-width:190px;}
   body.mobilemode .atsSelOpt{font-size:18px;padding:8px 10px;}
@@ -651,7 +656,9 @@
 
   <!-- 倉庫視窗（矮人）-->
   <div id="statebar"></div>
-  <div id="atsw"><h2>⚡ SUPER ATS <button class="sx" onclick="toggleWin('atsw')">關閉</button></h2><div id="atsBody"></div></div>
+  <div id="atsw"><h2>⚡ SUPER ATS <button class="sx" onclick="toggleWin('atsw')">關閉</button></h2>
+    <div class="atsTabs"><button class="atTab on" id="atTab_ats" onclick="setAtTab('ats')">ATS</button><button class="atTab" id="atTab_enh" onclick="setAtTab('enh')">AT強化</button></div>
+    <div id="atsBody"></div><div id="atEnhBody" style="display:none"></div></div>
   <div id="shopw2"><div class="win">
     <h2>🧰 矮人倉庫 <button class="sx" onclick="closeWarehouse()">關閉</button></h2>
     <div id="whGreet" style="font-size:16px;color:#d8c9a6;margin-bottom:8px">要存入，還是要取出呢？</div>
@@ -1449,13 +1456,12 @@ DI('紅色藥水','potion',30,{wt:5,price:30,hpMin:6,hpMax:27,eff:'恢復HP 6~27
 
 DI('肉','food',10,{food:30});
 DI('鑑定卷軸','scroll',30,{price:30,desc:'使用後按下道具時，可確認該道具的能力。'});DI('瞬間移動卷軸','scroll',120,{price:120,tp:true,desc:'會傳送到任意的場所，若跟傳送控制戒指一起用，可以移動到自己想要去的地方。'});DI('解除詛咒的卷軸','scroll',100,{price:100,desc:'使用時可解除穿戴道具上的詛咒。'});DI('對武器施法的卷軸','scroll',300,{price:300,desc:'施魔法在武器上，使武器增加攻擊力。但詛咒的則會弱化攻擊力。'});DI('對盔甲施法的卷軸','scroll',300,{price:300,desc:'施魔法在盔甲上，使盔甲增加防禦力。但詛咒的則會弱化防禦力。'});DI('復活卷軸','scroll',500,{price:500,desc:'復活死亡的人、寵物或死亡的怪物。'});DI('返回卷軸','scroll',80,{price:80,recall:true,desc:'傳送到最近的村莊。'});DI('精靈羽翼','scroll',80,{price:80,recall:true,desc:'精靈的強化翅膀。使用時可以傳送到最近的村莊。'});DI('變形卷軸','scroll',150,{price:150,eff:'持續時間+1200秒',desc:'可以變為怪物的卷軸。持續時間為20~30分鐘的時間而已。'});DI('空的魔法卷軸(等級1)','scroll',50,{price:50,desc:'空的魔法卷軸，可記錄等級1魔法。'});DI('空的魔法卷軸(等級2)','scroll',100,{price:100,desc:'空的魔法卷軸，可記錄等級2魔法。'});DI('空的魔法卷軸(等級3)','scroll',150,{price:150,desc:'空的魔法卷軸，可記錄等級3魔法。'});DI('空的魔法卷軸(等級4)','scroll',200,{price:200,desc:'空的魔法卷軸，可記錄等級4魔法。'});DI('血盟返回卷軸','scroll',120,{price:120,desc:'持有城堡或小屋的血盟成員使用時，就會傳送到所屬的地方。'});DI('解除封印卷軸','scroll',100,{price:100,desc:'可解除封印道具的卷軸。必須在可使用時間內使用。'});
-DI('變身卷軸','scroll',300,{price:300,wt:2,mat:'紙',eff:'暫時變身成指定怪物外觀',desc:'施法者可暫時變身成怪物型態，時間結束後恢復原貌。等級必須不低於該怪物才能選擇。'});
 DI('燈','tool',50,{light:6});DI('金幣','gold',1,{});DI('新手裝備箱','etc',0,{box:['骷髏頭盔','骷髏盔甲','骷髏盾牌'],desc:'開啟後獲得骷髏頭盔、骷髏盔甲、骷髏盾牌。'});DI('新手戒指箱','etc',0,{box:['守護戒指'],desc:'開啟後獲得守護戒指。'});DI('新手武器箱','etc',0,{box:['獵人之弓','銀長劍'],desc:'開啟後獲得獵人之弓、銀長劍。'});DI('燈籠','tool',120,{light:8});DI('燈油','tool',20,{});DI('蠟燭','tool',10,{light:5});
 // ===== 綜合道具（道具.pdf；材料/任務物/寶石/鑰匙等，cat=etc）=====
 DI('漂浮之眼肉','etc',0,{desc:'是漂浮之眼厚厚的殼裡面的嫩肉。吃完後會提高靈敏的能力。通常作為魔法材料。'});DI('松木魔杖','etc',0,{desc:'使用時將創造任意怪物。部分怪物無法用魔杖創造。'});DI('楓木魔杖','etc',0,{eff:'持續時間+7200秒',desc:'使用時會變成任意怪物。若與「變形控制戒指」一起使用時，可將自己的角色變身為想要的怪物。'});DI('烏木魔杖','etc',0,{desc:'可召喚雷電攻擊怪物。'});DI('胡蘿蔔','etc',0,{});DI('蛋','etc',0,{});DI('黃金鑰匙','etc',0,{desc:'可以打開說話之島地監2樓封印的那個地方的鑰匙。'});DI('銀鑰匙','etc',0,{desc:'可以打開說話之島地監2樓封印的那個地方的鑰匙。'});DI('檸檬','etc',0,{});DI('橘子','etc',0,{});DI('烤薄餅','etc',0,{});DI('蘋果','etc',0,{});DI('香蕉','etc',0,{});DI('夏洛伯之爪','etc',0,{desc:'拿給說話之島的甘特的話，就可以通過他的試煉。'});DI('往古魯丁的船票','etc',0,{desc:'在說話之島港口為了搭船所需的船票。'});DI('往說話之島的船票','etc',0,{desc:'在古魯丁村莊港口為了搭船所需的船票。'});DI('阿吐巴圖騰','etc',0,{desc:'把阿吐巴圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('那魯加圖騰','etc',0,{desc:'把那魯加圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('都達瑪拉圖騰','etc',0,{desc:'把都達瑪拉圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('甘地圖騰','etc',0,{desc:'把甘地圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('羅孚圖騰','etc',0,{desc:'把羅孚圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('魔法寶石','etc',0,{});DI('鑽石','etc',0,{});DI('品質鑽石','etc',0,{});DI('高品質鑽石','etc',0,{});DI('綠寶石','etc',0,{});DI('品質綠寶石','etc',0,{});DI('高品質綠寶石','etc',0,{});DI('紅寶石','etc',0,{});DI('品質紅寶石','etc',0,{});DI('高品質紅寶石','etc',0,{});DI('藍寶石','etc',0,{});DI('品質藍寶石','etc',0,{});DI('高品質藍寶石','etc',0,{});DI('信紙','etc',0,{});DI('潘的鬃毛','etc',0,{});DI('粗糙的米索莉塊','etc',0,{});DI('元素石','etc',0,{});DI('蘑菇汁','etc',0,{desc:'是蘑菇汁。可當在各魔法或毒性之原料。'});DI('食人巨魔的血','etc',0,{desc:'歐吉的血。是歐吉的力量之源。'});DI('線','etc',0,{});DI('純粹的米索莉塊','etc',0,{});DI('精靈粉末','etc',0,{});DI('芮克妮的網','etc',0,{});DI('安特的樹皮','etc',0,{});DI('奧里哈魯根','etc',0,{desc:'精靈女皇製作的高貴金屬。使用於損壞的武器或防具上時，可減少損壞程度。'});DI('米索莉線','etc',0,{});DI('芮克妮的蛻皮','etc',0,{});DI('魔法笛子','etc',0,{desc:'在潘的附近演奏時，潘就會靠近。'});DI('米索莉金屬板','etc',0,{});DI('奧里哈魯根金屬板','etc',0,{});DI('皮革','etc',0,{});DI('金屬塊','etc',0,{});DI('皮帶','etc',0,{});DI('高級皮革','etc',0,{});DI('骨頭碎片','etc',0,{});DI('哨子','etc',0,{desc:'吹哨子時，馴服的寵物會聚集到自己周邊。'});DI('磨刀石','etc',0,{desc:'能夠復原武器防具損害的道具。'});DI('血盟信紙','etc',0,{desc:'可以將同一個內容的信件寄到所有血盟成員的魔法信件。'});DI('項圈','etc',0,{desc:'代表已經馴養的寵物的項圈。若交換此項圈，可以交換寵物。'});DI('糖果','etc',0,{});DI('藍色布料','etc',0,{});DI('紅色布料','etc',0,{});DI('白色布料','etc',0,{});DI('鋼鐵原石','etc',0,{});DI('水龍鱗','etc',0,{});DI('地龍鱗','etc',0,{});DI('火龍鱗','etc',0,{});DI('風龍鱗','etc',0,{});DI('阿西塔基奧的灰燼','etc',0,{});DI('精靈玉','etc',0,{});DI('古老的交易文件','etc',0,{desc:'為了查明反王勢力的武器製造術，銀騎士村莊的鐵匠亞南正在尋找這份文件。'});DI('搜索狀','etc',0,{desc:'黑騎士搜索隊在偵察肯特城周邊時留下的文件。肯特村莊的傑羅正在等待這份文件。'});DI('黑騎士的誓約','etc',0,{desc:'對反王組織發誓絕對忠誠的證據。因為記錄著反王的計畫，銀騎士村莊的瑞奇正在尋找這份契約書。'});DI('都達瑪拉妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('那魯加妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('甘地妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('阿吐巴妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('骷髏頭','etc',0,{desc:'從骷髏身上掉下來，把這個拿給說話之島的詹姆的話，就可以在詛咒的魔法書注入魔力。'});DI('食屍鬼的指甲','etc',0,{desc:'塗著能使身體麻痹的有毒腳爪。說話之島的詹姆為了研究靈魂魔法的秘密正在等待著這種材料。'});DI('食屍鬼的牙齒','etc',0,{desc:'卡著腐爛的屍塊，使被啃咬的人引發麻痺的牙齒。說話之島的詹姆為了研究靈魂魔法的秘密正在等待著這種材料。'});DI('龍龜甲','etc',0,{desc:'用龍龜的巨大外殼堅持了幾十年的防禦象徵。由於加工困難，只有銀騎士村莊的鐵匠亞南才能製作裝備。'});DI('古代的卷軸','etc',0,{});DI('生命的卷軸','etc',0,{desc:'記載著藏在石頭高崙中的生命祕密的卷軸。說話之島的甘特正在等待這個卷軸。'});DI('蛇女之鱗','etc',0,{desc:'從蛇女頭目身上掉下來的藍色鱗片。拿給銀騎士村的傑瑞德的話，就可以通過他的試煉。'});DI('返生藥水','etc',0,{desc:'給予紅騎士的唯一一個特別的藥水。它擁有強大的力量，甚至可以解開邪惡神格蘭肯的詛咒。'});DI('感謝信','etc',0,{desc:'因詛咒變成骷髏的吉姆懷著感恩的心留下的信。如果拿給銀騎士村的傑瑞德，作為犧牲和獻身的憑證會給予認可。'});DI('村民的遺物','etc',0,{desc:'在變異巨蟻女皇的肚子裏發現的遺物。風木村莊的艾莉亞正在等待從螞蟻洞窟中消失的居民和父親的消息。'});DI('不死族的骨頭','etc',0,{desc:'偷走復活中的死亡騎士的骨頭後，逃跑的不死族背叛者所留下的骨頭。說話之島的吉倫為了完成研究，正在尋找這個。'});DI('受詛咒的精靈書','etc',0,{desc:'黑暗妖精魔法師達克馬勒，從妖精森林偷走的精靈書。妖精森林的迷幻森林之母希望重新回收精靈書。'});DI('不死族的鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。只要跟說話之島地監1樓的迪隆搭話就可以進去不死族地監。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('殭屍鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('骷髏鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('密室鑰匙','etc',0,{desc:'可以在古魯丁地監深處，魔法師歐林附近使用的老舊鑰匙。據說，祕密房間裏藏著被詛咒的人。'});DI('神秘水晶球','etc',0,{desc:'從古魯丁地監的歐林得到的凝聚著魔力的水晶球。拿給說話之島的吉倫的話，就可以用來完成神秘的魔杖。'});DI('神秘魔杖','etc',0,{desc:'缺少魔力根源神祕水晶球的魔杖。若要尋找水晶球，必須找到地監深處進行交易的魔法師歐林。'});DI('蛇女房間鑰匙','etc',0,{desc:'這是傑瑞德為了試煉，打開關著蛇女頭目房間的鑰匙。如果順利完成了傑瑞德的試煉，就不用再保留了。'});DI('黑色血痕','etc',0,{});DI('光明的鱗片','etc',0,{});DI('月光之氣息','etc',0,{desc:'蘊含象牙塔月光而凝聚的精氣。'});DI('神聖獨角獸之角','etc',0,{desc:'長出新的角而掉落的神聖獨角獸的痕跡。'});DI('畢克斯的羽毛','etc',0,{desc:'對獲得特別優惠的勇士發送的特別道具。'});DI('畢克斯的沙漏','etc',0,{eff:'持續時間+3600秒',desc:'使用時，每360秒可獲得一個「畢克斯的羽毛」。'});DI('贖罪聖書','etc',0,{desc:'寫著贖罪內容的聖書。透過和平神女可進行朗讀。'});DI('贖罪聖書箱','etc',0,{desc:'使用時，可獲得10張贖罪聖書。'});DI('畢克斯的沙漏箱','etc',0,{desc:'使用時，可獲得3個畢克斯的沙漏。'});DI('解除封印卷軸箱子','etc',0,{desc:'使用時，可獲得10張解除封印卷軸。必須在可使用時間內使用。'});DI('摺紙傳令鳥','etc',0,{desc:'使用後刻上不當之人的名稱時，就會傳送到追逐真相的人。'});DI('摺紙傳令鳥箱','etc',0,{});DI('被偷的項鍊','etc',0,{desc:'竊賊偷走的貴重品，奇岩村的艾歐拉正焦急地在尋找。'});DI('被偷的戒指','etc',0,{desc:'竊賊偷走的貴重品，奇岩村的艾歐拉正焦急地在尋找。'});DI('獨眼巨人的血','etc',0,{desc:'消滅獨眼巨人的憑證。拿給銀騎士村的皮革加工師朱利的話，就能製作特別的裝備。'});DI('污染的精靈水晶(水)','etc',0,{desc:'消滅污染的水精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(火)','etc',0,{desc:'消滅污染的火精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(地)','etc',0,{desc:'消滅污染的地精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(風)','etc',0,{desc:'消滅污染的風精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('邪惡蜥蜴之鱗','etc',0,{desc:'消滅邪惡蜥蜴的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('神秘魔力恢復藥水','etc',0,{desc:'歐林販售的特殊藥水。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('神秘慎重藥水','etc',0,{desc:'部分長者攜帶的特殊藥水。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('思克巴女皇的神祕魔杖','etc',0,{desc:'部分思克巴女皇攜帶的特殊魔杖。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('說話之島的回憶','etc',0,{eff:'獲得時負重+500',desc:'為了重新回到說話之島的勇士們準備的GM的禮物。持有時，能感覺到負重變輕。'});DI('遺忘之島的回憶','etc',0,{eff:'獲得時負重+500',desc:'是一本記載著通往遺忘之島航線的書。持有時，能感覺到負重變輕。'});DI('凱莉紗的記憶水晶','etc',0,{desc:'可以將我的記憶保存到水晶中。'});
 
 const SHOPS={
-  雜貨店:['紅色藥水','橙色藥水','白色藥水','藍色藥水','翡翠藥水','自我加速藥水','勇敢藥水','惡魔之血','精靈餅乾','變形卷軸','瞬間移動卷軸','返回卷軸','復活卷軸','鑑定卷軸','解除詛咒的卷軸','武器強化卷軸','防具強化卷軸','燈','燈籠','燈油','蠟燭','肉'],
+  雜貨店:['紅色藥水','橙色藥水','白色藥水','藍色藥水','翡翠藥水','自我加速藥水','勇敢藥水','惡魔之血','精靈餅乾','變形卷軸','瞬間移動卷軸','返回卷軸','復活卷軸','鑑定卷軸','解除詛咒的卷軸','對武器施法的卷軸','對盔甲施法的卷軸','燈','燈籠','燈油','蠟燭','肉'],
   武器店:['弓','短弓','精靈弓','獵人之弓','十字弓','箭','銀箭','長劍','闊劍','匕首','短劍','彎刀','大馬士革刀','銀長劍','銀劍','橡木魔法杖','美基魔法杖','巫術魔法杖','雙手劍','矛','巴迪須','柴刀','槍','露西錘','貝卡合金','斧','釘錘','木棒'],
   防具店:['精靈皮盔','歐西斯頭盔','侏儒鐵盔','頭盔','騎士面甲','艾爾穆的祝福','皮帽子','銀釘皮帽','皮頭盔','鋼鐵頭盔','法師之帽','精靈敏捷頭盔','精靈體質頭盔','紅騎士頭巾','巴土瑟之帽','卡士柏之帽','馬庫爾之帽','西瑪之帽','藤甲','皮甲','鏈甲','歐西斯鏈甲','鱗甲','銀釘皮甲','環甲','歐西斯環甲','小藤甲','皮夾克','抗魔法鏈甲','綿質長袍','木甲','精靈護胸金屬板','精靈鏈甲','木製的夾克','皮背心','皮盔甲','銀釘皮背心','硬皮背心','法師長袍','精靈斗篷','歐西斯斗篷','侏儒斗篷','保護者斗篷','隱身斗篷','抗魔法斗篷','紅色斗篷','君主的威嚴','瑪那斗篷','藍海賊斗篷','短統靴','長靴','皮涼鞋','銀釘皮涼鞋','皮長靴','鋼鐵長靴','深水長靴','神意長靴','勇氣長靴','賽菲亞長靴','瑪那長靴','手套','腕甲','力量手套','鋼鐵手套','石製手套','水晶手套','保護者手套','小盾牌','精靈盾牌','阿克海盾牌','大盾牌','侏儒圓盾','反射之盾','伊娃之盾','塔盾','木盾','銀騎士之盾','皮盾牌','銀釘皮盾','鋼鐵盾牌','魔法能量之書','紅騎士盾牌','瑪那水晶球','T恤','精靈T恤']
 };
@@ -2804,7 +2810,7 @@ function useItem(id){ invMove=null; if(id==='金幣'){ return; } const d=ITEM_DE
     var _mw=document.getElementById('magicw'); if(_mw&&_mw.classList.contains('on')&&typeof refreshMagic==='function')refreshMagic();
     if(typeof refreshInv==='function')refreshInv(); return; }
   if(d.teleport){ const _tw=document.getElementById('teleportw'); if(_tw&&_tw.classList.contains('on')){ _tw.classList.remove('on'); if(typeof navClear==='function')navClear(); } else openTeleport(); return; }
-  if(id==='武器強化卷軸'||id==='防具強化卷軸'||id==='對武器施法的卷軸'||id==='對盔甲施法的卷軸'){ if(enhKind&&enhScrollId===id){ cancelEnhance(); } else { openEnhance(id); } return; }
+  if(id==='對武器施法的卷軸'||id==='對盔甲施法的卷軸'){ if(enhKind&&enhScrollId===id){ cancelEnhance(); } else { openEnhance(id); } return; }
   if(d.cat==='weapon'||d.cat==='armor'||d.cat==='ammo'){ const slot=d.cat==='weapon'?'weapon':(d.cat==='ammo'?'ammo':d.slot);
     var _eqf=(arguments.length>1)?arguments[1]:isEquipped(id);
     if(slot==='ring'){ if(_eqf){ if(S.equip.ring===id) unequipItem('ring'); else if(S.equip.ring2===id) unequipItem('ring2'); } else equipItem(id); }
@@ -3651,8 +3657,8 @@ function atsRun(){ var a=ATS(); if(!a.on||!S||S.hp<=0||typeof player==='undefine
       break; } }
   if(a.transform.on && a.transform.target && a.transform.target!=='（未選擇）' && MOBS[a.transform.target] && (S.lv||1)>=(MOBS[a.transform.target].lv||1)){
     var _tExp=!S.transformInto || S.transformInto!==a.transform.target || (S.transformUntil||0)<=now;
-    if(_tExp){ if((S.inv['變身卷軸']||0)>0 || (a.transform.buy && atsBuy('變身卷軸',1))){
-        removeItem('變身卷軸',1); S.transformInto=a.transform.target; S.transformUntil=now+600000;
+    if(_tExp){ if((S.inv['變形卷軸']||0)>0 || (a.transform.buy && atsBuy('變形卷軸',1))){
+        removeItem('變形卷軸',1); S.transformInto=a.transform.target; S.transformUntil=now+1200000;
         sysMsg('【ATS】變身為「'+a.transform.target+'」！'); } }
   }
   if(a.hunt.on&&S.atsProf){ S.atsProf.ms+=700; }
@@ -3722,6 +3728,92 @@ function partyToggle(slot){ var idx=party.findIndex(function(p){return p.slot===
     sysMsg('『'+d.name+'』加入隊伍！'); }
   renderSocial(); renderPartyHud(); }
 function partyDisbandAll(){ if(!party.length){ sysMsg('目前沒有隊友。'); return; } party=[]; sysMsg('隊伍已解散。'); renderSocial(); renderPartyHud(); }
+var atEnh={item:'', tier:0, mode:'all', lastMsg:''};
+function setAtTab(t){
+  var ta=document.getElementById('atTab_ats'), te=document.getElementById('atTab_enh');
+  if(ta) ta.classList.toggle('on', t==='ats'); if(te) te.classList.toggle('on', t==='enh');
+  var ba=document.getElementById('atsBody'), be=document.getElementById('atEnhBody');
+  if(ba) ba.style.display=(t==='ats')?'block':'none'; if(be) be.style.display=(t==='enh')?'block':'none';
+  if(t==='ats'){ if(typeof renderATS==='function') renderATS(); } else { renderAtEnh(); } }
+function atEnhOptions(){                                    // 背包內去重複的武器/防具基礎名稱（同名不同強化等級視為同一項）
+  var seen={}, out=[];
+  for(var k in S.inv){ if((S.inv[k]||0)<=0) continue; var b=(typeof baseOf==='function')?baseOf(k):k; var bd=ITEM_DEF[b];
+    if(!bd||(bd.cat!=='weapon'&&bd.cat!=='armor')) continue;
+    if(ENH_EXCLUDE_SLOT[bd.slot]) continue;
+    if(!seen[b]){ seen[b]=1; out.push(b); } }
+  return out; }
+function atEnhScrollFor(bd){                                 // 依類別使用原本就存在的正確卷軸
+  return bd.cat==='weapon' ? '對武器施法的卷軸' : '對盔甲施法的卷軸'; }
+var _atEnhSelSeq=0;
+function _atEnhSel(key, labels, values, curLabel){
+  var vid='aeSel_'+(_atEnhSelSeq++);
+  var h='<span class="atsSelWrap" id="'+vid+'"><button type="button" class="atsSelBtn" onclick="atsSelToggle(this)">'+(curLabel||'')+' <span class="atsSelArrow">▾</span></button><div class="atsSelList">';
+  labels.forEach(function(lb,i){ var val=values[i];
+    h+='<div class="atsSelOpt" onclick="atEnhPick(this,\''+key+'\')" data-v="'+String(val).replace(/"/g,'&quot;')+'">'+lb+'</div>'; });
+  h+='</div></span>'; return h; }
+function atEnhPick(el,key){ var v=el.getAttribute('data-v'); if(key==='tier') v=parseInt(v,10); atEnh[key]=v; renderAtEnh(); }
+function renderAtEnh(){
+  var el=document.getElementById('atEnhBody'); if(!el)return;
+  var opts=atEnhOptions();
+  if(opts.length && opts.indexOf(atEnh.item)<0) atEnh.item=opts[0];
+  if(!opts.length) atEnh.item='';
+  var bd=atEnh.item?ITEM_DEF[atEnh.item]:null;
+  var safe=bd?safeOf(bd):0;
+  var tierLabels=['安定值（+'+safe+'）','過1（+'+(safe+1)+'）','過2（+'+(safe+2)+'）','過3（+'+(safe+3)+'）','過4（+'+(safe+4)+'）','過5（+'+(safe+5)+'）'];
+  var tierVals=[0,1,2,3,4,5];
+  var modeLabels=['全部','只要1把成功'], modeVals=['all','one'];
+  var h='';
+  h+='<div class="atsRow">強化裝備 '+(opts.length?_atEnhSel('item',opts,opts,atEnh.item):'<span class="atsNote">背包內無可強化的武器或防具</span>')+'</div>';
+  h+='<div class="atsRow">強化目標 '+_atEnhSel('tier',tierLabels,tierVals,tierLabels[atEnh.tier]||tierLabels[0])+'</div>';
+  h+='<div class="atsRow">強化模式 '+_atEnhSel('mode',modeLabels,modeVals,modeLabels[modeVals.indexOf(atEnh.mode)]||modeLabels[0])+'</div>';
+  h+='<div class="atsRow"><button class="socBtn" style="flex:1" onclick="atEnhRun()">開始強化</button></div>';
+  if(atEnh.lastMsg) h+='<div class="atsRow atsNote">'+atEnh.lastMsg+'</div>';
+  el.innerHTML=h; }
+function atEnhSingleAttempt(curId, scroll){                   // 對「一件」實體嘗試強化一次
+  var b=baseOf(curId), en=enOf(curId), bd=ITEM_DEF[b]||ITEM_DEF[curId];
+  if((S.inv[scroll]||0)<=0) return {scrollUsed:false};
+  if((S.inv[curId]||0)<=0) return {scrollUsed:false};
+  removeItem(scroll,1);
+  var wasEq=isEquipped(curId)&&availCount(curId)===0;
+  var _pos=(S.invOrder||[]).indexOf(curId);
+  var ok=(en<safeOf(bd))||(Math.random()<0.5);
+  if(ok){ var nn=cloneEnhDef(b,en+1); removeItem(curId,1); addItem(nn,1);
+    if(_pos>=0 && S.invOrder){ var _cur=S.invOrder.indexOf(nn); if(_cur>=0 && _cur!==_pos){ S.invOrder.splice(_cur,1); S.invOrder.splice(Math.min(_pos,S.invOrder.length),0,nn); } }
+    if(wasEq){ for(var sl in S.equip){ if(S.equip[sl]===curId) S.equip[sl]=nn; } }
+    return {scrollUsed:true, ok:true, newId:nn}; }
+  removeItem(curId,1);
+  if(wasEq){ for(var sl2 in S.equip){ if(S.equip[sl2]===curId) S.equip[sl2]=null; } }
+  return {scrollUsed:true, ok:false, destroyed:true}; }
+function atEnhRun(){
+  var base=atEnh.item; if(!base){ sysMsg('請先選擇要強化的裝備'); return; }
+  var bd=ITEM_DEF[base]; if(!bd){ sysMsg('找不到這件裝備的資料'); return; }
+  var target=safeOf(bd)+atEnh.tier; var cap=enhCapOf(bd); if(target>cap) target=cap;
+  var scroll=atEnhScrollFor(bd);
+  if((S.inv[scroll]||0)<=0){ sysMsg('沒有'+scroll+'（或對應的強化卷軸），無法開始強化'); return; }
+  var mode=atEnh.mode;
+  var totalSuccess=0, totalDestroyed=0, totalUsed=0, ranOut=false;
+  function collectIds(){                                      // 找出背包裡尚未達標的實體(依目前等級由低到高)
+    var arr=[];
+    for(var k in S.inv){ if((S.inv[k]||0)<=0) continue; if(baseOf(k)!==base) continue; var e=enOf(k);
+      if(e<target) arr.push({id:k, en:e}); }
+    arr.sort(function(a,b){return a.en-b.en;}); return arr; }
+  outer: while(true){
+    var ids=collectIds(); if(!ids.length) break;
+    var curId=ids[0].id;
+    while(true){
+      if((S.inv[scroll]||0)<=0){ ranOut=true; break outer; }
+      if((S.inv[curId]||0)<=0) break;
+      var r=atEnhSingleAttempt(curId, scroll);
+      if(!r.scrollUsed){ ranOut=true; break outer; }
+      totalUsed++;
+      if(r.ok){ curId=r.newId;
+        if(enOf(curId)>=target){ totalSuccess++; if(mode==='one'){ break outer; } break; }
+      } else { totalDestroyed++; break; }
+    }
+  }
+  recalcStats(); refreshUI(); if(typeof refreshInv==='function')refreshInv();
+  var msg='「'+base+'」強化結果：成功達標 '+totalSuccess+' 件、損毀 '+totalDestroyed+' 件、消耗卷軸 '+totalUsed+' 張'+(ranOut?'（卷軸已用完）':'（已完成）');
+  atEnh.lastMsg=msg; goldMsg('【AT強化】'+msg); renderAtEnh(); }
 function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; var a=ATS(); var h='';
   h+='<div class="atsMain">SUPER ATS 總開關 '+_tog('main',a.on)+'</div>';
   h+='<div class="atsSec"><div class="atsHead">1. 自動喝水 '+_tog('hp',a.hp.on)+'</div>'
@@ -3755,7 +3847,7 @@ function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; 
   var tOptsRaw=atsTransformOptions(), tOpts=['（未選擇）'].concat(tOptsRaw);
   h+='<div class="atsSec'+(tOptsRaw.length?'':' atsDis')+'"><div class="atsHead">7. 自動變身 '+_tog('transform',a.transform.on,!tOptsRaw.length)+'</div>'
     +'<div class="atsRow">變身為 '+_sel('transform','target',tOpts,a.transform.target||'（未選擇）')+'</div>'
-    +'<div class="atsRow">'+_chk('transform','buy',a.transform.buy,'自動購買變身卷軸（一次1）')+'</div></div>';
+    +'<div class="atsRow">'+_chk('transform','buy',a.transform.buy,'自動購買變形卷軸（一次1）')+'</div></div>';
   var bl=atsLearnedBuffs();
   h+='<div class="atsSec'+(bl.length?'':' atsDis')+'"><div class="atsHead">8. BUFF 魔法與技能</div>'
     +(bl.length? bl.map(function(sp){ return '<div class="atsRow">'+_chk('buff',sp.name,!!a.buff[sp.name],sp.name)+'</div>'; }).join('')
@@ -3794,8 +3886,8 @@ function cloneEnhDef(base,en){ var bd=ITEM_DEF[base]; if(!bd)return null; var nm
 function ensureEnhDefs(){ function scan(o){ if(!o)return; for(var k in o){ var e=enOf(k); if(e>0&&ITEM_DEF[baseOf(k)]) cloneEnhDef(baseOf(k),e); } }
   scan(S.inv); scan(S.warehouse); for(var sl in (S.equip||{})){ var v=S.equip[sl]; if(v){ var e2=enOf(v); if(e2>0&&ITEM_DEF[baseOf(v)]) cloneEnhDef(baseOf(v),e2); } } }
 var enhKind=null; var enhScrollId=null;
-var ARMOR_ENH_SCROLLS={'防具強化卷軸':1,'對盔甲施法的卷軸':1};
-var ENH_SCROLL_NAMES={'武器強化卷軸':1,'防具強化卷軸':1,'對武器施法的卷軸':1,'對盔甲施法的卷軸':1};
+var ARMOR_ENH_SCROLLS={'對盔甲施法的卷軸':1};
+var ENH_SCROLL_NAMES={'對武器施法的卷軸':1,'對盔甲施法的卷軸':1};
 var ENH_EXCLUDE_SLOT={ring:1,necklace:1,belt:1};   // 項鍊、戒指、腰帶不可強化
 function openEnhance(scrollId){
   if((S.inv[scrollId]||0)<=0){ sysMsg('沒有'+scrollId+'了'); return; }
@@ -3835,8 +3927,6 @@ const REDQ_PX=[["魔法寶石",100],["黑暗棲林者戒指",1],["馴獸師戒�
 const CRAFT_PX={"npc_flame_shadow":[{"result":"炎魔的血光斗篷","req":[["墮落鐮刀",1],["墮落首級",1]]}],"npc_imp":[{"result":"惡魔之劍","req":[["墮落之毒",1],["惡魔的黑色腳鐐",5],["惡魔的紅色腳鐐",10],["惡魔的藍色腳鐐",5],["惡魔的白色腳鐐",5]]},{"result":"惡魔鋼爪","req":[["墮落之手",1],["惡魔的黑色腳鐐",5],["惡魔的紅色腳鐐",5],["惡魔的藍色腳鐐",5],["惡魔的白色腳鐐",10]]},{"result":"惡魔雙刀","req":[["墮落之牙",1],["惡魔的黑色腳鐐",5],["惡魔的紅色腳鐐",5],["惡魔的藍色腳鐐",10],["惡魔的白色腳鐐",5]]},{"result":"惡魔十字弓","req":[["墮落之舌",1],["惡魔的黑色腳鐐",10],["惡魔的紅色腳鐐",5],["惡魔的藍色腳鐐",5],["惡魔的白色腳鐐",5]]}],"npc_tas":[{"result":"萬能藥(STR)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(DEX)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(INT)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(CON)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(WIS)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(CHA)","req":[["純白的萬能藥",3]]}],"npc_moli":[{"result":"皮帽子","req":[["金屬塊",1],["皮革",5]]},{"result":"皮盾牌","req":[["皮革",7]]},{"result":"皮涼鞋","req":[["金屬塊",2],["皮革",6]]},{"result":"皮背心","req":[["皮革",10]]},{"result":"皮頭盔","req":[["皮帽子",1],["頭盔",1],["高級皮革",5],["金屬塊",5]]},{"result":"硬皮背心","req":[["銀釘皮背心",1],["高級皮革",15],["金屬塊",15]]},{"result":"皮帶","req":[["高級皮革",5],["金屬塊",2]]},{"result":"皮盔甲","req":[["皮背心",1],["皮帶",1]]},{"result":"高級皮革","req":[["皮革",20]]}],"npc_brabo":[{"result":"覆上米索莉的角","req":[["潘的角",2],["純粹的米索莉塊",80]]},{"result":"覆上奧里哈魯根的角","req":[["潘的角",4],["奧里哈魯根",80],["紅寶石",3]]},{"result":"短劍的劍身","req":[["精靈羽翼",1],["純粹的米索莉塊",50]]},{"result":"長劍的劍身","req":[["精靈羽翼",3],["純粹的米索莉塊",150]]},{"result":"奧里哈魯根的劍身","req":[["精靈羽翼",3],["紅寶石",3],["奧里哈魯根",150]]}],"npc_finn":[{"result":"銀釘皮帽","req":[["皮帽子",1],["高級皮革",2],["金屬塊",10]]},{"result":"銀釘皮盾","req":[["皮盾牌",1],["高級皮革",5],["金屬塊",20]]},{"result":"銀釘皮涼鞋","req":[["皮涼鞋",1],["高級皮革",3],["金屬塊",12]]},{"result":"銀釘皮背心","req":[["皮背心",1],["高級皮革",2],["金屬塊",10]]}],"npc_falin":[{"result":"銀釘皮帽","req":[["皮帽子",1],["高級皮革",2],["金屬塊",10]]},{"result":"銀釘皮盾","req":[["皮盾牌",1],["高級皮革",5],["金屬塊",20]]},{"result":"銀釘皮涼鞋","req":[["皮涼鞋",1],["高級皮革",3],["金屬塊",12]]},{"result":"銀釘皮背心","req":[["皮背心",1],["高級皮革",2],["金屬塊",10]]}],"npc_nalien":[{"result":"魔法笛子","req":[["安特的樹皮",1],["奧里哈魯根",10]]}],"npc_rekne":[{"result":"線","req":[["潘的鬃毛",1]]},{"result":"米索莉線","req":[["線",1],["純粹的米索莉塊",5]]},{"result":"芮克妮的網","req":[["安特的樹枝",2]]},{"result":"芮克妮的蛻皮","req":[["安特的樹皮",3]]}],"npc_narupa":[{"result":"吉薩","req":[["短劍的劍身",1],["安特的樹枝",10],["純粹的米索莉塊",90],["芮克妮的網",10]]},{"result":"木甲","req":[["安特的樹皮",2],["潘的鬃毛",5]]},{"result":"木製的夾克","req":[["安特的樹枝",10],["線",6]]},{"result":"木盾","req":[["安特的樹皮",1],["安特的樹枝",5],["芮克妮的網",5]]},{"result":"細劍","req":[["奧里哈魯根的劍身",1],["精靈羽翼",2],["芮克妮的網",25],["奧里哈魯根",50],["品質紅寶石",1]]},{"result":"鎖子甲破壞者","req":[["短劍的劍身",1],["覆上米索莉的角",1],["安特的樹枝",10],["芮克妮的網",50],["鑽石",1]]},{"result":"木棒","req":[["安特的樹枝",10],["芮克妮的網",5]]},{"result":"米索莉箭","req":[["安特的樹枝",1],["純粹的米索莉塊",1]]},{"result":"長靴","req":[["芮克妮的蛻皮",2],["線",10]]},{"result":"艾爾穆的祝福","req":[["精靈皮盔",1],["奧里哈魯根金屬板",3],["米索莉線",150],["魔法寶石",5],["品質藍寶石",1],["品質綠寶石",1],["品質鑽石",1]]},{"result":"精靈皮盔","req":[["安特的樹皮",2],["精靈羽翼",1],["潘的鬃毛",10],["芮克妮的網",20]]},{"result":"精靈短劍","req":[["長劍的劍身",1],["安特的樹枝",5],["純粹的米索莉塊",150],["芮克妮的網",50]]},{"result":"精靈匕首","req":[["安特的樹枝",1],["粗糙的米索莉塊",1]]},{"result":"精靈斗篷","req":[["米索莉線",10],["魔法寶石",2],["元素石",6]]},{"result":"精靈盾牌","req":[["木盾",1],["米索莉金屬板",2],["芮克妮的網",5]]},{"result":"精靈鏈甲","req":[["米索莉金屬板",4],["米索莉線",10]]},{"result":"精靈之矛","req":[["覆上米索莉的角",1],["安特的樹枝",10],["芮克妮的網",30]]},{"result":"精靈金屬盔甲","req":[["奧里哈魯根金屬板",8],["米索莉線",20],["高品質鑽石",1]]},{"result":"精靈弓","req":[["安特的樹枝",10],["粗糙的米索莉塊",1],["芮克妮的蛻皮",2],["線",2]]},{"result":"精靈護胸金屬板","req":[["芮克妮的蛻皮",2],["線",10]]},{"result":"尤米弓","req":[["奧里哈魯根金屬板",6],["覆上奧里哈魯根的角",1],["米索莉線",40],["芮克妮的蛻皮",5],["品質綠寶石",2],["品質鑽石",1]]},{"result":"戰斧","req":[["短劍的劍身",1],["安特的樹枝",10],["粗糙的米索莉塊",3],["芮克妮的網",5]]},{"result":"短統靴","req":[["安特的樹皮",2],["線",4]]},{"result":"十字弓","req":[["奧里哈魯根金屬板",3],["精靈羽翼",8],["米索莉線",20],["芮克妮的網",30]]},{"result":"力量手套","req":[["米索莉線",20],["芮克妮的蛻皮",5],["品質鑽石",1],["食人巨魔的血",1]]},{"result":"法丘","req":[["精靈之矛",1],["覆上奧里哈魯根的角",1],["奧里哈魯根",60],["芮克妮的網",50],["品質紅寶石",1]]},{"result":"箭","req":[["安特的樹枝",10]]},{"result":"弓","req":[["安特的樹枝",1],["線",5]]},{"result":"腕甲","req":[["安特的樹皮",3],["米索莉線",20]]}],"npc_elfqueen":[{"result":"奧里哈魯根","req":[["純粹的米索莉塊",10]]}],"npc_elf":[{"result":"純粹的米索莉塊","req":[["粗糙的米索莉塊",1]]},{"result":"精靈粉末","req":[["元素石",1]]},{"result":"精靈羽翼","req":[["米索莉線",5],["元素石",2]]}],"npc_ent":[{"result":"安特的樹皮","req":[["蘑菇汁",1]]}],"npc_pan":[{"result":"米索莉金屬板","req":[["純粹的米索莉塊",50],["芮克妮的蛻皮",1]]},{"result":"奧里哈魯根金屬板","req":[["奧里哈魯根",30],["芮克妮的蛻皮",1]]},{"result":"潘的角","req":[["魔法笛子",1]]}],"npc_robinson":[{"result":"熾炎天使弓","req":[["神聖獨角獸之角",4],["風之氣息",30],["水之氣息",30],["火之氣息",30],["土之氣息",30],["格利芬羽毛",30],["品質鑽石",10],["品質紅寶石",10],["品質藍寶石",10],["品質綠寶石",10],["高品質鑽石",1],["高品質紅寶石",1],["高品質藍寶石",1],["高品質綠寶石",1],["精靈玉",1000]]}],"npc_kupu":[{"result":"黑暗鋼爪","req":[["高級皮革",10],["金屬塊",10],["三級黑魔石",5],["二級黑魔石",100]]},{"result":"銀光鋼爪","req":[["黑暗鋼爪",1],["高級皮革",10],["銀",30],["金屬塊",10],["四級黑魔石",1],["二級黑魔石",40],["鑽石",1]]},{"result":"幽暗鋼爪","req":[["黑暗鋼爪",1],["高級皮革",10],["金屬塊",10],["四級黑魔石",10],["三級黑魔石",100]]},{"result":"黑暗雙刀","req":[["高級皮革",20],["金屬塊",10],["二級黑魔石",100]]},{"result":"銀光雙刀","req":[["黑暗雙刀",1],["高級皮革",20],["銀",20],["金屬塊",10],["四級黑魔石",1],["二級黑魔石",50],["鑽石",1]]},{"result":"幽暗雙刀","req":[["黑暗雙刀",1],["高級皮革",20],["金屬塊",10],["四級黑魔石",5],["三級黑魔石",100]]},{"result":"黑暗十字弓","req":[["高級皮革",30],["金屬塊",10],["三級黑魔石",10],["二級黑魔石",100]]},{"result":"幽暗十字弓","req":[["黑暗十字弓",1],["高級皮革",30],["金屬塊",10],["四級黑魔石",20],["三級黑魔石",100]]}],"npc_moliya":[{"result":"法師之帽","req":[["白色布料",1],["紅色布料",1],["藍色布料",1],["魔法寶石",20],["品質綠寶石",2]]},{"result":"法師長袍","req":[["白色布料",2],["高品質藍寶石",1],["藍色布料",4],["魔法寶石",25]]}],"npc_lumiel":[{"result":"深水長靴","req":[["長靴",1],["光明的鱗片",30],["人魚之鱗",30]]},{"result":"伊娃之盾","req":[["塔盾",1],["人魚之鱗",100],["水龍鱗",10]]}],"npc_ibelbin":[{"result":"瑟魯基之劍","req":[["阿西塔基奧的灰燼",300],["奧里哈魯根",500],["高品質紅寶石",5],["高品質藍寶石",5],["高品質綠寶石",5],["高品質鑽石",5],["火龍鱗",3]]},{"result":"水龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["水龍鱗",15]]},{"result":"火龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["火龍鱗",15]]},{"result":"地龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["地龍鱗",15]]},{"result":"風龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["風龍鱗",15]]}],"npc_lentis":[{"result":"地靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["魔獸軍王徽印",1]]},{"result":"水靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["法令軍王徽印",1]]},{"result":"風靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["暗殺軍王徽印",1]]},{"result":"火靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["冥法軍王徽印",1]]}]};
 const QUEST_MATS=["丹特斯的召書","精靈的私語","古代黑妖之秘笈","密封的情報書","間諜報告書","混沌鑰匙","黑暗棲林者戒指","馴獸師戒指","精靈使戒指","喚獸師戒指","黑法師戒指","炎魔的血光斗篷","墮落鐮刀","墮落首級","惡魔之劍","墮落之毒","惡魔的黑色腳鐐","惡魔的紅色腳鐐","惡魔的藍色腳鐐","惡魔的白色腳鐐","惡魔鋼爪","墮落之手","惡魔雙刀","墮落之牙","惡魔十字弓","墮落之舌","萬能藥(STR)","純白的萬能藥","萬能藥(DEX)","萬能藥(INT)","萬能藥(CON)","萬能藥(WIS)","萬能藥(CHA)","風之氣息","水之氣息","火之氣息","土之氣息","格利芬羽毛","黑暗鋼爪","三級黑魔石","二級黑魔石","銀光鋼爪","銀","四級黑魔石","幽暗鋼爪","黑暗雙刀","銀光雙刀","幽暗雙刀","黑暗十字弓","幽暗十字弓","冥法軍團印記","法令軍團印記","魔獸軍團印記","暗殺軍團印記","魔獸軍王徽印","法令軍王徽印","暗殺軍王徽印","冥法軍王徽印"];
 QUEST_MATS.forEach(function(n){ if(!ITEM_DEF[n]) DI(n,'etc',0,{questItem:true,desc:'任務／合成材料'}); });
-DI('武器強化卷軸','scroll',600,{wt:1,eff:'武器+1（安定內必成）',desc:'對武器施放強化。'});
-DI('防具強化卷軸','scroll',400,{wt:1,eff:'防具+1（安定內必成）',desc:'對防具施放強化。'});
 function qWin(){ var w=document.getElementById('questw'); if(!w){ w=document.createElement('div'); w.id='questw';
   w.style.cssText='position:absolute;top:6px;left:6px;width:300px;height:500px;z-index:97;background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;border-radius:5px;color:#e8dcc0;padding:10px;display:none;overflow:auto;box-sizing:border-box;';
   document.getElementById('frame').appendChild(w);} return w; }
