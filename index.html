@@ -3246,15 +3246,16 @@ function endIntro(){ document.getElementById('intro').style.display='none'; paus
 /* ============ 啟動 ============ */
 // 整體等比縮放，讓 1024x768 版面貼合視窗，UI 位置永遠一致
 const frameEl=document.getElementById('frame');
-function fitFrame(){ const de=document.documentElement;
-  const vw=de.clientWidth||window.innerWidth, vh=de.clientHeight||window.innerHeight;
+function fitFrame(){ const de=document.documentElement, vv=window.visualViewport;
+  const vw=vv?vv.width:(de.clientWidth||window.innerWidth), vh=vv?vv.height:(de.clientHeight||window.innerHeight);
   var tw=vw, th=vh;
   if(!document.fullscreenElement){
     if(typeof SETTINGS!=='undefined'&&SETTINGS.winMode==='600'){ tw=Math.min(vw,800); th=Math.min(vh,600); }
     else { tw=Math.min(vw,1920); th=Math.min(vh,1080); }
   }
   const s=Math.min(tw/1024, th/768);
-  const x=Math.round((vw-1024*s)/2), y=Math.round((vh-768*s)/2);
+  const ox=(vv?vv.offsetLeft:0), oy=(vv?vv.offsetTop:0);            // 視覺視窗相對版面視窗的偏移（iOS Safari 網址列收合時會用到）
+  const x=Math.round(ox+(vw-1024*s)/2), y=Math.round(oy+(vh-768*s)/2);
   frameEl.style.transform='translate('+x+'px,'+y+'px) scale('+s+')'; }
 window.addEventListener('resize',fitFrame);
 window.addEventListener('orientationchange',function(){                 // iOS Safari 旋轉時視窗尺寸不會立刻穩定，多次延遲重新計算
