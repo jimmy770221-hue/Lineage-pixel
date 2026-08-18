@@ -1,9 +1,81 @@
 <!DOCTYPE html>
+<!--
+========================================
+天堂像素版 · 版本紀錄（每次更新請在最上面新增一行，格式：vXX YYYY-MM-DD 摘要）
+※ 公告欄（noticeBody）採「只增不刪」原則：新版本一律加在最上方，舊紀錄永久保留，
+   除非玩家明確要求才刪除舊紀錄。
+========================================
+v80 2026-08-19 玩家名條依性向值(align)做漸層變色，怪物名字確認維持全白：
+             新增 lerpColor(c1,c2,t) 顏色線性內插輔助函式：把兩個顏色的
+             R/G/B三個色頻道分別依比例t混合，t=0回傳c1、t=1回傳c2，
+             中間值即為兩色之間的漸層過渡色。
+             新增 alignNameColor(a) 依性向值換算顏色：
+             ・0~500（中立）：白色 #ffffff
+             ・501~32767（正義）：換算比例 t=(a-500)/(32767-500)，
+               用 lerpColor 從淺藍 #8ecbff 漸層加深到深藍 #0d1a5c
+             ・-1~-32768（邪惡）：換算比例 t=(-a)/32768，
+               用 lerpColor 從淺紅 #ffb0a0 漸層加深到深紅 #5c0a0a
+             把玩家頭上名條(drawPlayerIso裡的nameTag)原本寫死的淺藍色
+             改成呼叫 alignNameColor(S.align)，數值愈極端顏色愈深。
+             另外確認 drawMobIso() 繪製怪物名字時本來就是用 '#ffffff'
+             純白色，不需修改。
+v79 2026-08-19 修正後台編輯器「移動」欄位微調幅度過大的問題：
+             numField() 產生的數字輸入框原本統一用 step="any"，瀏覽器
+             對這種設定的上下箭頭按鈕預設以 1 為單位跳動，導致怪物「移動」
+             欄位按一次箭頭就從 1 跳到 2，幅度太大。
+             修法：讓 numField() 可指定 step 參數，並把 MOB_FIELDS 中的
+             「移動」(spd)、「攻速」(atkSpd)、「善惡」(align) 欄位設為
+             0.1 步進，直接輸入數字仍可打任意小數，不受影響。
+v78 2026-08-19 統一所有怪物的基礎移動速度：
+             將 MOBS 定義裡每隻怪的 spd 欄位統一改為 1（與玩家的基礎速度
+             player.speed=1 一致），稻草人（不會移動的訓練假人）維持 0。
+             另確認怪物移動速度的「spd」欄位本來就已經在後台編輯器的
+             MOB_FIELDS 清單中（標籤「移動」），可在後台「怪物」分頁
+             個別搜尋、調整每隻怪的速度，不需另外新增欄位。
+v77 2026-08-19 修正切換角色後移動速度異常變快的問題：
+             加速狀態(player.hasteTier/hasteUntil、moveHasteTier/moveHasteUntil)
+             是存在單一全域 player 物件裡，並非每個角色存檔各自獨立的資料
+             （snapshot() 存檔時也沒有保存這些欄位）。若在同一個分頁裡玩過
+             某個角色時曾觸發加速效果，接著沒有重新整理頁面就刪除角色、
+             新建/登入另一個角色，殘留的加速計時器會被新角色繼續套用，
+             導致新角色一進場移動速度就異常變快。
+             修法：在 enterGame()（無論新建角色或既有角色登入，最終都會呼叫
+             這個函式進場）一開始就重置這 4 個加速欄位，確保每次進場都是
+             乾淨的基礎速度，不受前一個角色殘留效果影響。
+v76 2026-08-19 調整人物移動速度：基礎速度由 2.4 調降為 1，
+             配合現有 HASTE_MULT{0:1,1:1.5,2:2}，效果為：
+             一般狀態=1、減速異常=0.5、一段加速=1.5、二段加速=2。
+v75 2026-08-19 修正登入畫面左側出現一條細長綠線的問題：
+             原因是 #titlew（登入畫面黑色遮罩）與底下 canvas（地圖畫布，底色深綠#3a5a2a）
+             都是 position:absolute;inset:0，理論上完全疊合；但 #frame 用非整數倍率
+             CSS transform:scale() 縮放配合視窗大小時，兩個各自獨立算圖的圖層邊界
+             會有次像素(sub-pixel)誤差，導致邊緣露出不到1px的縫隙，讓底下canvas的
+             綠色透出一條細線。修法：把 #titlew／#splashw／#adminw 這三個全螢幕遮罩
+             的 inset 從 0 改為 -2px，讓遮罩故意超出 #frame 邊界一點，反正 #frame
+             有 overflow:hidden 會裁掉多出的部分，藉此確保縮放時仍能完全蓋住底下畫布。
+v74 2026-08-19 公告欄樣式調整：
+             1. 移除公告內固定的遊戲簡介文字，只保留版本更新紀錄本身。
+             2. 版本標題（如「◆ v72」）原本用淺金色(#f2d489)在米色紙張背景上對比不足，
+                改為深咖啡色底＋米黃字的徽章樣式(.noticeVer)，並把條列項目改用
+                真正的 <ul><li> 搭配自訂項目符號，排版更清楚。
+v73 2026-08-19 更名為「天堂．像素版」，移除舊名「天堂經典版・GBA復刻」殘留字樣：
+             瀏覽器分頁標題、登入視窗副標題文字統一改為天堂．像素版。
+             登入首頁公告欄改為「版本更新紀錄」格式，之後每次改版直接在此區塊
+             最上方新增一則（格式同下方v72範例），玩家開啟遊戲就能看到最新改了什麼。
+v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
+             squareGridFix 原本是「先用保底70px建格→兩個rAF後才量測實際寬度並縮成66px」，
+             每次 refreshInv()/refreshMagic() 都會重演一次「70→66」的視覺跳動；
+             改為 squareGridFix() 優先用快取值建格、squareGridMeasure() 在填完格子後
+             於同一個tick內同步量測套用，消除兩段式閃爍。
+             另外也修正了拖曳時 pointermove 未節流、與遊戲主迴圈（rAF渲染）搶主執行緒
+             導致殘影/命中格閃爍的問題，改用 requestAnimationFrame 節流 DOM 讀寫。
+========================================
+-->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>天堂經典版 · GBA 復刻</title>
+<title>天堂．像素版</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
   input,textarea{user-select:text;-webkit-user-select:text;}   /* 輸入框內文字仍可正常選取/編輯 */
@@ -345,7 +417,7 @@
   #ccOkCancel button:hover{color:#ffd54a;}
   #ccOkCancel button:disabled{opacity:.35;cursor:not-allowed;}
   /* 登入首頁 */
-  #splashw{position:absolute;inset:0;z-index:105;background:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1s ease;overflow:hidden;}
+  #splashw{position:absolute;inset:-2px;z-index:105;background:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity 1s ease;overflow:hidden;}
   #splashw img{width:100%;height:100%;object-fit:cover;image-rendering:auto;}
   #splashw.fade{opacity:0;}
   .dragGhost{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-140%);background:#2a2f3a;color:#ffd94a;border:1px solid #e8c060;border-radius:6px;padding:3px 8px;font-size:16px;font-weight:bold;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.6);opacity:.95;}
@@ -353,8 +425,8 @@
   .islot.drag,.fslot.drag{opacity:.4;}
   #splashw .shint{position:absolute;bottom:38px;width:100%;text-align:center;color:#fff;font-size:19px;letter-spacing:3px;text-shadow:0 2px 8px #000;animation:sblink 1.4s infinite;pointer-events:none;}
   @keyframes sblink{0%,100%{opacity:1}50%{opacity:.25}}
-  #titlew{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;gap:24px;    background:radial-gradient(circle at 50% 30%,#1a1610,#050403);color:#e8dcc0;padding:24px;}
-  #adminw{position:absolute;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);}
+  #titlew{position:absolute;inset:-2px;z-index:100;display:flex;align-items:center;justify-content:center;gap:24px;    background:radial-gradient(circle at 50% 30%,#1a1610,#050403);color:#e8dcc0;padding:24px;}
+  #adminw{position:absolute;inset:-2px;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);}
   #adminw.on{display:flex;}
   #adminw .adminbox{width:900px;max-width:96vw;height:88vh;background:linear-gradient(#26261c,#15150f);border:3px solid #c8a24a;border-radius:6px;display:flex;flex-direction:column;color:#e8dcc0;}
   #adminw .adminhd{padding:10px 14px;font-size:20px;font-weight:bold;color:#e8c060;border-bottom:1px solid #5a5030;display:flex;align-items:center;}
@@ -378,6 +450,12 @@
     background:linear-gradient(#efe2c2,#e2d0a4);border:2px solid #8a6a3a;border-radius:6px;
     box-shadow:0 0 0 6px rgba(120,80,30,.25),0 6px 20px #000;}
   .noticeScroll h3{color:#7a2a10;font-size:20px;margin-bottom:8px;border-bottom:1px solid #b59a5a;padding-bottom:4px;}
+  .noticeVer{display:inline-block;background:#7a2a10;color:#ffe9a8;padding:2px 12px;border-radius:4px;font-weight:bold;font-size:16px;margin:10px 0 6px;box-shadow:0 1px 2px rgba(0,0,0,.25);}
+  .noticeVer:first-child{margin-top:0;}
+  #noticeBody{display:block;}
+  #noticeBody ul{margin:2px 0 14px 4px;padding:0;list-style:none;}
+  #noticeBody li{padding-left:14px;position:relative;}
+  #noticeBody li::before{content:'‧';position:absolute;left:0;color:#8a6a2a;}
   .loginBox{width:340px;max-width:42%;background:linear-gradient(#2a2620,#15120c);border:2px solid #7a5a2a;
     box-shadow:inset 0 0 0 1px #c8a24a,0 6px 20px #000;border-radius:6px;padding:22px;}
   .loginBox .lrow{display:flex;align-items:center;gap:8px;margin:12px 0;}
@@ -723,11 +801,47 @@
     <div id="titleLogo">天堂 · 像素版</div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
-      <div id="noticeBody">（公告內容之後再補上。）<br><br>請體驗中世紀幻想的戰鬥與以血盟為中心的遊玩。選擇一個職業，在亞丁大陸冒險並成長，透過狩獵獲得經驗值並強化裝備。死亡時會損失經驗值與掉落道具，這種硬核結構正是天堂經典版的最大魅力。</div>
+      <div id="noticeBody"><div class="noticeVer">◆ v80（2026-08-19）</div>
+<ul>
+<li>玩家頭上名條顏色改依性向值漸層變化：中立白色，正義值愈高愈深藍，邪惡值愈低愈深紅</li>
+</ul>
+<div class="noticeVer">◆ v79（2026-08-19）</div>
+<ul>
+<li>修正後台編輯器「移動」欄位按上下箭頭微調時跳動幅度過大（改為以0.1為單位微調）</li>
+</ul>
+<div class="noticeVer">◆ v78（2026-08-19）</div>
+<ul>
+<li>統一所有怪物的基礎移動速度為 1（與玩家一致），可在後台「怪物」分頁「移動」欄位個別調整</li>
+</ul>
+<div class="noticeVer">◆ v77（2026-08-19）</div>
+<ul>
+<li>修正切換角色後移動速度異常變快的問題（新角色進場時會殘留上一個角色的加速效果計時）</li>
+</ul>
+<div class="noticeVer">◆ v76（2026-08-19）</div>
+<ul>
+<li>調整人物移動速度：一般狀態速度調降，一段加速1.5倍、二段加速2倍、減速異常0.5倍</li>
+</ul>
+<div class="noticeVer">◆ v75（2026-08-19）</div>
+<ul>
+<li>修正登入畫面左側偶爾出現一條細長綠線的瑕疵（縮放次像素接縫問題）</li>
+</ul>
+<div class="noticeVer">◆ v74（2026-08-19）</div>
+<ul>
+<li>公告欄改版：移除固定簡介文字，只保留版本更新紀錄；版本標題改為醒目徽章樣式</li>
+</ul>
+<div class="noticeVer">◆ v73（2026-08-19）</div>
+<ul>
+<li>遊戲更名為「天堂．像素版」，移除舊名「天堂經典版・GBA復刻」殘留字樣</li>
+</ul>
+<div class="noticeVer">◆ v72（2026-08-19）</div>
+<ul>
+<li>修正背包／魔法欄拖曳道具時，整個視窗欄位放大縮小的抖動感（格子尺寸兩段式量測改為同步一次到位）</li>
+<li>修正拖曳道具時殘影與命中格偶爾卡頓、閃爍的問題（節流至每影格更新一次，避免與遊戲主迴圈搶執行緒）</li>
+</ul></div>
     </div>
     <div class="loginBox">
       <div style="text-align:center;color:#e8c060;font-size:20px;margin-bottom:6px">登入</div>
-      <div style="text-align:center;font-size:15px;color:#9a8">您好，這裡是天堂：經典版<br>誠摯歡迎各位勇士來到亞丁世界</div>
+      <div style="text-align:center;font-size:15px;color:#9a8">您好，這裡是天堂．像素版<br>誠摯歡迎各位勇士來到亞丁世界</div>
       <div class="lrow"><label>Account</label><input id="acc" value="Lineage" spellcheck="false"></div>
       <div class="lrow"><label>Password</label><input id="pwd" type="password" value="123456"></div>
       <div class="lbtns">
@@ -1313,7 +1427,7 @@ function drawSignIso(cx,cy){ shadow(cx,cy,10,5);
 }
 
 /* ============ 實體 ============ */
-const player={x:38*TS+8, y:38*TS, w:24, h:36, dir:'down', dir8:'down', speed:2.4, hasteTier:0, hasteUntil:0, anim:0, step:0, atkCd:0, atkFlash:0};
+const player={x:38*TS+8, y:38*TS, w:24, h:36, dir:'down', dir8:'down', speed:1, hasteTier:0, hasteUntil:0, anim:0, step:0, atkCd:0, atkFlash:0};
 /* 三段移動速度：套在基本速度(player.speed)上的倍率。0=正常×1、1=一段加速×1.5、2=二段加速×2 */
 const HASTE_MULT={0:1, 1:1.5, 2:2};
 function hasteMult(){ return HASTE_MULT[player.hasteTier]||1; }
@@ -1363,27 +1477,27 @@ const ELF_NPCS=[
 function curNpcs(){ return curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:[])); }
 // 怪物模板
 const MOBS={
-  '史萊姆':{name:'史萊姆', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:40, dmg:4, dmgMin:1, dmgMax:8, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2, spd:0.6, aggro:260, exp:15, gold:7, goldMin:3, goldMax:7, align:1.0},
-  '妖魔':{name:'妖魔', lv:2, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:6, dmg:2, dmgMin:1, dmgMax:2, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2.0, spd:1.0, aggro:260, exp:5, gold:30, goldMin:10, goldMax:30, align:0.4},
-  goblinG:{name:'哥布林', lv:2, size:'small', undead:false, boss:false, aggressive:false, calls:['goblinG'], hp:3, dmg:2, dmgMin:1, dmgMax:2, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1.1, aggro:260, exp:5, gold:30, goldMin:10, goldMax:30, align:0.4, spr:GOBLIN, pal:GOB_G, color:'#5aa03a'},
-  '妖魔弓箭手':{name:'妖魔弓箭手', lv:3, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:12, dmg:2, dmgMin:1, dmgMax:3, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1.0, aggro:260, exp:10, gold:32, goldMin:11, goldMax:32, align:0.6, atk:200, ranged:true},
-  '地靈':{name:'地靈', lv:3, size:'small', undead:false, boss:false, aggressive:false, calls:['地靈'], hp:7, dmg:2, dmgMin:1, dmgMax:3, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:0.8, aggro:260, exp:10, gold:32, goldMin:11, goldMax:32, align:0.6, atk:200, ranged:true},
-  '侏儒':{name:'侏儒', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:['侏儒'], hp:30, dmg:4, dmgMin:1, dmgMax:5, hitBonus:0, db:1, ac:10, mr:2, atkSpd:2.0, spd:1.0, aggro:260, exp:26, gold:36, goldMin:13, goldMax:36, align:1.0},
-  '牧羊犬':{name:'牧羊犬', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:30, dmg:3, dmgMin:1, dmgMax:5, hitBonus:0, db:0, ac:10, mr:30, atkSpd:2.0, spd:1.5, aggro:260, exp:26, gold:36, goldMin:13, goldMax:36, align:1.0},
-  '狼':{name:'狼', lv:4, size:'small', undead:false, boss:false, aggressive:false, calls:['狼','狼人'], hp:30, dmg:2, dmgMin:1, dmgMax:4, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1.4, aggro:260, exp:37, gold:0, goldMin:0, goldMax:0, align:0.8},
-  '人形殭屍':{name:'人形殭屍', lv:6, size:'small', undead:true, boss:false, aggressive:true, calls:['人形殭屍'], hp:45, dmg:6, dmgMin:1, dmgMax:12, hitBonus:0, db:0, ac:8, mr:5, atkSpd:2.0, spd:0.8, aggro:260, exp:37, gold:120, goldMin:10, goldMax:120, align:1.2},
-  '杜賓犬':{name:'杜賓犬', lv:6, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:20, dmg:4, dmgMin:1, dmgMax:6, hitBonus:0, db:0, ac:10, mr:30, atkSpd:1.0, spd:1.6, aggro:260, exp:37, gold:0, goldMin:0, goldMax:0, align:1.2},
-  '野豬':{name:'野豬', lv:6, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:46, dmg:5, dmgMin:1, dmgMax:9, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2, spd:1.2, aggro:260, exp:17, gold:8, goldMin:3, goldMax:8, align:1.2},
-  '飄浮之眼':{name:'飄浮之眼', lv:7, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:40, dmg:0, dmgMin:0, dmgMax:0, hitBonus:0, db:0, ac:5, mr:200, atkSpd:60.0, spd:1.0, aggro:260, exp:50, gold:0, goldMin:0, goldMax:0, align:1.4},
-  '妖魔鬥士':{name:'妖魔鬥士', lv:8, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:50, dmg:8, dmgMin:1, dmgMax:16, hitBonus:1, db:0, ac:5, mr:5, atkSpd:2.0, spd:1.1, aggro:260, exp:65, gold:45, goldMin:20, goldMax:45, align:1.6},
-  '狼人':{name:'狼人', lv:9, size:'small', undead:false, boss:false, aggressive:false, calls:['狼','狼人'], hp:50, dmg:12, dmgMin:1, dmgMax:13, hitBonus:1, db:5, ac:4, mr:10, atkSpd:2.0, spd:1.3, aggro:260, exp:82, gold:50, goldMin:22, goldMax:50, align:1.8},
-  '骷髏':{name:'骷髏', lv:10, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:80, dmg:10, dmgMin:1, dmgMax:20, hitBonus:2, db:0, ac:3, mr:10, atkSpd:1.8, spd:1.0, aggro:260, exp:101, gold:54, goldMin:25, goldMax:54, align:2.0},
-  '石頭高崙':{name:'石頭高崙', lv:13, size:'big', undead:false, boss:false, aggressive:false, calls:['石頭高崙'], hp:150, dmg:24, dmgMin:1, dmgMax:18, hitBonus:0, db:14, ac:-1, mr:5, atkSpd:3.0, spd:0.6, aggro:260, exp:170, gold:72, goldMin:37, goldMax:72, align:2.6},
-  '夏洛柏':{name:'夏洛柏', lv:14, size:'big', undead:false, boss:false, aggressive:true, calls:[], hp:100, dmg:10, dmgMin:1, dmgMax:14, hitBonus:4, db:2, ac:0, mr:12, atkSpd:1.0, spd:1.5, aggro:260, exp:197, gold:78, goldMin:41, goldMax:78, align:2.8, atk:64},
-  '黑騎士':{name:'黑騎士', lv:16, size:'small', undead:false, boss:false, aggressive:false, calls:['黑騎士'], hp:100, dmg:9, dmgMin:2, dmgMax:16, hitBonus:8, db:0, ac:-10, mr:10, atkSpd:2.0, spd:1.1, aggro:260, exp:257, gold:93, goldMin:50, goldMax:93, align:3.2},
-  '長老':{name:'長老', lv:21, size:'small', undead:false, boss:false, aggressive:false, calls:['長老'], hp:250, dmg:16, dmgMin:1, dmgMax:30, hitBonus:3, db:0, ac:-5, mr:30, atkSpd:2.0, spd:0.9, aggro:260, exp:442, gold:140, goldMin:80, goldMax:140, align:4.2, atk:224, caster:true, mmp:200, mpCost:20},
+  '史萊姆':{name:'史萊姆', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:40, dmg:4, dmgMin:1, dmgMax:8, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2, spd:1, aggro:260, exp:15, gold:7, goldMin:3, goldMax:7, align:1.0},
+  '妖魔':{name:'妖魔', lv:2, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:6, dmg:2, dmgMin:1, dmgMax:2, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2.0, spd:1, aggro:260, exp:5, gold:30, goldMin:10, goldMax:30, align:0.4},
+  goblinG:{name:'哥布林', lv:2, size:'small', undead:false, boss:false, aggressive:false, calls:['goblinG'], hp:3, dmg:2, dmgMin:1, dmgMax:2, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1, aggro:260, exp:5, gold:30, goldMin:10, goldMax:30, align:0.4, spr:GOBLIN, pal:GOB_G, color:'#5aa03a'},
+  '妖魔弓箭手':{name:'妖魔弓箭手', lv:3, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:12, dmg:2, dmgMin:1, dmgMax:3, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1, aggro:260, exp:10, gold:32, goldMin:11, goldMax:32, align:0.6, atk:200, ranged:true},
+  '地靈':{name:'地靈', lv:3, size:'small', undead:false, boss:false, aggressive:false, calls:['地靈'], hp:7, dmg:2, dmgMin:1, dmgMax:3, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1, aggro:260, exp:10, gold:32, goldMin:11, goldMax:32, align:0.6, atk:200, ranged:true},
+  '侏儒':{name:'侏儒', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:['侏儒'], hp:30, dmg:4, dmgMin:1, dmgMax:5, hitBonus:0, db:1, ac:10, mr:2, atkSpd:2.0, spd:1, aggro:260, exp:26, gold:36, goldMin:13, goldMax:36, align:1.0},
+  '牧羊犬':{name:'牧羊犬', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:30, dmg:3, dmgMin:1, dmgMax:5, hitBonus:0, db:0, ac:10, mr:30, atkSpd:2.0, spd:1, aggro:260, exp:26, gold:36, goldMin:13, goldMax:36, align:1.0},
+  '狼':{name:'狼', lv:4, size:'small', undead:false, boss:false, aggressive:false, calls:['狼','狼人'], hp:30, dmg:2, dmgMin:1, dmgMax:4, hitBonus:0, db:0, ac:10, mr:2, atkSpd:2.0, spd:1, aggro:260, exp:37, gold:0, goldMin:0, goldMax:0, align:0.8},
+  '人形殭屍':{name:'人形殭屍', lv:6, size:'small', undead:true, boss:false, aggressive:true, calls:['人形殭屍'], hp:45, dmg:6, dmgMin:1, dmgMax:12, hitBonus:0, db:0, ac:8, mr:5, atkSpd:2.0, spd:1, aggro:260, exp:37, gold:120, goldMin:10, goldMax:120, align:1.2},
+  '杜賓犬':{name:'杜賓犬', lv:6, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:20, dmg:4, dmgMin:1, dmgMax:6, hitBonus:0, db:0, ac:10, mr:30, atkSpd:1.0, spd:1, aggro:260, exp:37, gold:0, goldMin:0, goldMax:0, align:1.2},
+  '野豬':{name:'野豬', lv:6, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:46, dmg:5, dmgMin:1, dmgMax:9, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2, spd:1, aggro:260, exp:17, gold:8, goldMin:3, goldMax:8, align:1.2},
+  '飄浮之眼':{name:'飄浮之眼', lv:7, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:40, dmg:0, dmgMin:0, dmgMax:0, hitBonus:0, db:0, ac:5, mr:200, atkSpd:60.0, spd:1, aggro:260, exp:50, gold:0, goldMin:0, goldMax:0, align:1.4},
+  '妖魔鬥士':{name:'妖魔鬥士', lv:8, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:50, dmg:8, dmgMin:1, dmgMax:16, hitBonus:1, db:0, ac:5, mr:5, atkSpd:2.0, spd:1, aggro:260, exp:65, gold:45, goldMin:20, goldMax:45, align:1.6},
+  '狼人':{name:'狼人', lv:9, size:'small', undead:false, boss:false, aggressive:false, calls:['狼','狼人'], hp:50, dmg:12, dmgMin:1, dmgMax:13, hitBonus:1, db:5, ac:4, mr:10, atkSpd:2.0, spd:1, aggro:260, exp:82, gold:50, goldMin:22, goldMax:50, align:1.8},
+  '骷髏':{name:'骷髏', lv:10, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:80, dmg:10, dmgMin:1, dmgMax:20, hitBonus:2, db:0, ac:3, mr:10, atkSpd:1.8, spd:1, aggro:260, exp:101, gold:54, goldMin:25, goldMax:54, align:2.0},
+  '石頭高崙':{name:'石頭高崙', lv:13, size:'big', undead:false, boss:false, aggressive:false, calls:['石頭高崙'], hp:150, dmg:24, dmgMin:1, dmgMax:18, hitBonus:0, db:14, ac:-1, mr:5, atkSpd:3.0, spd:1, aggro:260, exp:170, gold:72, goldMin:37, goldMax:72, align:2.6},
+  '夏洛柏':{name:'夏洛柏', lv:14, size:'big', undead:false, boss:false, aggressive:true, calls:[], hp:100, dmg:10, dmgMin:1, dmgMax:14, hitBonus:4, db:2, ac:0, mr:12, atkSpd:1.0, spd:1, aggro:260, exp:197, gold:78, goldMin:41, goldMax:78, align:2.8, atk:64},
+  '黑騎士':{name:'黑騎士', lv:16, size:'small', undead:false, boss:false, aggressive:false, calls:['黑騎士'], hp:100, dmg:9, dmgMin:2, dmgMax:16, hitBonus:8, db:0, ac:-10, mr:10, atkSpd:2.0, spd:1, aggro:260, exp:257, gold:93, goldMin:50, goldMax:93, align:3.2},
+  '長老':{name:'長老', lv:21, size:'small', undead:false, boss:false, aggressive:false, calls:['長老'], hp:250, dmg:16, dmgMin:1, dmgMax:30, hitBonus:3, db:0, ac:-5, mr:30, atkSpd:2.0, spd:1, aggro:260, exp:442, gold:140, goldMin:80, goldMax:140, align:4.2, atk:224, caster:true, mmp:200, mpCost:20},
   '稻草人':{name:'稻草人', hp:9999, exp:0, gold:0, goldMin:0, goldMax:0, dmg:0, spd:0, aggro:0, align:0, dummy:true},
-  '克特':{name:'克特', lv:51, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:800, dmg:50, dmgMin:1, dmgMax:100, hitBonus:67, db:120, ac:-67, mr:65, atkSpd:1.0, spd:1.0, aggro:260, exp:500, gold:400, goldMin:200, goldMax:400, align:10.2}
+  '克特':{name:'克特', lv:51, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:800, dmg:50, dmgMin:1, dmgMax:100, hitBonus:67, db:120, ac:-67, mr:65, atkSpd:1.0, spd:1, aggro:260, exp:500, gold:400, goldMin:200, goldMax:400, align:10.2}
 };
 let mobs=[], drops=[];
 /* 怪物分布限制：某些怪只在指定地圖出現 */
@@ -2789,6 +2903,18 @@ function questAvail(n){ if(!n.quest) return false;
 /* ============ 程序化角色美術（GBA 粗顆粒＋左上光源＋走路擺動）============ */
 function shade(hex,f){ let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
   const c=v=>Math.max(0,Math.min(255,Math.round(v*f))).toString(16).padStart(2,'0'); return '#'+c(r)+c(g)+c(b); }
+/* 顏色線性內插：t=0 回傳c1、t=1 回傳c2，中間依比例混合（各色頻道分開計算）*/
+function lerpColor(c1,c2,t){ t=Math.max(0,Math.min(1,t));
+  const p1=[parseInt(c1.slice(1,3),16),parseInt(c1.slice(3,5),16),parseInt(c1.slice(5,7),16)];
+  const p2=[parseInt(c2.slice(1,3),16),parseInt(c2.slice(3,5),16),parseInt(c2.slice(5,7),16)];
+  const c=v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0');
+  return '#'+c(p1[0]+(p2[0]-p1[0])*t)+c(p1[1]+(p2[1]-p1[1])*t)+c(p1[2]+(p2[2]-p1[2])*t); }
+/* 依性向值(align)算出玩家名條顏色：0~500=中立白色；501~32767=正義，淺藍漸層加深至深藍；
+   -1~-32768=邪惡，淺紅漸層加深至深紅。數值愈極端顏色愈深，做出漸進式加深效果。*/
+function alignNameColor(a){ a=a||0;
+  if(a>500){ const t=Math.min(1,(a-500)/(32767-500)); return lerpColor('#8ecbff','#0d1a5c',t); }
+  if(a<0){ const t=Math.min(1,(-a)/32768); return lerpColor('#ffb0a0','#5c0a0a',t); }
+  return '#ffffff'; }
 const CLASS_ART={騎士:'knight',王族:'royal',妖精:'elf',魔法師:'mage'};
 const ART={
   hero:{type:'human',hair:'#6a4526',skin:'#e8c19a',cloth:'#2f6fd0',trim:'#e0c040',pants:'#28406e',boots:'#3a2a15'},
@@ -3163,7 +3289,7 @@ function drawPlayerIso(){ const g=groundScreen(player.x+player.w/2, player.y+pla
   const bw=30,ratio=S.hp/S.maxhp, by=topY-6;
   ctx.fillStyle='#000'; ctx.fillRect(g.x-bw/2,by,bw,5);
   ctx.fillStyle='#e0453a'; ctx.fillRect(g.x-bw/2,by,bw*ratio,5);
-  nameTag(S.name||'冒險者', g.x, by-2, '#a0e0ff'); }
+  nameTag(S.name||'冒險者', g.x, by-2, alignNameColor(S.align)); }
 function nameTag(t,cx,cy,col){ ctx.font='bold 20px "Microsoft JhengHei",monospace'; ctx.textAlign='center';
   ctx.lineWidth=3; ctx.lineJoin='round'; ctx.strokeStyle='#000'; ctx.strokeText(t,cx,cy-1);
   ctx.fillStyle=col; ctx.fillText(t,cx,cy-1); }
@@ -3298,18 +3424,28 @@ function invInfoText(id){ if(!id)return '點一下查看，雙擊使用/裝備';
   return s; }
 const _ISLOT_FALLBACK_COL=70;   // 這類視窗固定300px寬，扣掉內距6px*2、間距3px*3，(300-12-9)/4≈70px：作為保底值，避免依賴非同步量測時機
 function squareGridFix(g){ if(!g)return _ISLOT_FALLBACK_COL;
-  g.style.gridAutoRows=_ISLOT_FALLBACK_COL+'px';
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+  // 優先使用「上次同步量測」的快取值：讓格子一開始就用正確尺寸建立，避免 70px→實際寬度 的兩段式縮放（整個視窗放大縮小的抖動感）
+  const col=(g._sqColW>20&&g._sqColW<200)?g._sqColW:_ISLOT_FALLBACK_COL;
+  g.style.gridAutoRows=col+'px';
+  return col; }
+function squareGridMeasure(g){ if(!g)return;   // 內容填完後「同步」量測（同一個 tick 內完成，瀏覽器只會繪製最終狀態→零閃爍；此時捲軸已出現，clientWidth 正確）
+  const _apply=function(){
     const cs=getComputedStyle(g);
     const padL=parseFloat(cs.paddingLeft)||0, padR=parseFloat(cs.paddingRight)||0;
     const gapPx=parseFloat(cs.columnGap||cs.gap)||0;
     const cols=4;
     const innerW=g.clientWidth-padL-padR-gapPx*(cols-1);
     const colW=Math.round(innerW/cols);
-    if(colW>20 && colW<200){ g.style.gridAutoRows=colW+'px';
+    if(colW>20 && colW<200 && colW!==g._sqColW){ g._sqColW=colW; g.style.gridAutoRows=colW+'px';
       g.querySelectorAll('.islot').forEach(function(el){ el.style.height=colW+'px'; }); }
-  }); });
-  return _ISLOT_FALLBACK_COL; }
+  };
+  if(g.clientWidth>0){ _apply(); return; }     // 面板可見：立即同步套用
+  g._sqGen=(g._sqGen||0)+1;                    // 面板尚未顯示（clientWidth=0）：退回 rAF 兩段式，等版面完成再量
+  const _myGen=g._sqGen;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    if(_myGen!==g._sqGen) return;
+    _apply();
+  }); }); }
 function refreshInv(){ ensureInvOrder(); const g=document.getElementById('invGrid'); if(!g)return; g.innerHTML='';
   const FALLBACK_COL=squareGridFix(g);
   const TOTAL=200; const _eqUsed={};
@@ -3324,6 +3460,7 @@ function refreshInv(){ ensureInvOrder(); const g=document.getElementById('invGri
     // 所有格子（含空格）都可點：空格才能接住「已拿起」的道具；也讓手遊方向鍵能停在空格
     d.onclick=()=>invSlotClick(i,id);
     g.appendChild(d); }
+  squareGridMeasure(g);                                  // 內容填完後同步校正格子尺寸（同 tick 完成，無縮放閃爍）
   const info=document.getElementById('invInfo'); if(info) info.innerHTML=invSel===-2?('<b>金幣</b> · 貨幣 ×'+S.gold):invInfoText(invSelId);
 }
 function onInvDrop(ev,targetIdx){ let data; try{ data=JSON.parse(ev.dataTransfer.getData('text/plain')); }catch(e){ return; }
@@ -3423,9 +3560,11 @@ function setHotbarPage(p){ hotbarPage=p; buildHotbar(); }
 /* ===== 道具拖曳（滑鼠＋觸控通用：不用 HTML5 原生 DnD，避免縮放容器內命中失效的「禁止」游標）===== */
 let touchDrag=null;   // {id, from, x0, y0, moved, srcEl}
 let dragGhost=null, dragHi=null;
+let _dragPendingEv=null, _dragRafId=null;   // 拖曳節流用：把 elementFromPoint／位置更新合併到每個動畫影格，避免與遊戲主迴圈搶主執行緒造成「抖動」
 function touchDragStart(id, fromIdx, x, y, srcEl){ touchDrag={ id, from:fromIdx, x0:x, y0:y, moved:false, srcEl:srcEl||null }; }
 function dragClearHi(){ if(dragHi){ dragHi.classList.remove('draghover'); dragHi=null; } }
-function dragEnd(){ if(dragGhost){ dragGhost.remove(); dragGhost=null; } dragClearHi(); if(touchDrag&&touchDrag.srcEl) touchDrag.srcEl.classList.remove('drag'); touchDrag=null; }
+function dragEnd(){ if(_dragRafId!=null){ cancelAnimationFrame(_dragRafId); _dragRafId=null; } _dragPendingEv=null;
+  if(dragGhost){ dragGhost.remove(); dragGhost=null; } dragClearHi(); if(touchDrag&&touchDrag.srcEl) touchDrag.srcEl.classList.remove('drag'); touchDrag=null; }
 function touchDropResolve(el){                       // el＝放開處最上層元素
   if(!touchDrag) return false;
   const id=touchDrag.id, from=touchDrag.from; let done=false;
@@ -3443,6 +3582,15 @@ function touchDropResolve(el){                       // el＝放開處最上層�
   if(done && typeof persistSaves==='function') persistSaves();
   return done;
 }
+function _dragApplyPendingFrame(){                    // 每影格最多執行一次：更新殘影位置＋命中偵測（elementFromPoint 會強制重排，不宜每個 pointermove 都呼叫）
+  _dragRafId=null;
+  if(!touchDrag || !touchDrag.moved || !_dragPendingEv) return;
+  const ev=_dragPendingEv; _dragPendingEv=null;
+  if(dragGhost){ dragGhost.style.left=ev.clientX+'px'; dragGhost.style.top=ev.clientY+'px'; }
+  const el=document.elementFromPoint(ev.clientX, ev.clientY);
+  const tgt=el&&el.closest?(el.closest('.fslot')||el.closest('.islot')):null;
+  if(tgt!==dragHi){ dragClearHi(); if(tgt){ tgt.classList.add('draghover'); dragHi=tgt; } }
+}
 window.addEventListener('pointermove', ev=>{ if(!touchDrag)return;
   if(!touchDrag.moved && Math.hypot(ev.clientX-touchDrag.x0, ev.clientY-touchDrag.y0)>8){
     touchDrag.moved=true; if(touchDrag.srcEl) touchDrag.srcEl.classList.add('drag');
@@ -3450,15 +3598,13 @@ window.addEventListener('pointermove', ev=>{ if(!touchDrag)return;
     document.body.appendChild(dragGhost);
   }
   if(touchDrag.moved){
-    if(dragGhost){ dragGhost.style.left=ev.clientX+'px'; dragGhost.style.top=ev.clientY+'px'; }
-    const el=document.elementFromPoint(ev.clientX, ev.clientY);
-    const tgt=el&&el.closest?(el.closest('.fslot')||el.closest('.islot')):null;
-    if(tgt!==dragHi){ dragClearHi(); if(tgt){ tgt.classList.add('draghover'); dragHi=tgt; } }
     ev.preventDefault();
+    _dragPendingEv=ev;                                // 只記錄最新座標，實際 DOM 讀寫交給 rAF 節流
+    if(_dragRafId==null) _dragRafId=requestAnimationFrame(_dragApplyPendingFrame);
   }
 }, {passive:false});
 window.addEventListener('pointerup', ev=>{ if(!touchDrag)return;
-  if(touchDrag.moved){ const el=document.elementFromPoint(ev.clientX, ev.clientY); touchDropResolve(el); }
+  if(touchDrag.moved){ if(_dragRafId!=null){ cancelAnimationFrame(_dragRafId); _dragRafId=null; } const el=document.elementFromPoint(ev.clientX, ev.clientY); touchDropResolve(el); }
   dragEnd(); });
 window.addEventListener('pointercancel', ()=>{ dragEnd(); });
 function useHotbarSlot(i){ if(i<0||i>7)return; const id=hotbar[hotbarPage][i];
@@ -3615,6 +3761,7 @@ function refreshMagic(){ const g=document.getElementById('magicGrid'); if(!g)ret
       d.setAttribute('draggable','true');
       d.ondragstart=(ev)=>{ try{ ev.dataTransfer.setData('text/plain', JSON.stringify({spell:sp.name})); }catch(_e){} }; }
     g.appendChild(d); }
+  squareGridMeasure(g);                                  // 內容填完後同步校正格子尺寸（同 tick 完成，無縮放閃爍）
   const info=document.getElementById('magicInfo'); if(info&&spells.length===0) info.textContent=(magicTab==='cls'?'尚未習得專屬魔法。':'尚未習得任何魔法。');
 }
 function closeAllWins(){ ['inv','magicw','charw','mapw','teleportw','atsw','socialw'].forEach(id=>{ const el=document.getElementById(id); if(el)el.classList.remove('on'); });
@@ -4716,7 +4863,7 @@ let adminCat='shop', magicSub='royal';
   const BASIN_SEGS=[['weapon','武器'],['armor','防具']]; // 巴辛(妖魔商人)：武器/防具都寫入同一份 SHOPS['巴辛']
   const BASIN_SHOP={weapon:'巴辛',armor:'巴辛'};
 
-  const MOB_FIELDS=[['lv','等級'],['hp','HP'],['dmg','傷害'],['dmgMin','傷害下限'],['dmgMax','傷害上限'],['ac','AC'],['mr','MR'],['db','傷害加值'],['hitBonus','命中'],['atkSpd','攻速'],['spd','移動'],['aggro','索敵'],['exp','經驗'],['gold','金幣'],['goldMin','金幣下限'],['goldMax','金幣上限'],['align','善惡']];
+  const MOB_FIELDS=[['lv','等級'],['hp','HP'],['dmg','傷害'],['dmgMin','傷害下限'],['dmgMax','傷害上限'],['ac','AC'],['mr','MR'],['db','傷害加值'],['hitBonus','命中'],['atkSpd','攻速',0.1],['spd','移動',0.1],['aggro','索敵'],['exp','經驗'],['gold','金幣'],['goldMin','金幣下限'],['goldMax','金幣上限'],['align','善惡',0.1]];
   const FLABEL={atk:'攻擊',ac:'AC',mr:'MR',hp:'HP',mp:'MP',food:'飽食',light:'照明',buyQty:'購買量',dmg:'傷害',dmgS:'小怪傷害',dmgL:'大怪傷害',wt:'重量',drop:'掉落%',job:'可用職業',mat:'材質',enh:'強化',dur:'損傷',eff:'裝備效果',def:'防禦力'};
   const ITEM_TEXT_F={job:1,mat:1,enh:1,dur:1,eff:1,desc:1,note:1};    // 武器/藥水/卷軸的文字欄位
 
@@ -4804,8 +4951,8 @@ let adminCat='shop', magicSub='royal';
   function spawnsAt(mobKey,mapId){ if(typeof SPAWN_RESTRICT==='undefined')return true; const a=SPAWN_RESTRICT[mobKey]; if(a)return a.indexOf(mapId)!==-1; return mobKey==='克特'?KETA_DEFAULT.indexOf(mapId)!==-1:true; }
 
   /* ---- UI 小工具 ---- */
-  function numField(scope,id,f,label,val){ const dc=(_stat[scope+':'+id+':'+f]!==undefined)?' adirty':'';
-    return '<div class="aed-field"><label>'+label+'</label><input type="number" step="any" value="'+(val===undefined?'':val)+'" class="aei'+dc+'" oninput="editorSetStat(\''+scope+'\',\''+esc(id)+'\',\''+f+'\',this.value,this)"></div>'; }
+  function numField(scope,id,f,label,val,step){ const dc=(_stat[scope+':'+id+':'+f]!==undefined)?' adirty':'';
+    return '<div class="aed-field"><label>'+label+'</label><input type="number" step="'+(step||'any')+'" value="'+(val===undefined?'':val)+'" class="aei'+dc+'" oninput="editorSetStat(\''+scope+'\',\''+esc(id)+'\',\''+f+'\',this.value,this)"></div>'; }
   function txtField(scope,id,f,label,val){ const dc=(_stat[scope+':'+id+':'+f]!==undefined)?' adirty':'';
     return '<div class="aed-field wide"><label>'+label+'</label><input type="text" value="'+attr(val)+'" class="aei'+dc+'" oninput="editorSetStat(\''+scope+'\',\''+esc(id)+'\',\''+f+'\',this.value,this)"></div>'; }
   function selField(kind,id,cur,opts){ return '<select class="aed-sel" onchange="editorSetCat(\''+kind+'\',\''+esc(id)+'\',this.value)" title="調整分類書籤">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'; }
@@ -5029,7 +5176,7 @@ let adminCat='shop', magicSub='royal';
     }
     // 第二層：單一怪物編輯（原本數值欄位 + 掉落物放最後）
     const id=_mobSel, m=MOBS[id];
-    const fields=MOB_FIELDS.map(p=>{ const f=p[0]; if(m[f]===undefined)return ''; return numField('mob',id,f,p[1],m[f]); }).filter(Boolean).join('');
+    const fields=MOB_FIELDS.map(p=>{ const f=p[0]; if(m[f]===undefined)return ''; return numField('mob',id,f,p[1],m[f],p[2]); }).filter(Boolean).join('');
     const tags=[]; if(m.boss)tags.push('世界王'); if(m.undead)tags.push('不死'); if(m.aggressive)tags.push('主動'); if(m.calls&&m.calls.length)tags.push('召喚');
     const tagHTML=tags.length?'<span class="aed-tags">'+tags.join('・')+'</span>':'';
     let h='<button class="aed-back" onclick="mobBackToList()">← 返回怪物清單</button>';
@@ -5225,6 +5372,7 @@ function loadCharacter(data){
   document.getElementById('selectw').classList.remove('on'); enterGame();
 }
 function enterGame(){ navClear(); document.body.classList.add('ingame'); loadMap(S.mapId||'village'); player.dir='down';
+  player.hasteTier=0; player.hasteUntil=0; player.moveHasteTier=0; player.moveHasteUntil=0;   // 進場重置加速狀態，避免舊角色殘留的加速效果影響新角色移動速度
   if(_pendingPartySlots){ restorePartyFromSlots(_pendingPartySlots, _pendingPartyMode); _pendingPartySlots=null; _pendingPartyMode=null; }
   refreshUI(); refreshInv(); paused=false; cv.focus?.();
   if(!(S.inv['說話之島卷軸']>0)) addItem('說話之島卷軸',1);   // 卷軸永不消失
