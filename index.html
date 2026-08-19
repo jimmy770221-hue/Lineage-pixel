@@ -5,70 +5,161 @@
 ※ 公告欄（noticeBody）採「只增不刪」原則：新版本一律加在最上方，舊紀錄永久保留，
    除非玩家明確要求才刪除舊紀錄。
 ========================================
-v80 2026-08-19 玩家名條依性向值(align)做漸層變色，怪物名字確認維持全白：
-             新增 lerpColor(c1,c2,t) 顏色線性內插輔助函式：把兩個顏色的
-             R/G/B三個色頻道分別依比例t混合，t=0回傳c1、t=1回傳c2，
-             中間值即為兩色之間的漸層過渡色。
-             新增 alignNameColor(a) 依性向值換算顏色：
-             ・0~500（中立）：白色 #ffffff
-             ・501~32767（正義）：換算比例 t=(a-500)/(32767-500)，
-               用 lerpColor 從淺藍 #8ecbff 漸層加深到深藍 #0d1a5c
-             ・-1~-32768（邪惡）：換算比例 t=(-a)/32768，
-               用 lerpColor 從淺紅 #ffb0a0 漸層加深到深紅 #5c0a0a
-             把玩家頭上名條(drawPlayerIso裡的nameTag)原本寫死的淺藍色
-             改成呼叫 alignNameColor(S.align)，數值愈極端顏色愈深。
-             另外確認 drawMobIso() 繪製怪物名字時本來就是用 '#ffffff'
-             純白色，不需修改。
-v79 2026-08-19 修正後台編輯器「移動」欄位微調幅度過大的問題：
-             numField() 產生的數字輸入框原本統一用 step="any"，瀏覽器
-             對這種設定的上下箭頭按鈕預設以 1 為單位跳動，導致怪物「移動」
-             欄位按一次箭頭就從 1 跳到 2，幅度太大。
-             修法：讓 numField() 可指定 step 參數，並把 MOB_FIELDS 中的
-             「移動」(spd)、「攻速」(atkSpd)、「善惡」(align) 欄位設為
-             0.1 步進，直接輸入數字仍可打任意小數，不受影響。
-v78 2026-08-19 統一所有怪物的基礎移動速度：
-             將 MOBS 定義裡每隻怪的 spd 欄位統一改為 1（與玩家的基礎速度
-             player.speed=1 一致），稻草人（不會移動的訓練假人）維持 0。
-             另確認怪物移動速度的「spd」欄位本來就已經在後台編輯器的
-             MOB_FIELDS 清單中（標籤「移動」），可在後台「怪物」分頁
-             個別搜尋、調整每隻怪的速度，不需另外新增欄位。
-v77 2026-08-19 修正切換角色後移動速度異常變快的問題：
-             加速狀態(player.hasteTier/hasteUntil、moveHasteTier/moveHasteUntil)
-             是存在單一全域 player 物件裡，並非每個角色存檔各自獨立的資料
-             （snapshot() 存檔時也沒有保存這些欄位）。若在同一個分頁裡玩過
-             某個角色時曾觸發加速效果，接著沒有重新整理頁面就刪除角色、
-             新建/登入另一個角色，殘留的加速計時器會被新角色繼續套用，
-             導致新角色一進場移動速度就異常變快。
-             修法：在 enterGame()（無論新建角色或既有角色登入，最終都會呼叫
-             這個函式進場）一開始就重置這 4 個加速欄位，確保每次進場都是
-             乾淨的基礎速度，不受前一個角色殘留效果影響。
-v76 2026-08-19 調整人物移動速度：基礎速度由 2.4 調降為 1，
-             配合現有 HASTE_MULT{0:1,1:1.5,2:2}，效果為：
-             一般狀態=1、減速異常=0.5、一段加速=1.5、二段加速=2。
-v75 2026-08-19 修正登入畫面左側出現一條細長綠線的問題：
-             原因是 #titlew（登入畫面黑色遮罩）與底下 canvas（地圖畫布，底色深綠#3a5a2a）
-             都是 position:absolute;inset:0，理論上完全疊合；但 #frame 用非整數倍率
-             CSS transform:scale() 縮放配合視窗大小時，兩個各自獨立算圖的圖層邊界
-             會有次像素(sub-pixel)誤差，導致邊緣露出不到1px的縫隙，讓底下canvas的
-             綠色透出一條細線。修法：把 #titlew／#splashw／#adminw 這三個全螢幕遮罩
-             的 inset 從 0 改為 -2px，讓遮罩故意超出 #frame 邊界一點，反正 #frame
-             有 overflow:hidden 會裁掉多出的部分，藉此確保縮放時仍能完全蓋住底下畫布。
-v74 2026-08-19 公告欄樣式調整：
-             1. 移除公告內固定的遊戲簡介文字，只保留版本更新紀錄本身。
-             2. 版本標題（如「◆ v72」）原本用淺金色(#f2d489)在米色紙張背景上對比不足，
-                改為深咖啡色底＋米黃字的徽章樣式(.noticeVer)，並把條列項目改用
-                真正的 <ul><li> 搭配自訂項目符號，排版更清楚。
-v73 2026-08-19 更名為「天堂．像素版」，移除舊名「天堂經典版・GBA復刻」殘留字樣：
-             瀏覽器分頁標題、登入視窗副標題文字統一改為天堂．像素版。
-             登入首頁公告欄改為「版本更新紀錄」格式，之後每次改版直接在此區塊
-             最上方新增一則（格式同下方v72範例），玩家開啟遊戲就能看到最新改了什麼。
-v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
-             squareGridFix 原本是「先用保底70px建格→兩個rAF後才量測實際寬度並縮成66px」，
-             每次 refreshInv()/refreshMagic() 都會重演一次「70→66」的視覺跳動；
-             改為 squareGridFix() 優先用快取值建格、squareGridMeasure() 在填完格子後
-             於同一個tick內同步量測套用，消除兩段式閃爍。
-             另外也修正了拖曳時 pointermove 未節流、與遊戲主迴圈（rAF渲染）搶主執行緒
-             導致殘影/命中格閃爍的問題，改用 requestAnimationFrame 節流 DOM 讀寫。
+v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新增冒險洞穴內容、怪物出沒系統重構）：
+             ※ 8/19當天所有改動統一標示為v72（8/19最初的版本號），檔案
+               名稱內部仍用72.1／72.2…小數點區分每次交付的檔案，但遊戲
+               內顯示與這份紀錄一律維持v72，直到8/20才會變成v73。
+             ・改名為「天堂．像素版」；公告欄改版為徽章樣式版本紀錄
+             ・修正背包/魔法欄拖曳抖動、登入畫面左側細線等視覺瑕疵
+             ・移動速度整頓：玩家基礎速度改為1(一段加速1.5倍/二段2倍)、
+               統一所有怪物基礎速度、修正切換角色殘留加速、後台編輯器
+               「移動」欄位微調步進改為0.1
+             ・玩家名條依性向值(align)做藍/紅漸層變色
+             ・隊伍系統大幅強化：修正隊友無法升級的bug、改為隊伍平分經驗、
+               隊友有自己的性向與50級起的配點(存回自己的存檔)、新增隊友
+               資訊視窗(HP/MP/EXP/裝備/ATS設定)、怪物現在也會攻擊隊友
+               (HP歸零會被擊倒、20秒後自動起身)、隊友的自動喝水/加速/
+               主動技能/被動技能光環全部接上實際效果(含正確的法術特效
+               與範圍傷害)，並修正MP不回復、加速道具沒作用等多個潛藏bug
+             ・新增冒險洞穴5隻怪物(骷髏弓箭手/斧手/槍兵、史巴托、巴風特)，
+               含正確的8方位動畫與掉落表
+             ・怪物出沒系統重構為「勾選＋存檔」：所有地圖預設清空怪物，
+               後台「怪物擺放」分頁勾選怪物種類、按存檔才生效(面板內顯示
+               存檔成功提示，不佔用遊戲聊天頻道)；解除5隻怪物的地圖鎖定、
+               巴風特比照克特做成世界王全區僅一隻
+             ・冒險洞穴新增2樓，1樓南側樓梯可通往，怪物擺放可分層設定
+             ・冒險洞穴改造成真正的地牢迷宮：新增薄石牆(T_STONEWALL)與
+               魔法陣(T_MAGICCIRCLE)兩種地磚，新增carveMaze()迷宮生成器
+               (隨機化深度優先搜尋生成一棵涵蓋全部格子的生成樹，保證從
+               入口能走到任何一格，不會有孤立死區)，牆厚1格、通道寬2格；
+               2樓右下角額外開出3×3格區塊合併成「王房」，中央鋪魔法陣，
+               巴風特只會生成在王房裡，並新增m.confine禁足限制不會走出去，
+               一般怪物則反過來不會出現在王房裡；新增hasLineOfSight()視線
+               判定，怪物隔著牆看不到目標就無法攻擊。以上皆已用從實際檔案
+               抽出的函式做過連通性/王房可達性/視線遮蔽/禁足邊界的模擬測試
+             ・版本紀錄整理：同一天累積的多次改版統一標示為同一個版號
+             ・修正兩個回報問題：
+               1)【怪物穿牆】根因是怪物移動判定的X/Y兩軸碰撞檢查「同時」用
+                 移動前的舊座標各自獨立計算，斜角移動時兩軸各自檢查都可能
+                 通過，但實際的斜角終點卻落在牆角裡(這是軸分離碰撞系統的
+                 經典bug，牆越薄、通道越窄就越容易被利用，之前的厚牆村莊
+                 不明顯，換成迷宮的薄石牆後就很容易被撞見)。改成跟玩家
+                 movePlayer()一樣「循序」判定：X軸先算好、真的移動之後，
+                 Y軸才用「剛剛更新過的」新x去檢查，徹底消除切角穿牆；並
+                 加上移動子步進(每步最多16px)，避免以後怪物被設定超高速時
+                 一步跳過整片薄牆。
+               2)【迷宮幾乎直通】根因是buildTerminal()原本處理出入口的
+                 內建邏輯，會從地圖邊界直接拉一條到地圖正中央的直線通道
+                 (vLane)，我先前生成迷宮時保留了既有通道，這條「捷徑」就
+                 完整留在迷宮正中央，等於是直接從入口打通到出口。改成
+                 cave/cave2不再用buildTerminal自動處理出入口，改在生成
+                 迷宮前只鑿邊界的小缺口(不拉直線)，並讓迷宮入口對齊在
+                 邊界那一列，逼玩家從頭到尾都要走迷宮本身；另外生成完成後
+                 加了低機率(5%)的隨機打通(braid)增加迴路，讓路徑不只一條、
+                 更有探索感，但沒有高到讓最短路徑又變回直線捷徑。
+                 修正前：入口到南側出口最短路徑只有約39格(直線距離約32格)
+                 修正後：同樣起訖點最短路徑變成105格，路徑感明顯複雜許多
+             ・以上修正皆已用從實際檔案抽出的函式重新模擬測試：連通性
+               100%不變、對角切角穿牆情境不再發生、王房禁足仍正常運作
+             ・依玩家提供的韓文冒險洞穴參考地圖，重新設計迷宮風格與機制：
+               1)【迷宮改為稀疏蜿蜒風格】原本carveMaze()是填滿整個網格的
+                 密集迷宮(recursive backtracker走遍所有格子)，改寫成「帶
+                 轉向慣性的隨機漫步」：偏好持續同方向、強制避免長直線、
+                 只走出目標格數(約6成網格)的單一主通道並帶少量短分支，
+                 大部分區域維持實心岩塊，風格更接近參考圖那種手繪感的
+                 蜿蜒長廊，而不是規則網格迷宮。
+               2)【新增暗道機制】新增全域 MAP_WARPS[地圖id] 暗道/樓梯清單
+                 與 checkWarps()（掛入主更新迴圈，跟checkEdge()並列），
+                 每格記錄「踩到這裡要傳到哪裡」，分兩種：kind:'same'兩點
+                 互通(暗道)、kind:'map'傳到指定地圖的指定座標(樓梯)。
+                 loadMap()新增第三參數explicitSpawn，讓樓梯可以傳到任何
+                 一張地圖的任意座標，不再局限於地圖邊界。冒險洞穴1樓的
+                 迷宮路徑上安插了2組暗道(可瞬間互通的捷徑)跟1個通往2樓
+                 的內部樓梯(放在路徑最深處，不是地圖邊界)。新增T_STAIRS
+                 地磚樣式(向下凹陷的階梯剪影+淡紫光暈)標示這些位置。
+               3)【入口祭壇】1樓入口附近新增T_ALTAR地磚(偏暗紫色石板+
+                 符文光暈)，標示「這是從地面進來的入口」，比照參考圖左側
+                 的入口區域。
+               4)【2樓新增4間主題房間】新增 carveRoomBFS()：在既有通道旁
+                 直接鑿出長方形房間，用BFS自動找最近的通道並打通牆壁連過
+                 去(不受迷宮格子網格限制，可以放在地圖任意位置，保證一定
+                 連通)。冒險洞穴2樓依參考圖安插了水池房、骷髏房、夏洛柏房、
+                 巴風特房(原本的王房，維持魔法陣裝飾跟禁足機制不變)。
+             ・已用從實際檔案抽出的函式重新模擬測試：兩層樓連通性皆100%、
+               5個暗道/樓梯座標與磚塊類型正確、2樓4間房間全部確認連通。
+             ・修正傳送術在地監內的規則：地監(冒險洞穴1-2樓)是封閉迷宮，
+               施放傳送術應該只在「同一層」隨機換位置，不該把玩家傳到
+               野外去；反過來野外施放傳送術也不該誤把玩家傳進地監裡。
+               做法：buildTerminal()產生的冒險洞穴1-2樓地圖物件都標記
+               dungeon:true；WILD_MAP_IDS(野外隨機傳送候選池)拿掉cave／
+               cave2；castSpell()施放傳送術時，先判斷curMap.dungeon，
+               是的話改成在同一張地圖裡隨機找一個可站立的位置移動過去，
+               不是的話才維持原本「隨機切換到野外另一張地圖」的行為。
+             ・稻草人訓練場的稻草人不再顯示名字標籤(一堆同名稻草人掛名牌
+               看起來很怪，drawMobIso()新增判斷：m.type==='稻草人'時傳空
+               字串給nameTag()，其餘怪物名字顯示不受影響)。
+             ・稻草人不再顯示血條：訓練假人固定9999血量，顯示血條沒有實質
+               意義，drawMobIso()新增判斷提早return，跳過血條繪製那一段，
+               其餘怪物血條顯示不受影響。
+             ・修正稻草人看起來比玩家角色大的問題：用Pillow分析兩者的
+               sprite sheet發現，稻草人的圖案本身在64x64畫布內幾乎佔滿
+               (寬60px/高64px，佔比94%~100%)，而玩家角色的圖案只佔約
+               一半(寬30px/高31px，佔比47%~48%)；即使稻草人的MOB_SCALE
+               (1.0)比玩家固定使用的1.5小，實際換算後的顯示尺寸反而比
+               玩家還大。算出讓兩者實際顯示尺寸一致所需的縮放值後，把
+               MOB_SCALE['稻草人']從1.0調整為0.75(換算後約45x48px，玩家
+               是45x46px，兩者幾乎相同)。
+             ・修正冒險洞穴每次進圖都是不同迷宮格局的問題：carveMaze()
+               用Math.random()生成迷宮，但cave/cave2的MAP_BUILDERS每次
+               被呼叫(=每次進圖)都會整個重新執行一遍，等於每次進去都是
+               全新的隨機格局，暗道／樓梯／房間位置全部跟著變，玩家完全
+               沒辦法熟悉地圖。修法：新增DUNGEON_LAYOUTS版面快取，存進
+               localStorage('lineage_pixel_dungeon_layout_v1')。cave/
+               cave2的建圖函式改成先檢查是否已經生成過版面，有的話直接
+               沿用存好的資料(grid/exits/暗道清單/王房位置)重建地圖物件，
+               不再重新亂數生成；只有「從來沒生成過」時才會真的跑一次
+               carveMaze()產生新迷宮，並把結果存起來供之後重複使用。
+               另外在後台「怪物擺放」分頁，選到冒險洞穴1樓/2樓時新增
+               「🔀重新生成迷宮版面」按鈕，讓玩家可以自行選擇捨棄目前
+               版面、下次進圖時重新產生新的格局。已用模擬測試確認：
+               同一張地圖重複進圖3次版面完全一致，按下重新生成後才會
+               變成不同版面。
+             ・修正2樓回1樓時沒有從樓梯口出來的問題：根因是1樓的下樓
+               梯子已經改成「迷宮內部任意一點」的暗道式傳送(不再是地圖
+               邊界的實體出口)，但2樓回1樓那時候還沿用舊的「走到地圖
+               邊界」機制(gapN+ex.n)，而1樓早就沒有對應的南側邊界出口了，
+               於是回程時退回地圖預設的正中央座標(甚至可能剛好落在牆
+               裡)，不會準確回到原本下樓的那個位置。
+               修法：2樓不再鑿邊界出口(整張地圖邊界維持密封，入口跟出口
+               都改用內部傳送點處理)。1樓生成下樓梯時，把梯子的實際座標
+               記錄成stairsDown存進DUNGEON_LAYOUTS.cave；2樓生成時讀取
+               這個座標，在玩家傳送進來的那個落地點(跟1樓warp目的地一致)
+               安插一個回程樓梯，目的地精準設為1樓下樓梯的座標，這樣兩邊
+               樓梯的位置就完全對應，回1樓時會準確站在原本下樓的那個
+               樓梯口上。另外後台「重新生成迷宮」按鈕，重置1樓時會一併
+               連動重置2樓(因為2樓的回程座標是根據1樓位置算出來的，1樓
+               版面換了2樓也要跟著換，不然回程座標會對不上新版面)。
+               已用從實際檔案抽出的函式模擬測試驗證：2樓回程樓梯的目的
+               地座標，跟1樓下樓梯的實際座標完全一致，兩邊落點都確認是
+               可站立的樓梯磚，不是牆。
+             ・修正「2樓入口卡住、回不了1樓」的問題：根因是上一版修正
+               (2樓回程改用內部樓梯傳送)推出時，玩家瀏覽器裡已經存了
+               「更早之前」那版(2樓用邊界出口機制)生成的地城版面快取。
+               這份舊快取資料裡：新版程式讀取快取時會把回程用的warps
+               欄位當成undefined(舊快取本來就沒存這個欄位)，而快取還原
+               邏輯又寫死回傳空的exits(邊界出口資訊)，等於兩種回程機制
+               都失效了，玩家卡在2樓入口，哪個方向都出不去。
+               修法：把地城版面快取的localStorage key從
+               'lineage_pixel_dungeon_layout_v1'升級為'_v2'，讓舊版格式
+               的快取直接失效讀不到，強制以目前這版正確的程式碼重新生成
+               1樓、2樓的迷宮(讀到新檔案的玩家不需要自己手動清資料，
+               版本一升級舊快取自然就不會再被讀取)。
+             ・移除暗道／內部樓梯觸發時跳出的文字訊息：checkWarps()原本
+               每次觸動暗道或樓梯都會sysMsg()丟一則「觸動了暗道…」或
+               「踏上樓梯…」到聊天頻道，單純走迷宮就會一直洗版。改成
+               只保留playTeleportFx()的視覺特效，不再額外跳文字訊息。
+               （傳送術主動施法時的提示訊息維持不變，那是玩家主動下
+               指令觸發的，跟被動走路踩到暗道不同）
 ========================================
 -->
 <html lang="zh-TW">
@@ -213,6 +304,7 @@ v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
   .socModeBtn.on{background:#3a6a3a;color:#fff;border-color:#5a9a5a;}
   #partyHud{position:absolute;top:6px;left:6px;z-index:50;display:none;flex-direction:column;gap:5px;pointer-events:none;}
   .partyCard{width:168px;background:transparent;border:0;border-radius:0;padding:5px 7px;display:flex;gap:7px;align-items:center;box-shadow:none;}
+  .partyCard.partyDown{opacity:.55;}
   .partyPortrait{width:34px;height:34px;flex:none;border:0;border-radius:0;background:transparent;display:flex;align-items:center;justify-content:center;font-size:20px;}
   .partyInfo{flex:1;min-width:0;}
   .partyName{font-size:13px;color:#e8c060;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 3px #000,0 0 3px #000,1px 1px 1px #000;}
@@ -283,6 +375,14 @@ v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
   body.mobilemode #statebar{top:auto;bottom:150px;}
   #atsw{position:absolute;top:6px;left:6px;width:300px;height:500px;display:none;flex-direction:column;box-sizing:border-box;z-index:96;background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 3px 8px #000;border-radius:4px;color:#e8dcc0;}
   #atsw.on{display:flex;}
+  #partyMemberw{position:absolute;top:6px;left:6px;width:300px;height:500px;display:none;flex-direction:column;box-sizing:border-box;z-index:97;background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #6aa2c8;box-shadow:inset 0 0 0 1px #2a4a5a,0 3px 8px #000;border-radius:4px;color:#e8dcc0;}
+  #partyMemberw.on{display:flex;}
+  #partyMemberw h2{color:#8ecbff;font-size:19px;padding:8px 10px 6px;display:flex;justify-content:space-between;align-items:center;}
+  #partyMemberw .sx{background:#7a2a1a;color:#fff;border:0;border-radius:3px;padding:2px 10px;cursor:pointer;font-size:16px;}
+  .pmStatRow{display:flex;justify-content:space-between;align-items:center;margin:4px 0;font-size:15px;color:#d8c9a6;}
+  .pmBarBg{background:#101014;border:1px solid #4a4028;border-radius:3px;height:14px;position:relative;overflow:hidden;margin:2px 0 8px;}
+  .pmBarFill{position:absolute;left:0;top:0;bottom:0;}
+  .pmEqGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
   #atsw h2{color:#e8c060;font-size:19px;padding:8px 10px 6px;display:flex;justify-content:space-between;align-items:center;}
   .atsTabs{display:flex;gap:6px;padding:0 10px 8px;}
   .atTab{flex:1;background:#1a1a14;color:#c9bf9e;border:1px solid #5a5030;border-radius:4px;padding:6px 0;font-size:15px;cursor:pointer;}
@@ -556,6 +656,7 @@ v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
         #adminw .aed-shopitem:hover{background:#2a2a20;}
         #adminw .aed-shopitem input{width:20px;height:20px;flex:none;cursor:pointer;}
         #adminw .aed-empty{text-align:center;color:#9a8a68;padding:48px;font-size:20px;}
+        #adminw .aed-savetoast{margin-top:10px;padding:10px 14px;background:#2f6b2f;color:#fff;border:1px solid #4f9f4f;border-radius:4px;font-size:16px;text-align:center;font-weight:bold;}
     
   /* 裝備格：固定小正方形圖示框，避免變形也不撐大面板 */
   #charBody .ceq{grid-template-columns:repeat(4,1fr);gap:3px;}
@@ -728,6 +829,18 @@ v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
     <div id="socialList" style="flex:1;min-height:0;overflow-y:auto;padding:0 10px 10px"></div>
   </div>
 
+  <!-- 隊友資訊（獨立視窗，每位隊友各自的狀態/裝備/ATS設定） -->
+  <div id="partyMemberw">
+    <h2 id="pmTitle">隊友資訊 <button class="sx" onclick="closePartyMember()">關閉</button></h2>
+    <div class="atsTabs">
+      <button class="atTab on" id="pmTab_stat" onclick="setPmTab('stat')">狀態</button>
+      <button class="atTab" id="pmTab_eq" onclick="setPmTab('eq')">裝備</button>
+      <button class="atTab" id="pmTab_ats" onclick="setPmTab('ats')">ATS設定</button>
+    </div>
+    <div id="pmBody" style="padding:0 10px 10px;flex:1;min-height:0;overflow-y:auto;font-size:16px;"></div>
+  </div>
+
+
   <!-- 角色視窗 -->
   <div class="ui" id="charw">
     <div class="ttl">角色資訊 (Ctrl+A) <span class="win-x" onclick="toggleWin('charw')">✕</span></div>
@@ -801,42 +914,26 @@ v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
     <div id="titleLogo">天堂 · 像素版</div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
-      <div id="noticeBody"><div class="noticeVer">◆ v80（2026-08-19）</div>
+      <div id="noticeBody"><div class="noticeVer">◆ v72（2026-08-19）</div>
 <ul>
-<li>玩家頭上名條顏色改依性向值漸層變化：中立白色，正義值愈高愈深藍，邪惡值愈低愈深紅</li>
-</ul>
-<div class="noticeVer">◆ v79（2026-08-19）</div>
-<ul>
-<li>修正後台編輯器「移動」欄位按上下箭頭微調時跳動幅度過大（改為以0.1為單位微調）</li>
-</ul>
-<div class="noticeVer">◆ v78（2026-08-19）</div>
-<ul>
-<li>統一所有怪物的基礎移動速度為 1（與玩家一致），可在後台「怪物」分頁「移動」欄位個別調整</li>
-</ul>
-<div class="noticeVer">◆ v77（2026-08-19）</div>
-<ul>
-<li>修正切換角色後移動速度異常變快的問題（新角色進場時會殘留上一個角色的加速效果計時）</li>
-</ul>
-<div class="noticeVer">◆ v76（2026-08-19）</div>
-<ul>
-<li>調整人物移動速度：一般狀態速度調降，一段加速1.5倍、二段加速2倍、減速異常0.5倍</li>
-</ul>
-<div class="noticeVer">◆ v75（2026-08-19）</div>
-<ul>
-<li>修正登入畫面左側偶爾出現一條細長綠線的瑕疵（縮放次像素接縫問題）</li>
-</ul>
-<div class="noticeVer">◆ v74（2026-08-19）</div>
-<ul>
-<li>公告欄改版：移除固定簡介文字，只保留版本更新紀錄；版本標題改為醒目徽章樣式</li>
-</ul>
-<div class="noticeVer">◆ v73（2026-08-19）</div>
-<ul>
-<li>遊戲更名為「天堂．像素版」，移除舊名「天堂經典版・GBA復刻」殘留字樣</li>
-</ul>
-<div class="noticeVer">◆ v72（2026-08-19）</div>
-<ul>
-<li>修正背包／魔法欄拖曳道具時，整個視窗欄位放大縮小的抖動感（格子尺寸兩段式量測改為同步一次到位）</li>
-<li>修正拖曳道具時殘影與命中格偶爾卡頓、閃爍的問題（節流至每影格更新一次，避免與遊戲主迴圈搶執行緒）</li>
+<li>遊戲更名為「天堂．像素版」，公告欄改版</li>
+<li>修正背包/魔法欄拖曳抖動、登入畫面細線等視覺瑕疵</li>
+<li>移動速度全面調整：一般速度、加速藥水倍率、怪物移動速度都重新校準</li>
+<li>玩家名條依性向值呈現藍/紅漸層變色</li>
+<li>隊伍系統大幅強化：隊友可以升級、有自己的性向與配點，可查看隊友狀態與裝備，可設定隊友的自動喝水/加速/主動技能/被動技能，怪物現在也會攻擊隊友了</li>
+<li>新增冒險洞穴5隻怪物：骷髏弓箭手、骷髏斧手、骷髏槍兵、史巴托、巴風特(世界王)</li>
+<li>怪物出沒系統改版：所有地圖預設沒有怪物，改由後台「怪物擺放」分頁勾選怪物種類並存檔</li>
+<li>冒險洞穴新增2樓</li>
+<li>冒險洞穴改造成真正的地牢迷宮：薄石牆＋2格寬通道，怪物隔牆看不到你就不會攻擊；2樓新增巴風特專屬的「王房」（中央有魔法陣），巴風特只會在王房裡活動，不會跑出來</li>
+<li>修正怪物斜角移動會切角穿牆的問題；重新設計冒險洞穴的迷宮路線，入口到出口不再是直通捷徑，繞路感明顯提升</li>
+<li>冒險洞穴依參考地圖大改版：迷宮改成稀疏蜿蜒的單一長廊風格；1樓入口新增紫色祭壇，路上安插2組可瞬間互通的暗道跟1個通往2樓的隱藏樓梯；2樓新增水池房、骷髏房、夏洛柏房，加上原本的巴風特房共4間主題房間</li>
+<li>修正傳送術規則：在冒險洞穴地監內施放，只會在同一層隨機換位置，不會被傳送到野外去</li>
+<li>稻草人訓練場的稻草人不再顯示名字標籤</li>
+<li>稻草人不再顯示血條，尺寸也調小到跟玩家角色差不多大</li>
+<li>修正冒險洞穴每次進去格局都不一樣的問題：迷宮現在只會生成一次，之後每次進去都是同一個版面；後台「怪物擺放」新增按鈕，可以自己選擇重新產生新的迷宮格局</li>
+<li>修正從2樓回1樓時沒有從樓梯口出來的問題，現在會準確回到原本下樓的那個位置</li>
+<li>修正2樓入口卡住回不了1樓的問題（瀏覽器裡存的舊版地城版面快取已自動失效，重新整理就會用新版本重新生成）</li>
+<li>踩到暗道／樓梯時不再跳文字訊息到聊天頻道，只保留傳送特效</li>
 </ul></div>
     </div>
     <div class="loginBox">
@@ -863,7 +960,7 @@ v72 2026-08-19 修正背包/魔法欄拖曳道具時的整體縮放抖動：
         <button class="atab" data-cat="item" onclick="setAdminTab('item')">道具</button>
         <button class="atab" data-cat="magic" onclick="setAdminTab('magic')">魔法</button>
         <button class="atab" data-cat="mob" onclick="setAdminTab('mob')">怪物</button>
-        <button class="atab" data-cat="spawn" onclick="setAdminTab('spawn')">怪物分佈</button>
+        <button class="atab" data-cat="spawn" onclick="setAdminTab('spawn')">怪物擺放</button>
       </div>
       <div id="adminBody"></div>
     </div>
@@ -1110,8 +1207,8 @@ const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 const VX0=28,VX1=52,VY0=24,VY1=48;
 const GATE_NX=[39,40], GATE_SX=[39,40], GATE_WY=[35,36], GATE_EY=[35,36];
 function inVillage(px,py){ return curMap ? !curMap.wild : true; }
-const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16;
-const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE]);
+const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20;
+const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL]);
 
 let MAP=[];
 /* ================= 多地圖系統（寶可夢式一圖接一圖） ================= */
@@ -1124,6 +1221,111 @@ function gapW(g,r,ex,to){ g[r][0]=T_PATH;g[r+1][0]=T_PATH;g[r][1]=T_PATH;g[r+1][
 function gapE(g,r,ex,to){ const w=g[0].length; g[r][w-1]=T_PATH;g[r+1][w-1]=T_PATH;g[r][w-2]=T_PATH;g[r+1][w-2]=T_PATH; ex.e={to,row:r}; }
 function vLane(g,c,y0,y1){ for(let y=y0;y<=y1;y++){ g[y][c]=T_PATH; g[y][c+1]=T_PATH; } }
 function hLane(g,r,x0,x1){ for(let x=x0;x<=x1;x++){ g[r][x]=T_PATH; g[r+1][x]=T_PATH; } }
+/* 地牢稀疏迷宮生成器：牆厚1格(薄石牆T_STONEWALL)、通道寬2格，只生成一條主要蜿蜒通道(帶少量短分支)，
+   大部分區域維持實心岩塊，風格接近手繪地牢地圖(不是填滿整個網格的密集迷宮)。
+   用「帶轉向慣性」的隨機漫步：偏好持續同方向、偶爾轉彎、強制避免長直線，讓路線呈現自然的蜿蜒繞圈感。
+   entryX,entryY 必須對齊既有出入口(cx,cy)所在的那一格，確保迷宮跟地圖邊界的出入口通道無縫銜接。
+   opts.targetCells：目標走道格數(預設約整個網格的60%)；opts.branchChance：每步分岔出短支線的機率。
+   回傳值含 mainPath(主路徑格子座標序列)，方便後續在特定路徑點上安插暗道/樓梯。*/
+function carveMaze(g,W,H,entryX,entryY,opts){
+  opts=opts||{};
+  const PITCH=3, ix0=1, iy0=1;                                  // 每格3格距(2格通道+1格薄牆)，從邊界內縮1格開始
+  const cols=Math.floor((W-2-2)/PITCH)+1, rows=Math.floor((H-2-2)/PITCH)+1;
+  const targetCells=opts.targetCells || Math.floor(cols*rows*0.6);
+  const branchChance=opts.branchChance!=null?opts.branchChance:0.13;
+  const maxStraight=opts.maxStraight!=null?opts.maxStraight:2;   // 同方向連續最多幾步就強制轉彎
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ if(g[y][x]!==T_PATH) g[y][x]=T_STONEWALL; }   // 保留既有出入口通道(T_PATH)，其餘先填滿薄石牆
+  for(let x=0;x<W;x++){ if(g[0][x]===T_TREE)g[0][x]=T_STONEWALL; if(g[H-1][x]===T_TREE)g[H-1][x]=T_STONEWALL; }
+  for(let y=0;y<H;y++){ if(g[y][0]===T_TREE)g[y][0]=T_STONEWALL; if(g[y][W-1]===T_TREE)g[y][W-1]=T_STONEWALL; } // 外框也統一換成薄石牆(不含既有出入口)
+  const cellAt=(cxi,cyi)=>({x:ix0+cxi*PITCH, y:iy0+cyi*PITCH});
+  const visited=Array.from({length:rows},()=>Array(cols).fill(false));
+  const entryCol=Math.max(0,Math.min(cols-1,Math.round((entryX-ix0)/PITCH)));
+  const entryRow=Math.max(0,Math.min(rows-1,Math.round((entryY-iy0)/PITCH)));
+  const carveCell=(cxi,cyi)=>{ const p=cellAt(cxi,cyi); g[p.y][p.x]=T_DIRT; g[p.y][p.x+1]=T_DIRT; g[p.y+1][p.x]=T_DIRT; g[p.y+1][p.x+1]=T_DIRT; };
+  const linkCells=(cxi,cyi,nxi,nyi)=>{ const A=cellAt(cxi,cyi);                    // 打通兩格之間的薄牆(2格寬，跟通道同寬)
+    if(nxi===cxi+1){ g[A.y][A.x+2]=T_DIRT; g[A.y+1][A.x+2]=T_DIRT; }
+    else if(nxi===cxi-1){ const B=cellAt(nxi,nyi); g[B.y][B.x+2]=T_DIRT; g[B.y+1][B.x+2]=T_DIRT; }
+    else if(nyi===cyi+1){ g[A.y+2][A.x]=T_DIRT; g[A.y+2][A.x+1]=T_DIRT; }
+    else if(nyi===cyi-1){ const B=cellAt(nxi,nyi); g[B.y+2][B.x]=T_DIRT; g[B.y+2][B.x+1]=T_DIRT; } };
+  const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
+  const mainPath=[[entryCol,entryRow]];
+  visited[entryRow][entryCol]=true; carveCell(entryCol,entryRow);
+  let cxi=entryCol, cyi=entryRow, curDir=Math.floor(Math.random()*4), straightRun=0;
+  let carved=1, tries=0;
+  const branches=[];
+  while(carved<targetCells && tries<targetCells*30){
+    tries++;
+    let dirOrder;
+    const forceTurn = straightRun>=maxStraight;
+    const r=Math.random();
+    if(!forceTurn && r<0.40) dirOrder=[curDir, (curDir+1)%4, (curDir+3)%4, (curDir+2)%4];    // 62%延續原方向(強制轉彎除外)
+    else if(r<0.85) dirOrder=[(curDir+1)%4,(curDir+3)%4,curDir,(curDir+2)%4];                 // 偏好輕轉彎
+    else dirOrder=[0,1,2,3].sort(()=>Math.random()-0.5);                                       // 少量完全隨機
+    let moved=false;
+    for(const d of dirOrder){
+      const [dx,dy]=DIRS[d]; const nxi=cxi+dx, nyi=cyi+dy;
+      if(nxi<1||nxi>=cols-1||nyi<1||nyi>=rows-1||visited[nyi][nxi]) continue;
+      visited[nyi][nxi]=true; carveCell(nxi,nyi); linkCells(cxi,cyi,nxi,nyi);
+      mainPath.push([nxi,nyi]);
+      straightRun = (d===curDir) ? straightRun+1 : 0;
+      cxi=nxi; cyi=nyi; curDir=d; carved++; moved=true;
+      if(Math.random()<branchChance){                          // 額外分岔：從目前這格往其他方向開一條短支線(1~3格)
+        let bxi=cxi, byi=cyi, blen=1+Math.floor(Math.random()*3), branch=[[bxi,byi]];
+        for(let b=0;b<blen;b++){
+          const bd=Math.floor(Math.random()*4); const [bdx,bdy]=DIRS[bd];
+          const bnxi=bxi+bdx, bnyi=byi+bdy;
+          if(bnxi<1||bnxi>=cols-1||bnyi<1||bnyi>=rows-1||visited[bnyi][bnxi]) break;
+          visited[bnyi][bnxi]=true; carveCell(bnxi,bnyi); linkCells(bxi,byi,bnxi,bnyi);
+          branch.push([bnxi,bnyi]); bxi=bnxi; byi=bnyi; carved++;
+        }
+        if(branch.length>1) branches.push(branch);
+      }
+      break;
+    }
+    if(!moved){   // 這個方向都走不通：優先從路徑「尾端附近」重啟，減少突兀跳點；找不到才整條隨機挑
+      let pick=null;
+      for(let k=mainPath.length-1;k>=Math.max(0,mainPath.length-8);k--){
+        const [pxi,pyi]=mainPath[k];
+        if(DIRS.some(([dx,dy])=>{const nx=pxi+dx,ny=pyi+dy; return nx>=1&&nx<cols-1&&ny>=1&&ny<rows-1&&!visited[ny][nx];})){ pick=mainPath[k]; break; }
+      }
+      if(!pick) pick=mainPath[Math.floor(Math.random()*mainPath.length)];
+      cxi=pick[0]; cyi=pick[1]; curDir=Math.floor(Math.random()*4); straightRun=0;
+    }
+  }
+  return {cols,rows,cellAt,mainPath,branches,carved};
+}
+/* 在既有通道旁直接鑿出一間長方形房間(不受限於迷宮格子網格的邊界)，用BFS從房間邊緣往外找最近的
+   既有通道，沿路把薄石牆打通接過去(順便加寬到2格)，保證房間一定連通到主迷宮，可以放在地圖任意位置。
+   gx0,gy0,gx1,gy1：房間的格子座標範圍(含頭尾)。回傳房間的像素座標範圍(供怪物生成/王房禁足使用)。*/
+function carveRoomBFS(g,gx0,gy0,gx1,gy1){
+  const H=g.length, W=g[0].length;
+  for(let y=Math.max(1,gy0);y<=Math.min(H-2,gy1);y++)for(let x=Math.max(1,gx0);x<=Math.min(W-2,gx1);x++) g[y][x]=T_DIRT;
+  const inRoom=(x,y)=> x>=gx0&&x<=gx1&&y>=gy0&&y<=gy1;
+  const WALKABLE=new Set([T_DIRT,T_PATH]);
+  const visited=Array.from({length:H},()=>Array(W).fill(false));
+  const prev=Array.from({length:H},()=>Array(W).fill(null));
+  const q=[];
+  for(let y=Math.max(1,gy0);y<=Math.min(H-2,gy1);y++)for(let x=Math.max(1,gx0);x<=Math.min(W-2,gx1);x++){ visited[y][x]=true; q.push([x,y]); }
+  let qi=0, target=null;
+  while(qi<q.length){
+    const [x,y]=q[qi++];
+    if(!inRoom(x,y) && WALKABLE.has(g[y][x])){ target=[x,y]; break; }
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+      const nx=x+dx, ny=y+dy;
+      if(nx>0&&nx<W-1&&ny>0&&ny<H-1&&!visited[ny][nx]){ visited[ny][nx]=true; prev[ny][nx]=[x,y]; q.push([nx,ny]); }
+    });
+  }
+  if(target){ let cur=target;
+    while(cur && !inRoom(cur[0],cur[1])){
+      const [x,y]=cur; g[y][x]=T_DIRT;
+      if(g[y][x+1]!==undefined && g[y][x+1]===T_STONEWALL) g[y][x+1]=T_DIRT;   // 順便加寬到2格，跟其他通道寬度一致
+      if(g[y+1] && g[y+1][x]===T_STONEWALL) g[y+1][x]=T_DIRT;
+      cur=prev[y][x];
+    }
+  }
+  const mcx=Math.floor((gx0+gx1)/2), mcy=Math.floor((gy0+gy1)/2);
+  return {gx0,gy0,gx1,gy1,mcx,mcy, x0:gx0*TS,y0:gy0*TS,x1:(gx1+1)*TS-1,y1:(gy1+1)*TS-1};
+}
 
 function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
   const VX0=4,VX1=51,VY0=4,VY1=45, cx=27, cy=24;
@@ -1162,7 +1364,7 @@ function buildTerminal(name,id,wild,back,extra){ const W=40,H=34,g=NG(W,H),ex={}
     if(side==='w'){ gapW(g,cy,ex,to); hLane(g,cy,1,cx); }
     if(side==='e'){ gapE(g,cy,ex,to); hLane(g,cy,cx,W-2); }
   }
-  if(extra) extra(g,{W,H,cx,cy});
+  if(extra) extra(g,{W,H,cx,cy,ex});
   return {name,id,wild,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
 }
 function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},houses=[];
@@ -1184,6 +1386,14 @@ function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},
   if(forest){ for(let x=0;x<W;x++){g[0][x]=T_BIGTREE;g[H-1][x]=T_BIGTREE;} for(let y=0;y<H;y++){g[y][0]=T_BIGTREE;g[y][W-1]=T_BIGTREE;} } // 外框也是樹
   gapS(g,cx,ex,exitTo); vLane(g,cx,VY1,H-2);
   return {name:name,id:id,wild:false,grid:g,houses:houses,exits:ex,px:cx*TS,py:(cy+2)*TS,W:W,H:H}; }
+/* 地城(冒險洞穴)版面持久化：迷宮用亂數生成，若每次進圖都重新生成會導致玩家每次進去都是完全不同的
+   格局(暗門/樓梯位置也會跟著變)，無法熟悉地圖。改成只在「第一次」生成迷宮，之後存進localStorage，
+   下次進圖直接讀取存好的版面，格局、暗道、王房位置都會維持一致，直到玩家自己在後台清除重置。*/
+const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v2';   // v1→v2：2樓回1樓的機制從邊界出口改成內部樓梯傳送，資料格式不同，升版讓舊快取失效、強制重新生成
+function loadDungeonLayouts(){ try{ var r=localStorage.getItem(DUNGEON_LAYOUT_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
+function saveDungeonLayouts(){ try{ localStorage.setItem(DUNGEON_LAYOUT_KEY, JSON.stringify(DUNGEON_LAYOUTS)); }catch(e){} }
+let DUNGEON_LAYOUTS=loadDungeonLayouts();
+function resetDungeonLayout(mapId){ delete DUNGEON_LAYOUTS[mapId]; saveDungeonLayouts(); }
 const MAP_BUILDERS = {
   village: buildVillage,
   cross_n: ()=>buildCross('北方岔路','cross_n',{n:'port_n', w:'north_island', s:'village'}),
@@ -1193,7 +1403,68 @@ const MAP_BUILDERS = {
   port_n: ()=>buildTerminal('說話之島北邊港口','port_n',true,{s:'cross_n'},(g,o)=>{ for(let y=2;y<8;y++)for(let x=6;x<o.W-6;x++)g[y][x]=T_WATER; for(let x=14;x<26;x++)g[8][x]=T_DIRT; }),
   port_e: ()=>buildTerminal('說話之島東邊港口','port_e',true,{w:'cross_e'},(g,o)=>{ for(let y=6;y<o.H-6;y++)for(let x=o.W-8;x<o.W-2;x++)g[y][x]=T_WATER; for(let y=14;y<20;y++)g[y][o.W-9]=T_DIRT; }),
   north_island: ()=>{ const m=buildTerminal('北島','north_island',true,{e:'cross_n', s:'cross_w'},(g,o)=>{ for(let x=2;x<o.W-2;x++){g[2][x]=T_WATER;g[3][x]=T_WATER;} for(let i=0;i<14;i++){const x=6+((i*5)%(o.W-12)),y=6+((i*3)%(o.H-12)); if(g[y][x]===T_GRASS)g[y][x]=T_TREE;} }); return m; },
-  cave: ()=>buildTerminal('冒險洞穴1樓','cave',true,{n:'cross_w'},(g,o)=>{ for(let y=1;y<o.H-1;y++)for(let x=1;x<o.W-1;x++){ if(g[y][x]===T_GRASS)g[y][x]=T_DIRT; } for(let i=0;i<40;i++){const x=2+((i*13)%(o.W-4)),y=2+((i*7)%(o.H-4)); if(g[y][x]===T_DIRT&&((i*3)%10)<3)g[y][x]=T_WALL;} }),
+  cave: ()=>{
+    if(DUNGEON_LAYOUTS.cave){                                     // 已經生成過：直接沿用存好的版面，不再重新亂數生成
+      const L=DUNGEON_LAYOUTS.cave;
+      MAP_WARPS['cave']=L.warps;
+      return {name:'冒險洞穴1樓', id:'cave', wild:true, grid:L.grid, houses:[], exits:L.exits, px:L.px, py:L.py, W:L.W, H:L.H, dungeon:true};
+    }
+    let stairsDown=null;
+    const m=buildTerminal('冒險洞穴1樓','cave',true,null,(g,o)=>{
+    gapN(g,o.cx,o.ex,'cross_w');                                  // 只鑿邊界小缺口，不拉直線到地圖中心(避免出現直通捷徑)
+    const info=carveMaze(g,o.W,o.H,o.cx,1,{targetCells:110, branchChance:0.14});   // 稀疏蜿蜒主通道，覆蓋約6成地圖(不是填滿全部的密集迷宮)
+    const path=info.mainPath;
+    // 入口祭壇：路徑第2格附近鋪一小塊紫色祭壇地磚，標示「這是從地面進來的入口」
+    { const p=info.cellAt(path[Math.min(2,path.length-1)][0], path[Math.min(2,path.length-1)][1]);
+      const acx=p.x+1, acy=p.y+1, r=2.6;
+      for(let y=acy-Math.ceil(r);y<=acy+Math.ceil(r);y++)for(let x=acx-Math.ceil(r);x<=acx+Math.ceil(r);x++){
+        if(y>0&&x>0&&y<o.H-1&&x<o.W-1&&Math.hypot(x-acx,y-acy)<=r&&g[y][x]!==T_STONEWALL) g[y][x]=T_ALTAR; } }
+    // 暗道(P)：在路徑上挑兩組間隔夠遠的點，安插可瞬間互通的暗道階梯
+    const warps=[];
+    const pick=(f)=>{ const p=path[Math.max(0,Math.min(path.length-1,Math.floor(path.length*f)))]; return info.cellAt(p[0],p[1]); };
+    const s1a=pick(0.22), s1b=pick(0.55), s2a=pick(0.38), s2b=pick(0.82);
+    [[s1a,s1b],[s2a,s2b]].forEach(([a,b])=>{
+      g[a.y][a.x]=T_STAIRS; g[b.y][b.x]=T_STAIRS;
+      warps.push({x:a.x,y:a.y,kind:'same',tx:b.x,ty:b.y});
+      warps.push({x:b.x,y:b.y,kind:'same',tx:a.x,ty:a.y});
+    });
+    // 通往2樓的樓梯：安插在路徑最深處(最後一段)，可放在迷宮內部任意一點，不受地圖邊界限制
+    const sp=info.cellAt(path[path.length-1][0], path[path.length-1][1]);
+    g[sp.y][sp.x]=T_STAIRS;
+    stairsDown={x:sp.x,y:sp.y};                                    // 記錄下樓梯的座標，供2樓回程樓梯精準傳送回這裡(而不是傳到地圖正中央)
+    warps.push({x:sp.x,y:sp.y,kind:'map',toMap:'cave2',toX:o.cx,toY:2});
+    MAP_WARPS['cave']=warps;
+    });
+    m.dungeon=true;
+    DUNGEON_LAYOUTS.cave={grid:m.grid, exits:m.exits, px:m.px, py:m.py, W:m.W, H:m.H, warps:MAP_WARPS['cave'], stairsDown:stairsDown};
+    saveDungeonLayouts();
+    return m; },
+  cave2: ()=>{
+    if(DUNGEON_LAYOUTS.cave2){                                    // 已經生成過：直接沿用存好的版面
+      const L=DUNGEON_LAYOUTS.cave2;
+      MAP_WARPS['cave2']=L.warps;
+      return {name:'冒險洞穴2樓', id:'cave2', wild:true, grid:L.grid, houses:[], exits:{}, px:L.px, py:L.py, W:L.W, H:L.H, dungeon:true, bossRoom:L.bossRoom};
+    }
+    let bossRoom=null;
+    const m=buildTerminal('冒險洞穴2樓','cave2',true,null,(g,o)=>{
+      // 不鑿邊界出口：2樓入口不是用走的走進來，是從1樓的樓梯暗道直接傳送過來的，
+      // 所以邊界維持完全密封，入口點就是迷宮的第一個格子(跟1樓warp目的地toX:o.cx,toY:2一致)
+      carveMaze(g,o.W,o.H,o.cx,1,{targetCells:110, branchChance:0.14});
+      carveRoomBFS(g, 17,4, 22,9);                                 // 水池房：上方中央
+      carveRoomBFS(g, 27,12,32,17);                                // 骷髏房：中偏右
+      carveRoomBFS(g, 14,16,19,21);                                // 夏洛柏房：中央偏左
+      const br=carveRoomBFS(g, 26,23,32,29);                       // 巴風特房：中偏下，王房專屬(下方另外鋪魔法陣、加上禁足限制)
+      for(let y=br.mcy-1;y<=br.mcy+1;y++)for(let x=br.mcx-1;x<=br.mcx+1;x++) g[y][x]=T_MAGICCIRCLE;
+      bossRoom=br;
+      // 回1樓的樓梯：放在玩家從1樓傳送過來的落地點，精準傳回1樓的下樓梯位置(不是地圖邊界/正中央)
+      const stairsUp=DUNGEON_LAYOUTS.cave.stairsDown;
+      g[2][o.cx]=T_STAIRS;
+      MAP_WARPS['cave2']=[{x:o.cx,y:2,kind:'map',toMap:'cave',toX:stairsUp.x,toY:stairsUp.y}];
+    });
+    m.bossRoom=bossRoom; m.dungeon=true;
+    DUNGEON_LAYOUTS.cave2={grid:m.grid, px:m.px, py:m.py, W:m.W, H:m.H, bossRoom:bossRoom, warps:MAP_WARPS['cave2']};
+    saveDungeonLayouts();
+    return m; },
   scarecrow: ()=>buildTerminal('稻草人修練場','scarecrow',true,{e:'cross_w'},(g,o)=>{ scatterTrees(g,40,4); }),
   hunt_w: ()=>buildTerminal('西邊狩獵場','hunt_w',true,{e:'cross_s'},(g,o)=>scatterTrees(g,90,3)),
   hunt_s: ()=>buildTerminal('南邊狩獵場','hunt_s',true,{n:'cross_s'},(g,o)=>scatterTrees(g,90,9)),
@@ -1201,12 +1472,18 @@ const MAP_BUILDERS = {
   elf_forest: ()=>{ var _m=buildBirthTown('妖精森林','elf_forest','village',true); if(typeof ELF_NPCS!=='undefined') ELF_NPCS.forEach(function(nn){ var _gx=(nn.x/TS)|0,_gy=(nn.y/TS)|0; if(_m.grid[_gy]&&_m.grid[_gy][_gx]===T_TREE) _m.grid[_gy][_gx]=T_GRASS; }); return _m; },        // 妖精出生地
   silver_knight: ()=>buildBirthTown('銀騎士村莊','silver_knight','village',false),// 騎士出生地
 };
+/* 野外地圖清單：給「傳送術」等隨機傳送類功能使用，涵蓋岔路/港口/狩獵場/冒險洞穴1-2樓（訓練場是固定佈局的特殊場地，不列入隨機傳送目的地）*/
+const WILD_MAP_IDS=['north_island','port_n','port_e','hunt_w','hunt_s','hunt_e','cross_e','cross_w','cross_s','cross_n'];
+/* 冒險洞穴1-2樓不放進上面這份清單：地監是封閉迷宮，傳送術在地監內部應該只在同一層原地隨機移動，
+   不會被隨機傳送到野外去；同理野外的傳送術也不會誤把玩家傳進地監裡。冒險洞穴地圖物件會標記 dungeon:true，
+   castSpell()施放傳送術時依此旗標決定要「同層隨機移動」還是「傳送到野外的另一張地圖」。*/
 function opp(d){ return d==='n'?'s':d==='s'?'n':d==='e'?'w':'e'; }
-function loadMap(id, entrySide){
+function loadMap(id, entrySide, explicitSpawn){
   const b=MAP_BUILDERS[id]; if(!b){ sysMsg('地圖尚未開放：'+id); return; }
   curMap=b(); curMapId=id; MAP=curMap.grid; MAPW=curMap.W; MAPH=curMap.H; houses=curMap.houses;
   let px=curMap.px, py=curMap.py; const ex=curMap.exits;
-  if(entrySide==='n'&&ex.n){ px=ex.n.col*TS; py=2*TS; }
+  if(explicitSpawn){ px=explicitSpawn.x; py=explicitSpawn.y; }
+  else if(entrySide==='n'&&ex.n){ px=ex.n.col*TS; py=2*TS; }
   else if(entrySide==='s'&&ex.s){ px=ex.s.col*TS; py=(MAPH-3)*TS; }
   else if(entrySide==='w'&&ex.w){ px=2*TS; py=ex.w.row*TS; }
   else if(entrySide==='e'&&ex.e){ px=(MAPW-3)*TS; py=ex.e.row*TS; }
@@ -1224,6 +1501,25 @@ function checkEdge(){ if(!curMap) return; const ex=curMap.exits;
   else if(left<=0 && ex.w && Math.abs(cyT-ex.w.row)<=1){ loadMap(ex.w.to, opp('w')); }
   else if(right>=MAPW-1 && ex.e && Math.abs(cyT-ex.e.row)<=1){ loadMap(ex.e.to, opp('e')); }
 }
+/* 暗道／內部樓梯：跟地圖邊界出入口不同，可以放在迷宮「內部」任何一點。
+   MAP_WARPS[地圖id] = [ {x,y, kind:'same', tx,ty}                     // 同地圖內兩點互通(暗道)
+                        , {x,y, kind:'map', toMap, toX,toY} ]          // 傳送到另一張地圖的指定座標(樓梯)
+   x,y / tx,ty / toX,toY 都是「格子座標」，不是像素座標。踩到指定格子中心附近就會觸發。*/
+let MAP_WARPS={};
+function checkWarps(){
+  if(!curMap || !MAP_WARPS[curMapId]) return;
+  if(S.warpCooldownUntil && Date.now()<S.warpCooldownUntil) return;
+  const cxT=Math.floor((player.x+player.w/2)/TS), cyT=Math.floor((player.y+player.h/2)/TS);
+  const list=MAP_WARPS[curMapId];
+  for(let i=0;i<list.length;i++){ const w=list[i];
+    if(w.x===cxT && w.y===cyT){
+      S.warpCooldownUntil=Date.now()+900;                    // 短暫冷卻，避免傳送過去後立刻又觸發回程暗道
+      if(w.kind==='same'){ player.x=w.tx*TS; player.y=w.ty*TS; moveTarget=null; attackTarget=null; playTeleportFx(); }
+      else if(w.kind==='map'){ loadMap(w.toMap, null, {x:w.toX*TS, y:w.toY*TS}); playTeleportFx(); }
+      return;
+    }
+  }
+}
 let houses=[];
 function stampHouse(x,y,w,d){ for(let j=0;j<d;j++)for(let i=0;i<w;i++){ if(MAP[y+j]&&MAP[y+j][x+i]!==undefined) MAP[y+j][x+i]=T_HOUSE; } }
 function house(x,y){ houses.push({x,y,w:5,d:3,big:false}); stampHouse(x,y,5,3); }        // 中屋
@@ -1233,6 +1529,13 @@ function solidAt(px,py){
   const gx=Math.floor(px/TS), gy=Math.floor(py/TS);
   if(gx<0||gy<0||gx>=MAPW||gy>=MAPH) return true;
   return T_SOLID.has(MAP[gy][gx]);
+}
+function hasLineOfSight(x1,y1,x2,y2){
+  const dist=Math.hypot(x2-x1,y2-y1); if(dist<1) return true;
+  const steps=Math.max(1,Math.ceil(dist/8));               // 每8px取樣一次，足夠偵測到1格厚的薄牆
+  for(let i=1;i<steps;i++){ const t=i/steps;
+    if(solidAt(x1+(x2-x1)*t, y1+(y2-y1)*t)) return false; }
+  return true;
 }
 
 /* ============ 等角投影 (Isometric 45°) ============ */
@@ -1251,7 +1554,7 @@ function sp(x,y,w,h){ ctx.fillRect(x|0,y|0,w,h); }
 
 /* 地面磚（含草地層次、石板、泥土邊緣、水波）*/
 function drawIsoFloor(t,cx,cy){
-  let base = t===T_WATER?'#3a72b8' : (t===T_DIRT||t===T_DOORMAT)?'#b58a55' : t===T_PATH?'#9a8c6c' : '#5a9a3a';
+  let base = t===T_WATER?'#3a72b8' : (t===T_DIRT||t===T_DOORMAT)?'#b58a55' : t===T_PATH?'#9a8c6c' : t===T_MAGICCIRCLE?'#241a30' : t===T_ALTAR?'#2e1f3a' : t===T_STAIRS?'#4a4048' : '#5a9a3a';
   fillDiamond(cx,cy,base);
   // 斜角立體感：上緣高光、下緣陰影
   ctx.lineWidth=1;
@@ -1262,6 +1565,21 @@ function drawIsoFloor(t,cx,cy){
   else if(t===T_PATH){ ctx.fillStyle='#8a7c5c'; sp(cx-12,cy-2,9,5); sp(cx+3,cy-4,9,5); sp(cx-3,cy+5,9,4);
     ctx.strokeStyle='rgba(0,0,0,.18)'; ctx.strokeRect(cx-12,cy-2,9,5); ctx.strokeRect(cx+3,cy-4,9,5); ctx.strokeRect(cx-3,cy+5,9,4); }
   else if(t===T_WATER){ ctx.fillStyle='#5f9ae0'; sp(cx-10,cy-2,8,2); sp(cx+2,cy+4,8,2); ctx.fillStyle='#8fc0f0'; sp(cx-4,cy+1,5,1); }
+  else if(t===T_MAGICCIRCLE){ const pulse=0.55+0.35*Math.sin(Date.now()/500);
+    ctx.strokeStyle='rgba(180,110,255,'+pulse.toFixed(2)+')'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(cx,cy,HW*0.78,HH*0.78,0,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='rgba(120,60,220,'+(pulse*0.7).toFixed(2)+')'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.ellipse(cx,cy,HW*0.46,HH*0.46,0,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(160,90,255,'+(pulse*0.22).toFixed(2)+')'; diamondPath(cx,cy); ctx.fill(); }
+  else if(t===T_ALTAR){ const pulse=0.4+0.25*Math.sin(Date.now()/700);   // 祭壇：偏暗的紫色石板，帶淡淡符文光暈(比魔法陣低調，標示「入口」而非「頭目」)
+    ctx.fillStyle='rgba(150,100,200,'+(pulse*0.3).toFixed(2)+')'; diamondPath(cx,cy); ctx.fill();
+    ctx.strokeStyle='rgba(190,140,240,'+pulse.toFixed(2)+')'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-10,cy-3); ctx.lineTo(cx,cy-8); ctx.lineTo(cx+10,cy-3); ctx.lineTo(cx,cy+2); ctx.closePath(); ctx.stroke(); }
+  else if(t===T_STAIRS){ ctx.fillStyle='#241f28'; sp(cx-10,cy-1,20,5);            // 暗道/樓梯：向下凹陷的階梯剪影，暗示「這裡可以往下走」
+    ctx.strokeStyle='#6a5a72'; ctx.lineWidth=1;
+    for(let k=0;k<3;k++){ const yy=cy-3+k*3; ctx.beginPath(); ctx.moveTo(cx-9+k*2,yy); ctx.lineTo(cx+9-k*2,yy); ctx.stroke(); }
+    const pulse=0.4+0.3*Math.sin(Date.now()/400);
+    ctx.fillStyle='rgba(160,120,220,'+pulse.toFixed(2)+')'; sp(cx-2,cy-1,4,3); }
   if(t===T_FLOWER){ const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
     sp(cx-8+i*7,cy-2+((i%2)*4),4,4); ctx.fillStyle='#ffe27a'; sp(cx-7+i*7,cy-1+((i%2)*4),2,2);} }
 }
@@ -1321,7 +1639,13 @@ function drawHouse(h){
 
 /* 立體物件：牆、屋頂、樹、柵欄、水井、招牌 */
 function drawIsoObject(t,cx,cy){
-  if(t===T_WALL){
+  if(t===T_STONEWALL){
+    drawBlock(cx,cy,20,'#8a8a92','#6a6a72','#4e4e56');    // 頂亮灰/左中灰/右暗灰（比磚牆矮、無窗＝薄石牆）
+    faceLines(cx,cy,20,'#5a5a62',5);                       // 石縫（橫向較密）
+    ctx.strokeStyle='#5a5a62'; ctx.lineWidth=1;            // 交錯直縫
+    ctx.beginPath(); ctx.moveTo(cx-HW/2,cy+HH/2-7); ctx.lineTo(cx-HW/2,cy+HH/2-2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+HW/2,cy+HH/2-12); ctx.lineTo(cx+HW/2,cy+HH/2-7); ctx.stroke();
+  } else if(t===T_WALL){
     drawBlock(cx,cy,26,'#ecd6a4','#c6a86c','#9c7c48');   // 頂亮/左中/右暗（左上光源）
     faceLines(cx,cy,26,'#b6965e',6);                      // 磚縫（橫）
     ctx.strokeStyle='#b6965e'; ctx.lineWidth=1;           // 交錯直縫
@@ -1492,51 +1816,57 @@ const MOBS={
   '妖魔鬥士':{name:'妖魔鬥士', lv:8, size:'small', undead:false, boss:false, aggressive:false, calls:['妖魔','妖魔弓箭手','妖魔鬥士'], hp:50, dmg:8, dmgMin:1, dmgMax:16, hitBonus:1, db:0, ac:5, mr:5, atkSpd:2.0, spd:1, aggro:260, exp:65, gold:45, goldMin:20, goldMax:45, align:1.6},
   '狼人':{name:'狼人', lv:9, size:'small', undead:false, boss:false, aggressive:false, calls:['狼','狼人'], hp:50, dmg:12, dmgMin:1, dmgMax:13, hitBonus:1, db:5, ac:4, mr:10, atkSpd:2.0, spd:1, aggro:260, exp:82, gold:50, goldMin:22, goldMax:50, align:1.8},
   '骷髏':{name:'骷髏', lv:10, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:80, dmg:10, dmgMin:1, dmgMax:20, hitBonus:2, db:0, ac:3, mr:10, atkSpd:1.8, spd:1, aggro:260, exp:101, gold:54, goldMin:25, goldMax:54, align:2.0},
+  '骷髏弓箭手':{name:'骷髏弓箭手', lv:12, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:95, dmg:12, dmgMin:1, dmgMax:22, hitBonus:3, db:0, ac:2, mr:12, atkSpd:1.8, spd:1, aggro:260, exp:131, gold:58, goldMin:27, goldMax:58, align:2.2, atk:200, ranged:true},
+  '骷髏斧手':{name:'骷髏斧手', lv:13, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:130, dmg:14, dmgMin:1, dmgMax:26, hitBonus:3, db:2, ac:1, mr:12, atkSpd:1.9, spd:1, aggro:260, exp:150, gold:62, goldMin:28, goldMax:62, align:2.4},
+  '骷髏槍兵':{name:'骷髏槍兵', lv:13, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:125, dmg:13, dmgMin:1, dmgMax:24, hitBonus:4, db:1, ac:1, mr:12, atkSpd:1.9, spd:1, aggro:260, exp:150, gold:62, goldMin:28, goldMax:62, align:2.4, atk:50},
   '石頭高崙':{name:'石頭高崙', lv:13, size:'big', undead:false, boss:false, aggressive:false, calls:['石頭高崙'], hp:150, dmg:24, dmgMin:1, dmgMax:18, hitBonus:0, db:14, ac:-1, mr:5, atkSpd:3.0, spd:1, aggro:260, exp:170, gold:72, goldMin:37, goldMax:72, align:2.6},
   '夏洛柏':{name:'夏洛柏', lv:14, size:'big', undead:false, boss:false, aggressive:true, calls:[], hp:100, dmg:10, dmgMin:1, dmgMax:14, hitBonus:4, db:2, ac:0, mr:12, atkSpd:1.0, spd:1, aggro:260, exp:197, gold:78, goldMin:41, goldMax:78, align:2.8, atk:64},
   '黑騎士':{name:'黑騎士', lv:16, size:'small', undead:false, boss:false, aggressive:false, calls:['黑騎士'], hp:100, dmg:9, dmgMin:2, dmgMax:16, hitBonus:8, db:0, ac:-10, mr:10, atkSpd:2.0, spd:1, aggro:260, exp:257, gold:93, goldMin:50, goldMax:93, align:3.2},
+  '史巴托':{name:'史巴托', lv:16, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:180, dmg:14, dmgMin:2, dmgMax:20, hitBonus:6, db:1, ac:-6, mr:14, atkSpd:1.9, spd:1, aggro:260, exp:270, gold:95, goldMin:52, goldMax:95, align:3.4},
   '長老':{name:'長老', lv:21, size:'small', undead:false, boss:false, aggressive:false, calls:['長老'], hp:250, dmg:16, dmgMin:1, dmgMax:30, hitBonus:3, db:0, ac:-5, mr:30, atkSpd:2.0, spd:1, aggro:260, exp:442, gold:140, goldMin:80, goldMax:140, align:4.2, atk:224, caster:true, mmp:200, mpCost:20},
   '稻草人':{name:'稻草人', hp:9999, exp:0, gold:0, goldMin:0, goldMax:0, dmg:0, spd:0, aggro:0, align:0, dummy:true},
+  '巴風特':{name:'巴風特', lv:50, size:'small', undead:false, boss:true, aggressive:false, calls:[], hp:750, dmg:45, dmgMin:1, dmgMax:95, hitBonus:63, db:110, ac:-60, mr:60, atkSpd:1.0, spd:1, aggro:260, exp:480, gold:380, goldMin:190, goldMax:380, align:10.0},
   '克特':{name:'克特', lv:51, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:800, dmg:50, dmgMin:1, dmgMax:100, hitBonus:67, db:120, ac:-67, mr:65, atkSpd:1.0, spd:1, aggro:260, exp:500, gold:400, goldMin:200, goldMax:400, align:10.2}
 };
 let mobs=[], drops=[];
-/* 怪物分布限制：某些怪只在指定地圖出現 */
-const SPAWN_RESTRICT = {
-  '夏洛柏': ['hunt_e','hunt_s'],
-  '骷髏':   ['hunt_e','hunt_s'],
-  '長老':   ['hunt_e','hunt_s'],
-  '人形殭屍':['hunt_e','hunt_s'],
-  '克特':   ['port_n','port_e'],
-  '稻草人': ['scarecrow'],
-};
-function eligibleTypes(mapId){
-  return Object.keys(MOBS).filter(type=>{
-    if(type==='克特') return false;                 // 世界王，另外處理
-    const allowed = SPAWN_RESTRICT[type];
-    return allowed ? allowed.includes(mapId) : true; // 受限怪只在指定地圖；其餘任何野外
-  });
-}
+/* 怪物出沒設定：後台編輯器勾選「這張地圖要出沒哪些怪物」，按存檔後才會真正生效。
+   資料格式：{ 地圖id: [type, type, ...] }，存在 localStorage，遊戲一開始預設是空的（也就是所有地圖預設沒有怪物，直到玩家自己去後台勾選存檔）*/
+const MOB_ENABLED_KEY='lineage_pixel_mob_enabled_v1';
+function loadMobEnabled(){ try{ var r=localStorage.getItem(MOB_ENABLED_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
+function saveMobEnabledToStorage(){ try{ localStorage.setItem(MOB_ENABLED_KEY, JSON.stringify(MOB_ENABLED)); }catch(e){} }
+let MOB_ENABLED = loadMobEnabled();
 const KETA_RESPAWN_MS = 4*60*60*1000;                // 克特重生等待：4 小時
 function ketaReady(){ return !S.ketaKilledAt || (Date.now()-S.ketaKilledAt >= KETA_RESPAWN_MS); }
-function spawnKeta(){ const m=MOBS['克特']; let tries=0;
-  while(tries<600){ tries++; const gx=2+Math.floor(Math.random()*(MAPW-4)), gy=2+Math.floor(Math.random()*(MAPH-4));
+const BAPHO_RESPAWN_MS = 4*60*60*1000;               // 巴風特重生等待：4 小時（跟克特一樣，世界王全區僅會有一隻）
+function baphoReady(){ return !S.baphoKilledAt || (Date.now()-S.baphoKilledAt >= BAPHO_RESPAWN_MS); }
+function inBossRoom(gx,gy){ const r=curMap&&curMap.bossRoom; return !!(r && gx>=r.gx0 && gx<=r.gx1 && gy>=r.gy0 && gy<=r.gy1); }
+function spawnBossRandom(type,room){ const m=MOBS[type]; if(!m) return; let tries=0;
+  while(tries<600){ tries++;
+    const gx=room ? (room.gx0+Math.floor(Math.random()*(room.gx1-room.gx0+1))) : (2+Math.floor(Math.random()*(MAPW-4)));
+    const gy=room ? (room.gy0+Math.floor(Math.random()*(room.gy1-room.gy0+1))) : (2+Math.floor(Math.random()*(MAPH-4)));
     if(T_SOLID.has(MAP[gy][gx])) continue;
-    mobs.push({type:'克特',name:m.name,x:gx*TS,y:gy*TS,hp:m.hp,maxhp:m.hp,cd:0,wc:0,vx:0,vy:0}); return; }
+    const obj={type,name:m.name,x:gx*TS,y:gy*TS,hp:m.hp,maxhp:m.hp,cd:0,wc:0,vx:0,vy:0};
+    if(room) obj.confine={x0:room.x0,y0:room.y0,x1:room.x1,y1:room.y1};   // 王房禁足：這隻怪只能在房間範圍內移動
+    mobs.push(obj); return; }
 }
 function spawnMobs(){ mobs=[]; if(!curMap || !curMap.wild) return;
   if(curMapId==='scarecrow'){ const _sm=MOBS['稻草人']; const g0x=Math.floor(MAPW/2)-10, g0y=Math.floor(MAPH/2)-10;
     for(let r=0;r<6;r++)for(let c=0;c<6;c++){ const gx=g0x+c*4, gy=g0y+r*4;
       if(MAP[gy]&&MAP[gy][gx]!=null&&T_SOLID.has(MAP[gy][gx])) MAP[gy][gx]=T_GRASS;
       mobs.push({type:'稻草人',name:_sm.name,x:gx*TS,y:gy*TS,hp:_sm.hp,maxhp:_sm.hp,cd:0,wc:0,vx:0,vy:0}); }
-    return; }   // 訓練場只有稻草人(6×6=36隻)
-  const types=eligibleTypes(curMapId); const N=14; let tries=0;
+    return; }   // 訓練場只有稻草人(6×6=36隻)，維持固定佈局，不受出沒設定影響
+  const enabled=(MOB_ENABLED[curMapId]||[]);
+  const types=enabled.filter(t=>MOBS[t] && !MOBS[t].boss);   // 世界王另外處理，不放進一般隨機池
+  const N=14; let tries=0;
   if(types.length){ while(mobs.length<N && tries<3000){ tries++;
     const gx=2+Math.floor(Math.random()*(MAPW-4)), gy=2+Math.floor(Math.random()*(MAPH-4));
     if(T_SOLID.has(MAP[gy][gx])) continue;
+    if(inBossRoom(gx,gy)) continue;                          // 一般怪物不會出現在王房裡，王房是世界王專屬
     const type=types[Math.floor(Math.random()*types.length)], m=MOBS[type];
     mobs.push({type,name:m.name,x:gx*TS,y:gy*TS,hp:m.hp,maxhp:m.hp,cd:0,wc:0,vx:0,vy:0}); } }
-  // 世界王克特：只在港口、全區唯一、擊殺後 4 小時重生
-  { const _km=(typeof SPAWN_RESTRICT!=='undefined'&&SPAWN_RESTRICT['克特'])?SPAWN_RESTRICT['克特']:['port_n','port_e']; if(_km.indexOf(curMapId)!==-1 && ketaReady()) spawnKeta(); }
+  // 世界王：有勾選才會嘗試生成，全區僅一隻，尊重各自的重生計時器；若該地圖有王房(目前只有冒險洞穴2樓)，巴風特只會生成在王房裡且不會走出去
+  if(enabled.indexOf('克特')>=0 && ketaReady()) spawnBossRandom('克特');
+  if(enabled.indexOf('巴風特')>=0 && baphoReady()) spawnBossRandom('巴風特', curMap.bossRoom||null);
 }
 
 /* ============ 玩家數值 ============ */
@@ -2087,7 +2417,8 @@ function restorePartyFromSlots(slots, mode){
     var d=SAVES[slot]; if(!d) return;           // 該存檔可能已被刪除
     if(1+party.length>=8) return;
     var ang=Math.random()*Math.PI*2;
-    party.push({slot:slot, name:d.name, cls:d.cls, gender:d.gender||'male', lv:d.lv,
+    party.push({slot:slot, name:d.name, cls:d.cls, gender:d.gender||'male', lv:d.lv, exp:d.exp||0,
+      con:d.con||12, int:d.int||9, wis:d.wis||9, align:d.align||0,
       hp:d.hp, maxhp:d.maxhp, mp:d.mp, maxmp:d.maxmp,
       x:player.x+Math.cos(ang)*40, y:player.y+Math.sin(ang)*40, dir8:'down', atkCd:0, target:null});
   });
@@ -2102,6 +2433,7 @@ function updateParty(dt){
   const wild = (typeof curMap!=='undefined') && curMap && curMap.wild;
   const GAP=13;                          // 軌跡取樣間隔：每位隊友間隔幾個記錄點（數字越小跟得越緊）
   for(let i=0;i<party.length;i++){ const p=party[i];
+    if(p.down) continue;                                    // 被擊倒中：暫停戰鬥與移動，直到自動起身
     if(p.atkCd==null) p.atkCd=0; p.atkCd=Math.max(0,p.atkCd-dt);
     let tgt=null;
     if(wild && typeof mobs!=='undefined'){
@@ -2117,23 +2449,54 @@ function updateParty(dt){
     } else { p.target=null; }
     if(tgt){
       const dx=(tgt.x+16)-p.x, dy=(tgt.y+16)-p.y, d=Math.hypot(dx,dy)||1;
-      const ranged=(p.cls==='妖精');
+      const _pa=(typeof allyAts==='function')?allyAts(p.slot):null;
+      const hasActiveSpell=!!(_pa&&_pa.act&&_pa.act.on&&_pa.act.skill&&_pa.act.skill!=='（不使用）');
+      const ranged=(p.cls==='妖精')||(p.cls==='魔法師')||hasActiveSpell;
       const engageR=ranged?170:44;
-      if(d>engageR){ const spd=(player.speed||2.4)*1.05*(dt/16.67); const mx=dx/d*spd, my=dy/d*spd; p.x+=mx; p.y+=my;
+      const hm=(typeof partyHasteMult==='function')?partyHasteMult(p):1;
+      if(d>engageR){ const spd=(player.speed||2.4)*1.05*(dt/16.67)*hm; const mx=dx/d*spd, my=dy/d*spd; p.x+=mx; p.y+=my;
         const d8a=(typeof dir8of==='function')?dir8of(dx,dy):null; if(d8a) p.dir8=d8a; }
-      else if(p.atkCd<=0){ p.atkCd=ranged?900:700; const dmg=Math.max(1,Math.floor(4+(p.lv||1)*1.6+Math.random()*4));
-        if(ranged && typeof mobFx!=='undefined' && mobFx.length<40){ mobFx.push({kind:'arrow',x0:p.x,y0:p.y,x:tgt.x+16,y:tgt.y+16,life:150}); }
-        if(typeof damageMob==='function') damageMob(tgt,dmg);
+      else if(p.atkCd<=0){ p.atkCd=(ranged?900:700)/hm;
+        const casted=(typeof partyActCast==='function')?partyActCast(p,tgt):false;
+        if(!casted){
+          const bonus=(typeof partyBuffMult==='function')?partyBuffMult(p).dmg:1;
+          const dmg=Math.max(1,Math.round((4+(p.lv||1)*1.6+Math.random()*4)*bonus));
+          if(ranged && typeof mobFx!=='undefined' && mobFx.length<40){ mobFx.push({kind:'arrow',x0:p.x,y0:p.y,x:tgt.x+16,y:tgt.y+16,life:150}); }
+          if(typeof damageMob==='function') damageMob(tgt,dmg);
+        }
         const d8b=(typeof dir8of==='function')?dir8of(dx,dy):null; if(d8b) p.dir8=d8b; }
       continue; }
     // 沒有戰鬥目標：沿著主角走過的軌跡排隊跟隨，每位隊友取用軌跡上更深的一段（像小火車依序走同一條路）
     const idx=Math.min(playerTrail.length-1, (i+1)*GAP);
     const tp=playerTrail[idx]||player;
     const dxp=tp.x-p.x, dyp=tp.y-p.y, dp=Math.hypot(dxp,dyp);
-    if(dp>4){ const spd=Math.min(dp,(player.speed||2.4)*1.3*(dt/16.67));
+    if(dp>4){ const hm2=(typeof partyHasteMult==='function')?partyHasteMult(p):1; const spd=Math.min(dp,(player.speed||2.4)*1.3*(dt/16.67)*hm2);
       const mx=dxp/dp*spd, my=dyp/dp*spd; p.x+=mx; p.y+=my;
       if(dp>10){ const d8c=(typeof dir8of==='function')?dir8of(dxp,dyp):null; if(d8c) p.dir8=d8c; } }
   } }
+/* 隊友加速倍率：二段加速(h2Until)優先於一段加速(hasteUntil)，數值比照玩家HASTE_MULT{0:1,1:1.5,2:2} */
+function partyHasteMult(p){ var now=Date.now();
+  if((p.h2Until||0)>now) return 2;
+  if((p.hasteUntil||0)>now) return 1.5;
+  return 1; }
+function partyExpNeed(lv){ lv=lv|0; if(lv<1)lv=1; return (lv<EXP_T.length? (EXP_T[lv]||125) : EXP_T[EXP_T.length-1]); }
+function partyGainExp(p, n){                              // 隊友協助狩獵獲得經驗，並比照玩家的規則升級
+  if(!p || n<=0 || (p.lv||1)>=99) return;
+  p.exp=(p.exp||0)+n;
+  var leveled=false, d=SAVES[p.slot];
+  while(p.exp>=partyExpNeed(p.lv) && p.lv<99){
+    p.exp-=partyExpNeed(p.lv); p.lv++; leveled=true;
+    var k=idleCls(p.cls), conG=getConGrowth(p.con||12,k), wisG=getWisGrowth(p.wis||9);
+    p.maxhp=Math.max(1, Math.floor(HPBASE2[k] + (p.lv-1)*(HPINC[k]+conG)));
+    p.maxmp=Math.max(0, Math.floor(MPBASE2[k] + (p.lv-1)*(MPINC[k]+wisG)));
+    p.hp=p.maxhp; p.mp=p.maxmp;                            // 升級全回血回魔，比照玩家
+    if(p.lv>=50 && d){ d.statPoints=(d.statPoints||0)+1; }  // 50級起跟玩家一樣獲得配點，直接存進該隊友自己的存檔，供之後登入該角色時分配
+  }
+  if(p.lv>=99) p.exp=Math.min(p.exp, partyExpNeed(99));
+  if(leveled) sysMsg('★『'+p.name+'』等級提升！現在是 LEV '+p.lv);
+  // 同步寫回該隊友自己的存檔，離隊/登出後等級與經驗值依然保留
+  if(d){ d.lv=p.lv; d.exp=p.exp; d.maxhp=p.maxhp; d.maxmp=p.maxmp; d.hp=p.hp; d.mp=p.mp; }
+}
 function partyClassGlyph(cls){ return cls==='王族'?'👑':cls==='騎士'?'🛡️':cls==='妖精'?'🏹':cls==='魔法師'?'🔮':'❔'; }
 function partyHeadHTML(p){ var key=(p.cls||'')+'_'+(p.gender||'male');
   var b64=(typeof PARTY_HEAD!=='undefined')?PARTY_HEAD[key]:null;
@@ -2145,8 +2508,8 @@ function renderPartyHud(){ var el=document.getElementById('partyHud'); if(!el)re
   party.forEach(function(p){
     var hpPct=p.maxhp?Math.max(0,Math.min(100,(p.hp/p.maxhp)*100)):100;
     var mpPct=p.maxmp?Math.max(0,Math.min(100,(p.mp/p.maxmp)*100)):100;
-    h+='<div class="partyCard"><div class="partyPortrait">'+partyHeadHTML(p)+'</div>'
-      +'<div class="partyInfo"><div class="partyName">'+p.name+' <span style="color:#9a8f76;font-weight:normal">Lv.'+p.lv+'</span></div>'
+    h+='<div class="partyCard'+(p.down?' partyDown':'')+'" style="cursor:pointer" onclick="openPartyMember('+p.slot+')" title="查看『'+p.name+'』的資訊"><div class="partyPortrait">'+partyHeadHTML(p)+'</div>'
+      +'<div class="partyInfo"><div class="partyName">'+p.name+' <span style="color:#9a8f76;font-weight:normal">Lv.'+p.lv+'</span>'+(p.down?' <span style="color:#e04040">（倒下）</span>':'')+'</div>'
       +'<div class="partyBarBg"><div class="partyBarHp" style="width:'+hpPct+'%"></div></div>'
       +'<div class="partyBarBg"><div class="partyBarMp" style="width:'+mpPct+'%"></div></div></div></div>';
   });
@@ -2158,6 +2521,7 @@ function update(dt){
   clearHasteIfExpired();
   clearTransformIfExpired();
   updateParty(dt);
+  if(typeof updatePartyAts==='function') updatePartyAts();
   atsAcc+=dt; if(atsAcc>=700){ atsAcc=0; try{ atsRun(); }catch(_e){} }
   if(S&&S.buffs){ buffAcc+=dt; if(buffAcc>=1000){ buffAcc=0; var _ch=false,_nw2=Date.now(); for(var _b2 in S.buffs){ if(!S.buffs[_b2]||S.buffs[_b2].until<=_nw2){ delete S.buffs[_b2]; _ch=true; sysMsg('『'+_b2+'』效果結束'); } } if(_ch) recalcStats(); if(typeof renderStateBar==='function') renderStateBar(); }
     if(S.st){ var _nw4=Date.now(); for(var _k4 in S.st){ if(S.st[_k4]<=_nw4){ delete S.st[_k4]; sysMsg('「'+ST_NAME[_k4]+'」狀態解除'); } }
@@ -2208,24 +2572,40 @@ function update(dt){
       else player.dir=rdy<0?'up':'down';
       const d8=dir8of(rdx,rdy); if(d8)player.dir8=d8; } }
   checkEdge();          // 走到出口邊界 → 切換地圖
+  checkWarps();         // 踩到暗道/內部樓梯 → 觸發傳送
   if(player.atkCd>0)player.atkCd-=dt;
   if(player.atkFlash>0)player.atkFlash-=dt;
 
-  // 怪物 AI
+  // 怪物 AI（會在玩家與存活的隊友之間，挑選最近的目標追擊/攻擊）
   const pcx=player.x+player.w/2, pcy=player.y+player.h/2;
   mobs.forEach(m=>{ const t=MOBS[m.type]; m.cd-=dt;
-    const mcx=m.x+16,mcy=m.y+16, d=Math.hypot(pcx-mcx,pcy-mcy);
     let vx=0,vy=0;
     if(t.caster && m.mp==null) m.mp=t.mmp||0;
     const _ar=mobAtk(m,t); const _mFroz=(m.stF||0)>Date.now(); if(_mFroz){ vx=0; vy=0; }
-    if((t.aggressive||m.provoked) && d<(t.aggro||260) && !inVillage(player.x,player.y)){ if(d>_ar-6){ vx=(pcx-mcx)/d; vy=(pcy-mcy)/d; } }
+    // 挑選目標：玩家 + 隊伍中還沒被擊倒的隊友，取距離最近者
+    let tcx=pcx, tcy=pcy, ttype='player', tref=null, d=Math.hypot(pcx-(m.x+16),pcy-(m.y+16));
+    if(typeof party!=='undefined' && party.length){
+      party.forEach(function(p){ if(p.down) return; const pd=Math.hypot((p.x)-(m.x+16),(p.y)-(m.y+16));
+        if(pd<d){ d=pd; tcx=p.x; tcy=p.y; ttype='party'; tref=p; } }); }
+    const mcx=m.x+16,mcy=m.y+16; d=Math.hypot(tcx-mcx,tcy-mcy);
+    if((t.aggressive||m.provoked) && d<(t.aggro||260) && !inVillage(player.x,player.y)){ if(d>_ar-6){ vx=(tcx-mcx)/d; vy=(tcy-mcy)/d; } }
     else { m.wc-=dt; if(m.wc<=0){ m.wc=900+Math.random()*1400; m.rx=Math.random()*2-1; m.ry=Math.random()*2-1; } vx=(m.rx||0)*0.5; vy=(m.ry||0)*0.5; }
     { const d8=dir8of(vx,vy); if(d8)m.dir8=d8; }
     const sp=t.spd*dt/16;
-    const nx=m.x+vx*sp, ny=m.y+vy*sp;
-    if(!solidAt(nx+16,m.y+24)&&!solidAt(nx+16,m.y+8)) m.x=nx;
-    if(!solidAt(m.x+16,ny+24)&&!solidAt(m.x+16,ny+8)) m.y=ny;
-    if(!_mFroz && d<_ar && m.cd<=0 && (t.aggressive||m.provoked) && !inVillage(player.x,player.y)){ mobAttack(m,t); }
+    const totalDx=vx*sp, totalDy=vy*sp, stepLen=Math.hypot(totalDx,totalDy);
+    const subSteps=Math.max(1,Math.ceil(stepLen/16));                // 每步最多16px，避免高速時一步跳過1格厚的薄牆
+    for(let _s=0;_s<subSteps;_s++){
+      const dx=totalDx/subSteps, dy=totalDy/subSteps;
+      const nx=m.x+dx;
+      let _okX=!solidAt(nx+16,m.y+24)&&!solidAt(nx+16,m.y+8);
+      if(m.confine && (nx<m.confine.x0||nx>m.confine.x1-32)) _okX=false;   // 王房禁足：不能移動出房間範圍(巴風特專用)
+      if(_okX) m.x=nx;
+      const ny=m.y+dy;
+      let _okY=!solidAt(m.x+16,ny+24)&&!solidAt(m.x+16,ny+8);   // 用「上面X軸判定完成後」的最新m.x，跟玩家movePlayer()做法一致：X先提交、Y再用最新x檢查，避免斜角切角穿過牆角(薄牆下這個bug特別容易被利用)
+      if(m.confine && (ny<m.confine.y0||ny>m.confine.y1-32)) _okY=false;
+      if(_okY) m.y=ny;
+    }
+    if(!_mFroz && d<_ar && m.cd<=0 && (t.aggressive||m.provoked) && !inVillage(player.x,player.y) && hasLineOfSight(mcx,mcy,tcx,tcy)){ mobAttack(m,t,ttype==='party'?tref:null); }   // 隔牆看不到目標就不能攻擊
   });
   // 撿掉落
   drops=drops.filter(dp=>{ if(Math.hypot((dp.x+8)-pcx,(dp.y+12)-pcy)<22){ pickup(dp); return false; } return true; });
@@ -2359,14 +2739,26 @@ function wakeUpBoss(name){                              // /WAKE UP 指令：僅
   sysMsg('★「'+mm.name+'」已被喚醒！'); }
 function killMob(m){ const t=MOBS[m.type];
   if(m.type==='克特'){ S.ketaKilledAt=Date.now(); }
+  if(m.type==='巴風特'){ S.baphoKilledAt=Date.now(); }
   var _em=(typeof SETTINGS!=='undefined'&&SETTINGS.expMult!=null)?SETTINGS.expMult:1; var _gm=(typeof SETTINGS!=='undefined'&&SETTINGS.goldMult!=null)?SETTINGS.goldMult:1;
-  gainExp(Math.max(0,Math.round(t.exp*_em))); var _kg=Math.round(((t.goldMin!=null&&t.goldMax!=null)?(t.goldMin+Math.floor(Math.random()*(t.goldMax-t.goldMin+1))):(t.gold||0))*_gm); S.gold+=_kg;
+  var _partySize=1+((typeof party!=='undefined'&&party.length)?party.length:0);          // 經驗值依隊伍人數(含主角)平分
+  var _baseExp=Math.max(0,Math.round(t.exp*_em));
+  var _splitExp=_partySize>1 ? Math.max(1,Math.round(_baseExp/_partySize)) : _baseExp;
+  gainExp(_splitExp); var _kg=Math.round(((t.goldMin!=null&&t.goldMax!=null)?(t.goldMin+Math.floor(Math.random()*(t.goldMax-t.goldMin+1))):(t.gold||0))*_gm); S.gold+=_kg;
+  if(typeof party!=='undefined' && party.length){                          // 隊友協助狩獵：全隊一起分經驗並可升級，性向值也套用跟玩家一樣的規則
+    if(_splitExp>0) party.forEach(function(_p){
+      partyGainExp(_p,_splitExp);
+      if((_p.align||0)>=0){ _p.align=Math.min(32767,(_p.align||0)+(t.align||0.5)); }
+      else { var _pratio=t.exp/Math.max(1,partyExpNeed(_p.lv)); _p.align=Math.min(0,(_p.align||0)+_pratio*40); }
+      var _pd=SAVES[_p.slot]; if(_pd) _pd.align=_p.align;
+    });
+  }
   if(S.align>=0){ S.align=Math.min(32767, S.align+(t.align||0.5)); }        // 一般：依該怪強度給正義值
   else { const ratio=t.exp/Math.max(1,expNeed()); S.align=Math.min(0, S.align+ratio*40); } // 紅名：按經驗比例累積洗白
   // 掉落
   var _dg=Math.round((t.gold||0)*_gm); if(_dg>0)S.gold+=_dg;
   if((_kg+_dg)>0) goldMsg(t.name+' 給你 '+(_kg+_dg)+' 金幣');
-  if(S.ats&&S.ats.on&&S.ats.hunt&&S.ats.hunt.on&&S.atsProf){ S.atsProf.kills++; S.atsProf.exp+=Math.max(0,Math.round(t.exp*_em)); S.atsProf.gold+=(_kg+_dg); }
+  if(S.ats&&S.ats.on&&S.ats.hunt&&S.ats.hunt.on&&S.atsProf){ S.atsProf.kills++; S.atsProf.exp+=_splitExp; S.atsProf.gold+=(_kg+_dg); }
   var _dtb=(typeof MOB_DROPS_PX!=='undefined')?MOB_DROPS_PX[t.name]:null; var _got=[];
   if(_dtb){ for(var _i4=0;_i4<_dtb.length;_i4++){ if(Math.random()*100<_dtb[_i4][1]){ addItem(_dtb[_i4][0],1); _got.push(_dtb[_i4][0]); } } }
   else if(Math.random()<0.15){ addItem('紅色藥水',1); _got.push('紅色藥水'); }
@@ -2374,33 +2766,52 @@ function killMob(m){ const t=MOBS[m.type];
   const i=mobs.indexOf(m); if(i>=0)mobs.splice(i,1);
   S.kills++; checkQuest();
   refreshUI();
-  // 重生（野外隨機處，避開村莊）
+  // 重生：在這張地圖目前勾選的怪物種類中隨機挑一種、隨機找位置補位（野外隨機處，避開村莊）
+  // （世界王克特／巴風特不在這裡重生，由 spawnMobs() 的重生計時器機制控制，下次進圖才會依4小時計時重新出現）
   var _respawnMapId=curMapId;
   setTimeout(()=>{ if(curMapId!==_respawnMapId || !curMap || !curMap.wild) return;   // 期間已離開原地圖（例如傳送回村莊）：不補位
-    if(mobs.length<16){ const types=(typeof eligibleTypes==='function')?eligibleTypes(curMapId):Object.keys(MOBS); if(!types.length)return; const type=types[Math.floor(Math.random()*types.length)];
-    const mm=MOBS[type]; let gx,gy,tries=0;
-    do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tries++; }
-    while(tries<30 && (inVillage(gx*TS,gy*TS) || T_SOLID.has(MAP[gy][gx])));
-    mobs.push({type,name:mm.name,spr:mm.spr,pal:mm.pal,x:gx*TS,y:gy*TS,hp:mm.hp,maxhp:mm.hp,cd:0,wc:0}); } }, 6000);
+    if(mobs.length<16){ const types=((typeof MOB_ENABLED!=='undefined'&&MOB_ENABLED[curMapId])||[]).filter(t=>MOBS[t] && !MOBS[t].boss);
+      if(!types.length) return; const type=types[Math.floor(Math.random()*types.length)];
+      const mm=MOBS[type]; let gx,gy,tries=0;
+      do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tries++; }
+      while(tries<30 && (inVillage(gx*TS,gy*TS) || T_SOLID.has(MAP[gy][gx])));
+      mobs.push({type,name:mm.name,x:gx*TS,y:gy*TS,hp:mm.hp,maxhp:mm.hp,cd:0,wc:0}); } }, 6000);
 }
 // PvP：擊殺其他玩家會大幅降低性向（變邪惡）。假玩家系統加入後呼叫此函式
 function killPlayerAlign(){ S.align=Math.max(-32768, S.align-100); sysMsg('你擊殺了其他玩家，性向大幅下降（趨向邪惡）！'); refreshUI(); }
 function hurtPlayer(dmg){ const real=Math.max(1,dmg-Math.floor((10-S.ac)/3)-(S.dmgReduce||0)); S.hp=Math.max(0,S.hp-real);
   if(S.ats&&S.ats.on&&S.ats.hunt&&S.ats.hunt.on&&S.atsProf) S.atsProf.dmg+=real;
   refreshUI(); if(S.hp<=0) playerDown(); }
+/* 隊友受傷：套用被動技能(防禦系)簡化減傷，HP歸零時「被擊倒」，暫停戰鬥與移動，過一段時間自動起身(回滿血比例的一部分) */
+function hurtPartyMember(p,dmg){
+  var defMult=(typeof partyBuffMult==='function')?partyBuffMult(p).def:1;
+  var real=Math.max(1, Math.round(dmg*defMult)-2);
+  p.hp=Math.max(0, (p.hp||0)-real);
+  var d=SAVES[p.slot]; if(d) d.hp=p.hp;
+  if(p.hp<=0 && !p.down){ p.down=true; p.downAt=Date.now(); p.target=null; sysMsg('『'+p.name+'』被擊倒了，暫時無法戰鬥……'); }
+  refreshUI(); }
+function reviveDownedParty(){                                 // 隊友被擊倒一段時間後自動起身(回30%HP)，避免卡死無法繼續遊戲
+  if(!party.length) return;
+  var now=Date.now();
+  party.forEach(function(p){ if(p.down && now-(p.downAt||0)>20000){
+    p.down=false; p.hp=Math.max(1,Math.round((p.maxhp||1)*0.3));
+    var d=SAVES[p.slot]; if(d) d.hp=p.hp;
+    sysMsg('『'+p.name+'』重新振作，回到隊伍中戰鬥！'); } }); }
 function mobAtk(m,t){ if(t.caster) return (m.mp>0)?(t.atk||224):38; return t.atk||38; }   // 該怪當前攻擊距離（施法者MP耗盡→近戰38）
 function mobHitRoll(t){ var hv=(t.lv||1)+(t.hitBonus||0)+S.ac-S.lv; hv=Math.max(1,Math.min(19,hv));
   var r=1+Math.floor(Math.random()*20); if(r===1)return false; if(r===20)return true; return hv>=r; }
 function mobDmgRoll(t){ var lo=(t.dmgMin!=null?t.dmgMin:1), hi=(t.dmgMax!=null?t.dmgMax:(t.dmg||2)); return lo+Math.floor(Math.random()*Math.max(1,hi-lo+1)); }
 function mobStRoll(t){ var cfg=(typeof MOB_ST!=='undefined')?MOB_ST[t.name]:null; if(cfg&&Math.random()<cfg[1]) afflict(cfg[0],cfg[2]); }
-function mobAttack(m,t){ m.cd=900;
+function mobAttack(m,t,partyTarget){ m.cd=900;
   if((m.stF||0)>Date.now()) return;                                    // 冰凍中無法攻擊
+  var tx=partyTarget?partyTarget.x+16:player.x+player.w/2, ty=partyTarget?partyTarget.y+16:player.y+player.h/2;
+  var applyDmg=partyTarget? (function(dmg){ hurtPartyMember(partyTarget,dmg); }) : hurtPlayer;
   if(t.caster && m.mp>0){ m.mp-=(t.mpCost||20);
-    mobFx.push({kind:'bolt', x:player.x+player.w/2, y:player.y+player.h/2, life:650});
-    warnMsg(t.name+' 施放了落雷！'); hurtPlayer(t.dmg);
+    mobFx.push({kind:'bolt', x:tx, y:ty, life:650});
+    warnMsg(t.name+' 對'+(partyTarget?('『'+partyTarget.name+'』'):'你')+'施放了落雷！'); applyDmg(t.dmg);
     if(m.mp<=0) warnMsg(t.name+' 的魔力耗盡，改為近戰！');
-  } else if(t.ranged){ if(!mobHitRoll(t)) return; mobFx.push({kind:'arrow', x0:m.x+16, y0:m.y+16, x:player.x+player.w/2, y:player.y+player.h/2, life:150}); hurtPlayer(mobDmgRoll(t)); mobStRoll(t); }
-  else { if(!mobHitRoll(t)) return; hurtPlayer(mobDmgRoll(t)); mobStRoll(t); } }
+  } else if(t.ranged){ if(!mobHitRoll(t)) return; mobFx.push({kind:'arrow', x0:m.x+16, y0:m.y+16, x:tx, y:ty, life:150}); applyDmg(mobDmgRoll(t)); if(!partyTarget) mobStRoll(t); }
+  else { if(!mobHitRoll(t)) return; applyDmg(mobDmgRoll(t)); if(!partyTarget) mobStRoll(t); } }
 function playerDown(){ warnMsg('你被擊倒了……');
   S.hp=0; S.exp=Math.max(0,S.exp-Math.floor(expNeed()*0.1));   // 死亡：血維持 0，直到重生
   refreshUI(); openEndMenu(true); }
@@ -2482,14 +2893,14 @@ function render(){
   ctx.fillStyle='#243c18'; ctx.fillRect(0,0,VW,VH);   // 邊界外底色（深草綠）
 
   // 1) 地面層（依深度 tx+ty 由遠到近）
-  const FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT]);
+  const FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS]);
   { const _dLo=Math.floor((-HW-4-originX)/HW)-1, _dHi=Math.ceil((VW+HW+4-originX)/HW)+1;   // 可視範圍：tx-ty
     const _sLo=Math.floor((-HH-4-originY)/HH)-2, _sHi=Math.ceil((VH+HH+4-originY)/HH)+1;   // 可視範圍：tx+ty
   for(let ty=0;ty<MAPH;ty++){ const _a=Math.max(0, ty+_dLo, _sLo-ty), _b=Math.min(MAPW-1, ty+_dHi, _sHi-ty);
   for(let tx=_a;tx<=_b;tx++){
     const t=MAP[ty][tx]; const s=tileCenter(tx,ty);
     if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) continue;
-    const under = t===T_GATE ? T_PATH : (FLOOR.has(t)?t:T_GRASS);   // 城門下鋪石板
+    const under = t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : (FLOOR.has(t)?t:T_GRASS);   // 城門下鋪石板；薄石牆下鋪泥土(地牢地板)
     drawIsoFloor(under, s.x, s.y);
   } } }
 
@@ -2501,7 +2912,7 @@ function render(){
 
   // 3) 立體物件 + 實體，統一依深度排序
   const talls=[];
-  const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE]);
+  const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE,T_STONEWALL]);
   { const _dLo2=Math.floor((-HW-40-originX)/HW)-1, _dHi2=Math.ceil((VW+HW+40-originX)/HW)+1;
     const _sLo2=Math.floor((-120-originY)/HH)-2, _sHi2=Math.ceil((VH+HH+40-originY)/HH)+1;
   for(let ty=0;ty<MAPH;ty++){ const _a2=Math.max(0, ty+_dLo2, _sLo2-ty), _b2=Math.min(MAPW-1, ty+_dHi2, _sHi2-ty);
@@ -2967,6 +3378,11 @@ MOB_SHEETS['琳達']="iVBORw0KGgoAAAANSUhEUgAAAgAAAABACAYAAABsv8+/AAAHA0lEQVR4nO
 MOB_SHEETS['艾利溫']="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";
 MOB_SHEETS['里迪']="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";
 MOB_SHEETS['稻草人']='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';
+MOB_SHEETS['骷髏弓箭手']="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";
+MOB_SHEETS['骷髏斧手']="iVBORw0KGgoAAAANSUhEUgAAAgAAAABACAYAAABsv8+/AAAUCElEQVR4nO2df2wcx3XHv+/2fEdLVEnYQJJGjQWJiH7UlKUKjmFLtVADdeQ0ARIbQWzUUiSqLiAbMWxCjMzkBNSOJZuV7LoCbPNQpJEVEvmnDVRJSSylslyIUSUzgUFSYkXWDtUCVUxHqHNn/TDphvf6x+7MzuwuybNN8m733gdYiNo7Svtm3rz35s2bWUAQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQBEEQEgJV+gFqEiLWP4LAYIC5NvqCiAFXfEIKAMBcqg3ZbRjkic2GOtQQRClmlEBIgcHuWKgdXfD7X9+pERsAuHbA13uAqLbkrxLmvsGJ2Ek51q2Jid/XTMc7TppH3/o5/uDGhdb9bOMygJPtAIhS/NtfHw/JPu+Gm2tKB4hSPFY4r/8+NNCLR57oxJk3emumHYJtAABjHxTR+Ie3Jz8IIOLxwlDodl3jiuTLjui+Hxroxer1m2tBfgYRKGDqKyV3ai7/M8dJc//JH+Lae4PWBTUlTDpE/FLHo7j8/pXQR+OFYRClktsORNy55zH85uLF0EfX3htMtuwGUcZv+S234cSr+3Hypy9a2aGkQpTivpMHQvfrrm+Adz+5bTCJ8x8a6EXnnseAJMsOAEQh/Vd07nks2fpPxP09XRgvDGGscF5fhXfOABXq9zkLAIhS/FLHo/jswoWhz/p7upLd8QpPwndGfxP58VjhfOId4ekzb+LihWFcvDBs3R8rnAeIOOHys2fkLcY+KOLihWGcPTsMKy2aUDjC1g0N9OLihWGcPvNmBZ5ozuDxwhDGPihaN4cGenH6zJuor59XoceaI6YIfrT8NaD/Qequb8BI3+GK+MD0XP1HzKVJP1t+y23oyG1B+65XGEj+OtDZs8Oonz8fy2+5LfRZlHFMGj//19e9n15Hff08rGxerj/7XeF3uPGGGzmBqXDdsfv/IR/5hfr6eWotlJHcegDO73kcp8+8aTm9K1euVfix5oaLF4Zx+XIRZ8/5jrBWZI9y7u//78WkB30A3Alw557HIm2+pgLBz5wuAQDAsWOvRd7/o4WfRdKzXwCjUCwAcGfCQwO9qGtcgV+dfh1DA73oOXEUSW6D0Xcvob5+nnW9/ev/xpWrV7Hqzk36exOliQo+5QxB0R1ZKBZCbWC2RZL7X1FfP0/rAuA7QHU/VByXIJb8yVex6s5NuHLlWsjx/8/F6MxgklB2rq5xBYYGevHjHx/Rn7n6X3sMDfTi30+/UZH/e84yAIBv/LINy9y0P4ArV69i/Ze/hQMvPjGXj1IhXMNWKBbQ2NCIK1evgrmEP/3SIxgrnMeqhmUVfr7ZwXHSPFGaQF3ddSEjV1d3nfcTAczY9b1n5/4BZxiiFHsZL3MmT97fdRuMjf2fIb/XFqy/m2iidGH03UtWeyQQrQMq4KsrRsjrVsgnUAcIy2+5Dasal4dmu4Viwe17NwNWoeebPVRmt65xhapzwZWrV7HuS9vQ/XKuYlmgOQ0ATNb8WQuuvTeIbIQyJBdG+679IEqh6+XvYOnSpRgvumvh2YZlidwK4zhpfqnjUWzb8fdo37XfvenN8DpyWwAAPb94A+PFIWQbluHYsZ8kQh/atrcDAJ57vkMJQwCofdd+7tjZAgB48rluAID6ey1Qv2A+Nj7yDDpyW3QA1L77lWCfJ2oMWDAwXhzGP/3ohzrYad/9ivWV7pe/i40P707gMhAj27gcqg5gaKAXALDt2y/4WZ+E2T+FqvpnLmH1+s0YK5xXO7+Si+OkmSjFjpPm+gXzGQBfGjnB48VhHi8Os+Ok9c9IdlO4uEUenN/b6srrFb0luQ2IUq68RAwi7tjZwh07W9hLkXs/E3d35hgAr2xuTkI78MrmZm7b3s6FYlH3NUBKNgYRHz+4jw91d7DSi5oohHVx+91oi46dLda4ABE7TjqZ7eH1t2qD/N5WX3bTPsR/HATRts61CaqvDX1IWL8r/3f84D4GkZbftPv9PV3J7G+iFHd35vjJto2mgFZDGI4v0RXgRCk+1N2hFQFwnV53Z04bvEo/40zjOGnt2JXDU4Pe62sGwKeO5hkANzUt4bbt7bEeCEqulc3NOpgJ6rnqbx0Y+c6fASTKAEaRyWS1vJlM1moTePqg2yxh40IZ/vzeVtXPWnZzrGi7kDCIUnpSqOU19N90kBV+1BkhNMkN+j4y/GLyxr4rrDLw6jI7Xg0C917yFN5DR3xWtGcow6WRExxZOGY4zDgNCjXAn2zbaBn34mivJbf/GXHb9vb4ZwCIeNfTT4UCgO7OnO7nU0fz3N/TpfXBNAhJzQQprIwXEY/0Heb+ni7dDuZs+NTRfCKdoBrPZqDT1LTEsg0dO1vc7FCSdIHc8a8uFeSYmbBD3R2JCvwcJ232o58J9OyhFQQB3N/TlYwgQA10U0DVEMoYmp93d+b4+MF9sXJyHwEeLw5bimAouTn7syHidWvXcqFYDKSS4wFRSqf2jh/cFwoCXWfnDoampiVMlHKdZoxkDKJk2LrlIUtW5dTUkodyeO53yNKLTCYb13FgZXYi+5FgjHtjSQh+UGi2lesYEuQEffj4wX2WHVBZQgQyQpV9zBnGnPEaS6AwnGF+b2siggDTB+pxEcgAuPdJ97uSPQFBAIU6VnWqTvsFrksjJ+Jq+KZDy66zIWQEAZMpOhEXikVu297Obdvbdepsbh/9E6PlPXU079WCkC27kSFQs+YYygnADwBUZssd2GQbdG/W881v3KPHRTA4jNk4YKKUrnnwA9ZIvdZ2QS0RqlSoMn7mGrheJkuYIyRKcSaTNW2eDgSNJZJEEcwKmsHPpZETVhuoz2I2DixUAKBkCAbHRCn+zKc+rWXt7+nSf8ZZbphRnbpU6jeTyQYCA63oNREAwHMKZhrUWgsOoAxrzFPj3N2Z8xyeP8CJUjrtqWojHrj/Qf7Mpz4dVzkBIl7Z3Kydm3Jmf968KJT9aGpaYq0NmuugsRoHRDpIVddUQa3K/KiZP3RQ4AZG+b2tapIAeGlRr50Shcr0KNnze1uTWxAWrG0gf73fXeqBWRALeDpRHO2N11jwUH7OyHzqAMhcBlNBgekfYjf+TTKZrL+OA7uq1XR8mUyWHSdtzvS4Y2dLbDt8Uoj40sgJL8Ila/nDrIz3ZzmBqNdzKCubm13HGMuZAWknr4z+oe4OnQlSBuCB+x/kB+5/MO7GTwcAxdFebmpaEk7pemuh1jKQcekUebz6WgeqUwYAgQyAWgJwnDSP9B3m/N7WwPh3x0d/T5cZFFQtEdnN6bAcAWK2zFcOyvEp50eU4l1PP2U5PHeCaLVXXMeBjxfsmtlMNTEA/ABopO+wZRsSsPzhGngzrdndmbOi2+Job3BAc35v62TpPv17MQwOjOIuChp8Fy8QsNtMb4fhdWvXctv2dnfQxM05esse2//6a35Kj/xAyHHSOhAy1s3jibe++cD9D3q1DHY/Pvn1u4zMl+/s9e4I+LUyMSwG1IHqFNkqP/VrpEH9epBAPUy4UKq68TIh1jLIFPULyhlq2+BlO2A4gzl79tnEWuoL1Td4NsHeIROoko8dZkCndFtNemHoebBOTskeQz8XwJv5Qnd0eKYTsc4bNnzeOri6ppldVCcULvwLzWYIbBsEcMuaRTqlOo1hrV68AECta/k7IeyUNxIy87nni3+hMxlGNsOcybBK96r04GQ1MYhXX4eXAQwnD8/Q+xm+QP2Hdx0/uM+dDXq/a9QDVDdRyyBTPHcwEIbn8NU6cMuaRfGRvRy8/jWLmXc9/RTvevopvSNC7frQNjCm9sBM9QN2rZce90YQpM7IUd9NUOGrnwIxD/5Qab+IyD5q5sOYzLjEBSJ/pmulvNyIWClKy5pF3LJmkVkboSvjYxsAeP1nbndzU16kZQ7UjMQaZditIMDrd3NPsHkAkLks1rLGrxWIQ8rbgNetXRvSVaXTINI6r+/B3vOvDgkLbhuGMTOspIBlwE1NS6Yeq4bhN7OCqg10BmCynUExJJPJ6jM+2ra3G7NgP0A0JwixTvsDepvnvTc1aFmtZV9P71VRdH9Plw72rKWgWPb/JGuagH3CVVQAoCsiI5YA7PXFuDUMmfv89SzQnOn7ht+uFkd5qdXqRqX+YG8BBex7sR70Qby+0wGAZxRG+g5r+dU2MBUUKSOo9KFlzaJgnUw1Y+spIaDvhsPzghsls9ke6rv33tRgjQ01I67y1KjVBu54Nbb6ejpRv2C+Tm9HnIaarHGg8GqZlB036pmsICgmgV75hDMaRj/Dd/5EbqGwkfFWv1vlOu/jOGnO7221Bi2Mwa+U/Ad/83AoSFAVsZOlQ0PGJS6oGb7X+TvuXq3bJWKrSyjwWbd2LW/d8pC9tzxuA4TIygCZW79MHansQ84aunZDFbnBcgikg+ORvsN834bbLb2/96aGuBwIY41RI62pl4HMNV016zOPiTb3SoeNJcVB97WTMzOVUfbQTAObaV91TkRlxZgVLP1wnDTvuHu1bw/N2pDq1/WycQMdWBPgqMlecOecqUOxCQBMgxa88ntbefXKpQy4xVDmoGhZs0in/fp7ukIDJpj+j02DeFtblCxWcBNc/7RhwD0cZ+uWh0JXrAwEwTjsRQ/sQEQcI3k+Dl49zJTFbF4RqFURbATHk/5edaCzHcrAh3ZzGA7dcdK2849CBY1x0vWpMgDBwMYoejMNv3kmfgXlmHmMDIAKjHbcvVo7P3gyj/QdTo7swdovs+/JXB6Dro1RAYNqK6NwcJYecZbIZLL8y9e+j1ePnfDfAjcJ3Z05bHx4N04dzWPdPdtCn69sbrb+fvbcOWAWn32mUIEKg2G97cx781V+z+Oor5+HjQ/vBmx5mCiFls1bQ//mz352BKO/fbfqZQfgOv+c+6a77+w+AOaSem4eLw7j6JGD+OrGdvebSYXA/Se79Ks/wZPLSpTizj2P4Yt334WFi5cF35RZzW3ED9z/YOjm4GA/zg4OIviGN6IU9508gFXrN03eHkSc3/M4CsUC2nfvn7Ldqgg2bdW0doqIxwtDGBroxar13wSYiSjFz+Y2A4B6S2Ic5C4HDtrxc4P/AeYSEaWYwchcl8EvX/s+Vq/fbNqK2EKUYvetf8uj+5GI9fj2XoPctr0dp0+fxPvvv6+/ptpprp77E+M4aS6O9pZ9rnEmkw2+ESv0eVzXwdUarlkEot6QN9X6jir+M9eDYhgZ85NtG6Nk5FNH834hZLLh7s6cuw2yDMyiIcRIz+Ft4zR37OiKbwPHSXv1MFP3uxobgcxR1RMq2p1CTmUXQjaSEDu5p0NlsVS7RNmE/p4uHuk7bFbQxxsyXvg2fV9y1E4S41TRWSE10/+gev87AKy6cxMmJn4/beTyvR1/ifr6edi24wUgHDHzffd+3b4Tn1gIpVIJx/75eQDQMzoV4TNKk0Z2zCU6OziIxsZGNDY2uhFk3GYDRHjq+R9FfrL+y9/Cvx0/gfHCEGJS5PaxWbz4c/j80sUox6hNlCbQ39OFo0cO6kxRLGCmHxz4RzQ2NPhXYwNgjFbHSfO19wZx7NhrmM4exmrG45HJZJm5hC/cejsA4Au33o6tm/8KiFjXzmSyfO29QRw9chClUknfJ0pxfk/rHD713PDhh+NWfzbf/MfB8UCr7tyEhYuXYcGCBd6dmAdAzLTxkd1lf3118+fx3N/9LY4d+4m+ANcmzBYzHgCUSiXU18/DkYOHyvsFL0Le+Mgz4TSfu24EALj55lX+nzFRC6IU/+LVl/H22/+FeTfcrO+3796Ph3fsQ/fLOdxz54rJpVFOP26OH67sHbkteDa3Gc/mNiN4GtaBF5/A5cuXkW1cXlaQGGduveMubPv2C2U5NQJhwYIGfG3Td+OX/nWf178C43miNIFfnX4dixd/DlSG6WGOyUD3+PDDcailEBUEAEChWIz6LtU1rsD8+dej8M4ZvV78bG4z3vrPC+6yaZwCwHLwxNmw4SvYsOEr7tJo4BvZhmV455138S9dz8BJpef6CWcUohSPF4bL/nrfubew7o47rJtnz52Llx3Qb7QqI7WrzgfQWwLNiM/bDrF1y0PWnmp1Vf2s0dgCNcnML7jnM3Go3Q8h+b2Ct6rvw0+Ikv+jVPHro0LjPvuZDO+lUOX1vdt26qjg2X+4Tw5RatplEBN1aEwSK+Bt/C3N0xV0Kx8Slz6PgijF92243bTx0/2ClfZXZ2qU9bvVguOkWb0LoFwDprb+ZTJZLo72BjqdQoOpqWlJHBSDuztzyXuvwQyQhMFdDmpLrHrDXbl6YDqEJL8Vrsw20bUvI32H4zOWwmehTPN1t/o7Zgc/fSSampZYhwFNt5vLcdJ8qLsjPn0exNaB6bDe+mqelxCr8U+UChz/+9FwnHRkcQjsLTRxgQFEBDW1jQoAzNcjJ9XwfYwXwwDm1jBKwKtBDdT2P3UA0kcZF0kdQyrgC7wcKpE0NS3RJ5tOFQCYJwImRfengREIAqZ9q2a1od5trfY8I06pi9nE2ONZ6UepEvSZ7/Cr3QVF9AE4SSB0BHLNjwlz33uCjv6dFv9k0KgPjWPSE6P700P2i6SMI5Nn97+d4X/Pquqc4X87vhA4JvuY5xLRldoiaMykz5WDc4sdpT1c2NsTX4vtIWNEEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEOLG/wMPoEiFPHUDcAAAAABJRU5ErkJggg==";
+MOB_SHEETS['骷髏槍兵']="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";
+MOB_SHEETS['史巴托']="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";
+MOB_SHEETS['巴風特']="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";
 const MOB_SHEET_IMG={};
 for(const k in MOB_SHEETS){ const im=new Image(); im.src="data:image/png;base64,"+MOB_SHEETS[k]; MOB_SHEET_IMG[k]=im; }
 function mobSheetReady(type){ const im=MOB_SHEET_IMG[type]; return (im&&im.complete&&im.naturalWidth)?im:null; }
@@ -2975,9 +3391,9 @@ const NPC_PORTRAIT_IMG={};
 for(const k in NPC_PORTRAITS){ const im=new Image(); im.src="data:image/png;base64,"+NPC_PORTRAITS[k]; NPC_PORTRAIT_IMG[k]=im; }
 function npcPortraitReady(name){ const im=NPC_PORTRAIT_IMG[name]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 const NPC_PORTRAIT_SCALE={"瑞奇":1.15,"高特":2.9};  // 依各圖實際像素比例校正，讓顯示高度統一貼近玩家角色
-const MOB_SCALE={"潘朵拉":1.5,"吉倫":1.5,"妖魔商人":1.5,goblinG:2.2,"人形殭屍":1.5,"石頭高崙":2.5,"克特":2,"侏儒":1.5,"長老":1.5,"夏洛柏":2.5,"黑騎士":1.5,"骷髏":1.5,"飄浮之眼":1,"史萊姆":1,"地靈":1.5,"狼":1,"狼人":1.5,"牧羊犬":1,"杜賓犬":1,"野豬":1,"那翰":1.5,"娜魯帕":1.5,"精靈":1.5,"精靈女皇":1.5,"安特":1.5,"潘":1.5,"芮克妬":1.5,"布拉伯":1.5,"艾爾":1.5,"琳達":1.5,"艾利溫":1.5,"里迪":1.5};
+const MOB_SCALE={"潘朵拉":1.5,"吉倫":1.5,"妖魔商人":1.5,goblinG:2.2,"人形殭屍":1.5,"石頭高崙":2.5,"克特":2,"侏儒":1.5,"長老":1.5,"夏洛柏":2.5,"黑騎士":1.5,"骷髏":1.5,"飄浮之眼":1,"史萊姆":1,"地靈":1.5,"狼":1,"狼人":1.5,"牧羊犬":1,"杜賓犬":1,"野豬":1,"那翰":1.5,"娜魯帕":1.5,"精靈":1.5,"精靈女皇":1.5,"安特":1.5,"潘":1.5,"芮克妬":1.5,"布拉伯":1.5,"艾爾":1.5,"琳達":1.5,"艾利溫":1.5,"里迪":1.5,"骷髏弓箭手":1.5,"骷髏斧手":1.5,"骷髏槍兵":1.5,"史巴托":1.5,"巴風特":2};
 const SPR_F=64, SPR_FOOT=56, SPR_CX=32, SPR_HEAD=16;
-MOB_SCALE['巴辛']=1.5; MOB_SCALE['稻草人']=1.0;
+MOB_SCALE['巴辛']=1.5; MOB_SCALE['稻草人']=0.75;   // 稻草人圖片本身在64x64畫布內幾乎佔滿(玩家角色只佔約一半)，同樣scale=1.0時稻草人反而比玩家還大，實測後0.75跟玩家的實際顯示大小一致
 const DIR8_FRAME={down:0,'down-right':1,right:2,'up-right':3,up:4,'up-left':5,left:6,'down-left':7};
 const DIR8_ROT={ 'down':'down-left','down-right':'down','right':'down-right','up-right':'right','up':'up-right','up-left':'up','left':'up-left','down-left':'left' };
 function dir8of(dx,dy){ if(!dx&&!dy)return null; const ax=Math.sign(dx),ay=Math.sign(dy);
@@ -3174,13 +3590,16 @@ function drawEntityIso(art, wx, wy, label, col, mark, moving){
   g.topY=topY; return g;
 }
 function drawMobIso(m){ let g; const sheet=mobSheetReady(m.type);
+  const _isScarecrow = (m.type==='稻草人');
+  const _dispName = _isScarecrow ? '' : m.name;   // 訓練場稻草人不顯示名字(一堆同名稻草人掛名牌很怪)，其餘怪物照常顯示
   if(m===lockTarget){ const rs=groundScreen(m.x+16,m.y+28); ctx.save(); ctx.strokeStyle='#ff2b2b'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.ellipse(rs.x, rs.y-4, 25, 12, 0, 0, Math.PI*2); ctx.stroke(); ctx.restore(); }
   if(sheet){ const gs=groundScreen(m.x+16,m.y+28); actorShadow(ctx,gs.x,gs.y,14,5);
     const sc=MOB_SCALE[m.type]||1.4;
     const topY=drawSheetFrame(ctx,sheet,gs.x,gs.y,sc,(DIR8_FRAME[m.dir8||'down']??0));
-    nameTag(m.name, gs.x, topY-2, '#ffffff'); g={x:gs.x, topY:topY};
-  } else { g=drawEntityIso(m.type, m.x, m.y, m.name, '#ffffff', false, !!m.moving); }
+    if(_dispName) nameTag(_dispName, gs.x, topY-2, '#ffffff'); g={x:gs.x, topY:topY};
+  } else { g=drawEntityIso(m.type, m.x, m.y, _dispName, '#ffffff', false, !!m.moving); }
+  if(_isScarecrow) return;   // 稻草人不顯示血條(固定9999血量沒有實質意義)
   const w=30,ratio=m.hp/m.maxhp, by=g.topY-8;
   ctx.fillStyle='#000'; ctx.fillRect(g.x-w/2,by,w,4);
   ctx.fillStyle=ratio>0.5?'#4ae04a':ratio>0.25?'#e0c040':'#e04040'; ctx.fillRect(g.x-w/2,by,w*ratio,4); }
@@ -3193,10 +3612,13 @@ function drawGraveIso(cx,cy){ shadow(cx,cy,16,7);
 function drawPartyMemberIso(p){
   const g=groundScreen(p.x+12, p.y+36);
   const art=CLASS_ART[p.cls]||'royal'; const img=(typeof sheetReady==='function')?sheetReady(art,p.gender):null;
-  let topY;
+  let topY; ctx.save(); if(p.down) ctx.globalAlpha=0.45;
   if(img){ actorShadow(ctx,g.x,g.y,15,5); topY=drawSheetFrame(ctx,img,g.x,g.y,1.5,(DIR8_FRAME[p.dir8||'down']??0)); }
   else { topY=drawActor(ctx, CLASS_ART[p.cls]||'hero', g.x, g.y, ACTOR_S, false); }
-  nameTag(p.name, g.x, topY-2, '#a0ffb0'); }
+  ctx.restore();
+  if(!p.down && typeof drawPartyBuffAuras==='function') drawPartyBuffAuras(p,g.x,g.y,topY);
+  var _col=p.down?'#909090':((typeof alignNameColor==='function')?alignNameColor(p.align||0):'#a0ffb0');
+  nameTag(p.name+(p.down?'（倒下）':''), g.x, topY-2, _col); }
 var BUFF_VFX={                                   // 像素版天堂專屬：輔助魔法光環主題（方塊粒子，非圓形漸層）
   '日光術':{color:'#ffe9a0', color2:'#fff6d0', style:'firefly'},   // 螢火蟲狀，向上飄浮
   '保護罩':{color:'#9fd0ff', color2:'#e8f5ff', style:'ring'},       // 藍白方塊光環，環繞腳邊旋轉
@@ -3239,42 +3661,52 @@ var BUFF_VFX={                                   // 像素版天堂專屬：輔�
   '堅固防護':{color:'#9ac0e8', style:'pulse'},                       // 藍色專注脈衝，迴避系
   '灼熱靈氣':{color:'#ffb84a', color2:'#ff8020', style:'spark'},     // 橘色靈氣火花
   '勇敢靈氣':{color:'#ffd050', color2:'#ff3a1a', style:'spark'} };   // 金紅靈氣火花（更強烈）
+function renderAuraStyle(vfx,gx,gy,t){
+  ctx.save();
+  if(vfx.style==='ring'){ var n=6, r=15;
+    for(var i=0;i<n;i++){ var ang=(t/500)+i*(Math.PI*2/n);
+      var px=gx+Math.cos(ang)*r, py=gy-4+Math.sin(ang)*r*0.42, sz=3;
+      ctx.fillStyle=(i%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(px-sz/2),Math.round(py-sz/2),sz,sz); } }
+  else if(vfx.style==='ring4'){ var n5=8, r5=15; var cols=['#ff8a5a','#7ac8ff','#b08a5a','#9af0a0'];
+    for(var q=0;q<n5;q++){ var ang5=(t/600)+q*(Math.PI*2/n5);
+      var px5=gx+Math.cos(ang5)*r5, py5=gy-4+Math.sin(ang5)*r5*0.42, sz5=3;
+      ctx.fillStyle=cols[q%4]; ctx.fillRect(Math.round(px5-sz5/2),Math.round(py5-sz5/2),sz5,sz5); } }
+  else if(vfx.style==='firefly'){ var n2=5;
+    for(var j=0;j<n2;j++){ var cyc=((t/900)+j/n2)%1;
+      var px2=gx+Math.sin((t/700)+j*37)*14, py2=gy-6-cyc*40, a=Math.max(0,1-cyc), sz2=2;
+      ctx.globalAlpha=a; ctx.fillStyle=(j%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(px2-sz2/2),Math.round(py2-sz2/2),sz2,sz2); }
+    ctx.globalAlpha=1; }
+  else if(vfx.style==='spark'){ var wx=gx+10, wy=gy-28, n3=3;
+    for(var k=0;k<n3;k++){ var ang3=(t/260)+k*(Math.PI*2/n3);
+      var px3=wx+Math.cos(ang3)*6, py3=wy+Math.sin(ang3)*6, sz3=2;
+      ctx.fillStyle=(k%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(px3-sz3/2),Math.round(py3-sz3/2),sz3,sz3); } }
+  else if(vfx.style==='pulse'){ var pu=(t/900)%1, r2=6+pu*22;
+    ctx.globalAlpha=Math.max(0,1-pu); ctx.strokeStyle=vfx.color; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.ellipse(gx,gy-4,r2,r2*0.42,0,0,7); ctx.stroke(); ctx.globalAlpha=1; }
+  else if(vfx.style==='float'){ var n7=4;
+    for(var f=0;f<n7;f++){ var fy=gy-8-((t/1000+f/n7)%1)*16, fx2=gx+Math.sin((t/600)+f*50)*10, sz7=2;
+      ctx.fillStyle=(f%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(fx2-sz7/2),Math.round(fy-sz7/2),sz7,sz7); } }
+  else if(vfx.style==='trail'){ var n8=3;
+    for(var tr=0;tr<n8;tr++){ var tx=gx-8-tr*5, ty=gy-6+Math.sin((t/300)+tr)*2;
+      ctx.globalAlpha=(1-tr/n8)*0.8; ctx.fillStyle=vfx.color; ctx.fillRect(Math.round(tx-3),Math.round(ty-1),4,2); }
+    ctx.globalAlpha=1; }
+  else if(vfx.style==='shield'){ var br=14+Math.sin(t/300)*1.5;
+    ctx.strokeStyle=vfx.color; ctx.lineWidth=1.5; ctx.globalAlpha=0.75;
+    ctx.beginPath(); ctx.ellipse(gx,gy-8,br,br*0.85,0,0,7); ctx.stroke(); ctx.globalAlpha=1; }
+  ctx.restore(); }
 function drawBuffAuras(gx,gy,topY){
   if(!S.buffs) return; var now=Date.now(), t=performance.now();
   for(var bn in S.buffs){ var bf=S.buffs[bn]; if(!bf||bf.until<=now) continue;
     if(now-(bf.cast||0)>1500) continue;                 // 只在剛施放的1.5秒內顯示光環，之後靠右側狀態圖示提示即可
-    var vfx=BUFF_VFX[bn]; if(!vfx) continue; ctx.save();
-    if(vfx.style==='ring'){ var n=6, r=15;
-      for(var i=0;i<n;i++){ var ang=(t/500)+i*(Math.PI*2/n);
-        var px=gx+Math.cos(ang)*r, py=gy-4+Math.sin(ang)*r*0.42, sz=3;
-        ctx.fillStyle=(i%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(px-sz/2),Math.round(py-sz/2),sz,sz); } }
-    else if(vfx.style==='ring4'){ var n5=8, r5=15; var cols=['#ff8a5a','#7ac8ff','#b08a5a','#9af0a0'];
-      for(var q=0;q<n5;q++){ var ang5=(t/600)+q*(Math.PI*2/n5);
-        var px5=gx+Math.cos(ang5)*r5, py5=gy-4+Math.sin(ang5)*r5*0.42, sz5=3;
-        ctx.fillStyle=cols[q%4]; ctx.fillRect(Math.round(px5-sz5/2),Math.round(py5-sz5/2),sz5,sz5); } }
-    else if(vfx.style==='firefly'){ var n2=5;
-      for(var j=0;j<n2;j++){ var cyc=((t/900)+j/n2)%1;
-        var px2=gx+Math.sin((t/700)+j*37)*14, py2=gy-6-cyc*40, a=Math.max(0,1-cyc), sz2=2;
-        ctx.globalAlpha=a; ctx.fillStyle=(j%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(px2-sz2/2),Math.round(py2-sz2/2),sz2,sz2); }
-      ctx.globalAlpha=1; }
-    else if(vfx.style==='spark'){ var wx=gx+10, wy=gy-28, n3=3;
-      for(var k=0;k<n3;k++){ var ang3=(t/260)+k*(Math.PI*2/n3);
-        var px3=wx+Math.cos(ang3)*6, py3=wy+Math.sin(ang3)*6, sz3=2;
-        ctx.fillStyle=(k%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(px3-sz3/2),Math.round(py3-sz3/2),sz3,sz3); } }
-    else if(vfx.style==='pulse'){ var pu=(t/900)%1, r2=6+pu*22;
-      ctx.globalAlpha=Math.max(0,1-pu); ctx.strokeStyle=vfx.color; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.ellipse(gx,gy-4,r2,r2*0.42,0,0,7); ctx.stroke(); ctx.globalAlpha=1; }
-    else if(vfx.style==='float'){ var n7=4;
-      for(var f=0;f<n7;f++){ var fy=gy-8-((t/1000+f/n7)%1)*16, fx2=gx+Math.sin((t/600)+f*50)*10, sz7=2;
-        ctx.fillStyle=(f%2===0)?vfx.color:vfx.color2; ctx.fillRect(Math.round(fx2-sz7/2),Math.round(fy-sz7/2),sz7,sz7); } }
-    else if(vfx.style==='trail'){ var n8=3;
-      for(var tr=0;tr<n8;tr++){ var tx=gx-8-tr*5, ty=gy-6+Math.sin((t/300)+tr)*2;
-        ctx.globalAlpha=(1-tr/n8)*0.8; ctx.fillStyle=vfx.color; ctx.fillRect(Math.round(tx-3),Math.round(ty-1),4,2); }
-      ctx.globalAlpha=1; }
-    else if(vfx.style==='shield'){ var br=14+Math.sin(t/300)*1.5;
-      ctx.strokeStyle=vfx.color; ctx.lineWidth=1.5; ctx.globalAlpha=0.75;
-      ctx.beginPath(); ctx.ellipse(gx,gy-8,br,br*0.85,0,0,7); ctx.stroke(); ctx.globalAlpha=1; }
-    ctx.restore(); } }
+    var vfx=BUFF_VFX[bn]; if(!vfx) continue;
+    renderAuraStyle(vfx,gx,gy,t); } }
+/* 隊友的被動技能維持：只要勾選就持續顯示對應光環特效，不受「剛施放1.5秒內」限制(因為是持續維持的被動效果，不是單次施法) */
+function drawPartyBuffAuras(p,gx,gy,topY){
+  var a=(typeof allyAts==='function')?allyAts(p.slot):null; if(!a||!a.buff) return;
+  var t=performance.now();
+  for(var bn in a.buff){ if(!a.buff[bn]) continue;
+    var vfx=(typeof BUFF_VFX!=='undefined')?BUFF_VFX[bn]:null; if(!vfx) continue;
+    renderAuraStyle(vfx,gx,gy,t); } }
 function drawPlayerIso(){ const g=groundScreen(player.x+player.w/2, player.y+player.h);
   if(S.hp<=0){ drawGraveIso(g.x,g.y); nameTag((S.name||'冒險者')+' †', g.x, g.y-42, '#c8c8d0'); return; }   // 死亡：顯示墳墓
   const moving=!!(moveTarget||attackTarget)||keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'];
@@ -3639,7 +4071,7 @@ function openTeleport(){ const w=document.getElementById('teleportw'), list=docu
     if(!collapsed){ spots.forEach(function(nm){ const d=document.createElement('div'); d.className='teleItem'; d.textContent='◈  '+nm; d.onclick=function(){ teleportTo(nm); }; list.appendChild(d); }); }
   });
   w.classList.add('on'); navBuildPanel('teleportw'); }
-const TELE_MAP={'說話之島村':'village','妖精森林':'elf_forest','銀騎士村莊':'silver_knight','稻草人修練場':'scarecrow','北島':'north_island','說話之島北邊港口':'port_n','說話之島東邊港口':'port_e','東邊狩獵場':'hunt_e','西邊狩獵場':'hunt_w','南邊狩獵場':'hunt_s','冒險洞穴1樓':'cave'};
+const TELE_MAP={'說話之島村':'village','妖精森林':'elf_forest','銀騎士村莊':'silver_knight','稻草人修練場':'scarecrow','北島':'north_island','說話之島北邊港口':'port_n','說話之島東邊港口':'port_e','東邊狩獵場':'hunt_e','西邊狩獵場':'hunt_w','南邊狩獵場':'hunt_s','冒險洞穴1樓':'cave','冒險洞穴2樓':'cave2'};
 function playTeleportFx(){ if(typeof mobFx!=='undefined'&&typeof player!=='undefined') mobFx.push({kind:'teleportfx', x:player.x+player.w/2, y:player.y+player.h, life:500}); }
 function teleportTo(nm){ document.getElementById('teleportw').classList.remove('on'); navClear();
   const id=TELE_MAP[nm];
@@ -3674,7 +4106,15 @@ function castSpell(sp){ if(!sp) return; var name=(typeof sp==='string')?sp:(sp.n
   var ty=fx?fx.type:'buff';
   function roll(dice){ var v=0; if(dice){ for(var r=0;r<dice[0];r++) v+=1+Math.floor(Math.random()*dice[1]); } return v; }
   if(name==='傳送術'){ S.mp-=mp;
-    var _tpPool=(typeof SPAWN_MAPS!=='undefined')?SPAWN_MAPS.map(function(m){return m[0];}).filter(function(id){return id!==curMapId;}):[];
+    if(curMap && curMap.dungeon){                                 // 地監內：只在同一層隨機找位置移動，不會傳送到野外去
+      let gx,gy,tries=0;
+      do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tries++; }
+      while(tries<300 && T_SOLID.has(MAP[gy][gx]));
+      if(T_SOLID.has(MAP[gy][gx])){ sysMsg('這裡無法使用傳送術。'); refreshUI(); return; }
+      player.x=gx*TS; player.y=gy*TS; moveTarget=null; attackTarget=null;
+      playTeleportFx(); sysMsg('施放「傳送術」，在這一層隨機移動了位置。'); refreshUI(); return;
+    }
+    var _tpPool=(typeof WILD_MAP_IDS!=='undefined')?WILD_MAP_IDS.filter(function(id){return id!==curMapId;}):[];
     if(!_tpPool.length){ sysMsg('這裡無法使用傳送術。'); refreshUI(); return; }
     var _tpDest=_tpPool[Math.floor(Math.random()*_tpPool.length)];
     loadMap(_tpDest); playTeleportFx(); sysMsg('施放「傳送術」，隨機傳送到附近區域。'); refreshUI(); return; }
@@ -3983,6 +4423,7 @@ function drawMiniMap(){ const c=document.getElementById('mmcv'), x=c.getContext(
   const sx=c.width/MAPW, sy=c.height/MAPH;
   for(let y=0;y<MAPH;y++)for(let gx=0;gx<MAPW;gx++){ const t=MAP[y][gx];
     x.fillStyle = t===T_WATER?'#3a7ac0': t===T_TREE?'#2a6a2a': (t===T_ROOF||t===T_WALL)?'#a0402a':
+      t===T_STONEWALL?'#6a6a72': t===T_MAGICCIRCLE?'#9a5aff': t===T_ALTAR?'#7a4aaa': t===T_STAIRS?'#c8a0ff':
       t===T_TOWNWALL?'#8a5a2a': t===T_GATE?'#b83a24': t===T_PATH?'#a89878': t===T_DIRT?'#b89060':
       (inVillage(gx*TS,y*TS)?'#5aa04a':'#4a8a30');
     x.fillRect(gx*sx,y*sy,Math.ceil(sx),Math.ceil(sy)); }
@@ -4326,7 +4767,7 @@ function startGame(){ if(!cc.cls) return;
   // （背包排序、已學魔法、快捷欄、ATS設定、試煉進度…等），確保每個存檔完全獨立
   Object.assign(S,{ acDexBase:undefined, align:0,
     equip:{weapon:null,body:null,helmet:null,tshirt:null,cloak:null,gloves:null,boots:null,shield:null,necklace:null,ring:null,ring2:null,belt:null,ammo:null},
-    inv:{}, invOrder:[], food:80, kills:0, ketaKilledAt:0 });
+    inv:{}, invOrder:[], food:80, kills:0, ketaKilledAt:0, baphoKilledAt:0 });
   S.spells=[]; S.ats=null; S.atsProf=null; S.trial50=null; S.redKnight=false; S.st={}; S.transformInto=null; S.transformUntil=0; S.statPoints=0; party=[]; partyMode='focus'; playerTrail=[]; _pendingPartySlots=null; _pendingPartyMode=null;
   for(let p=0;p<4;p++)for(let i=0;i<8;i++) hotbar[p][i]=null;
   if(typeof loadSharedWarehouse==='function') S.warehouse=loadSharedWarehouse(); else S.warehouse={};   // 倉庫改為跨角色共用
@@ -4531,7 +4972,7 @@ function renderSocial(){ var el=document.getElementById('socialList'); if(!el)re
   var h='', any=false;
   for(var i=0;i<SAVES.length;i++){ if(i===curSlot) continue; var d=SAVES[i]; if(!d) continue; any=true;
     var inParty=party.some(function(p){return p.slot===i;});
-    h+='<div class="socRow"><div class="socName"><b>'+d.name+'</b><br><span>Lv.'+d.lv+' '+d.cls+'</span></div>'
+    h+='<div class="socRow"><div class="socName"'+(inParty?' style="cursor:pointer" onclick="openPartyMember('+i+')" title="查看隊友資訊"':'')+'><b>'+d.name+'</b><br><span>Lv.'+d.lv+' '+d.cls+'</span></div>'
       +'<button class="socBtn'+(inParty?' on':'')+'" onclick="partyToggle('+i+')">'+(inParty?'踢出':'組隊')+'</button></div>'; }
   if(!any) h='<div class="socEmpty">目前沒有其他角色存檔<br>可以組隊</div>';
   el.innerHTML=h; }
@@ -4540,12 +4981,175 @@ function partyToggle(slot){ var idx=party.findIndex(function(p){return p.slot===
   else{ if(1+party.length>=8){ sysMsg('隊伍已滿（最多8人）'); return; }
     var d=SAVES[slot]; if(!d)return;
     var ang=Math.random()*Math.PI*2;
-    party.push({slot:slot, name:d.name, cls:d.cls, gender:d.gender||'male', lv:d.lv,
+    party.push({slot:slot, name:d.name, cls:d.cls, gender:d.gender||'male', lv:d.lv, exp:d.exp||0,
+      con:d.con||12, int:d.int||9, wis:d.wis||9, align:d.align||0,
       hp:d.hp, maxhp:d.maxhp, mp:d.mp, maxmp:d.maxmp,
       x:player.x+Math.cos(ang)*40, y:player.y+Math.sin(ang)*40, dir8:'down', atkCd:0, target:null});
     sysMsg('『'+d.name+'』加入隊伍！'); }
   renderSocial(); renderPartyHud(); }
 function partyDisbandAll(){ if(!party.length){ sysMsg('目前沒有隊友。'); return; } party=[]; sysMsg('隊伍已解散。'); renderSocial(); renderPartyHud(); }
+
+/* ============ 隊友資訊視窗：狀態／裝備／ATS設定（每位隊友獨立顯示） ============ */
+var _pmSlot=-1, _pmTab='stat';
+function allyAtsDefault(){ return {
+  hp:{on:false, pct:50, potion:'紅色藥水', buy:false},           // 自動喝水（HP%以下）
+  mp:{on:false, pct:50, potion:'藍色藥水', buy:false},           // 自動喝藍水（MP%以下）
+  haste:{on:false, potion:'自我加速藥水', buy:false},            // 一段加速（綠色藥水類）
+  h2:{on:false, buy:false},                                       // 二段加速（依職業對應道具）
+  act:{on:false, skill:'', mpMin:20},                             // 主動技能：選一招攻擊魔法定期施放
+  buff:{} }; }                                                    // 被動技能：勾選要維持的輔助魔法
+function allyAts(slot){ var d=SAVES[slot]; if(!d) return allyAtsDefault();
+  if(!d.allyAts) d.allyAts=allyAtsDefault();
+  var def=allyAtsDefault(); for(var k in def){ if(d.allyAts[k]==null) d.allyAts[k]=def[k]; }
+  if(!d.allyAts.buff || typeof d.allyAts.buff!=='object') d.allyAts.buff={};
+  return d.allyAts; }
+function openPartyMember(slot){ if(!SAVES[slot]) return; _pmSlot=slot; _pmTab='stat';
+  document.getElementById('partyMemberw').classList.add('on');
+  setPmTab('stat'); }
+function closePartyMember(){ document.getElementById('partyMemberw').classList.remove('on'); }
+function setPmTab(t){ _pmTab=t;
+  ['stat','eq','ats'].forEach(function(k){ var b=document.getElementById('pmTab_'+k); if(b) b.classList.toggle('on', k===t); });
+  renderPmBody(); }
+function renderPmBody(){
+  var el=document.getElementById('pmBody'); if(!el) return;
+  var d=SAVES[_pmSlot]; if(!d){ el.innerHTML='<div class="atsNote">找不到這位隊友的資料</div>'; return; }
+  var title=document.getElementById('pmTitle'); if(title) title.innerHTML=d.name+'（Lv.'+d.lv+' '+d.cls+'）<button class="sx" onclick="closePartyMember()">關閉</button>';
+  if(_pmTab==='stat') el.innerHTML=renderPmStat(d);
+  else if(_pmTab==='eq') el.innerHTML=renderPmEquip(d);
+  else el.innerHTML=renderPmAts(_pmSlot, d);
+}
+function renderPmStat(d){
+  var hpPct=d.maxhp?Math.max(0,Math.min(100,(d.hp/d.maxhp)*100)):100;
+  var mpPct=d.maxmp?Math.max(0,Math.min(100,(d.mp/d.maxmp)*100)):100;
+  var need=partyExpNeed(d.lv), expPct=need?Math.max(0,Math.min(100,((d.exp||0)/need)*100)):0;
+  var alignCol=(typeof alignNameColor==='function')?alignNameColor(d.align||0):'#e8dcc0';
+  var h='';
+  h+='<div class="pmStatRow"><span>HP</span><span>'+d.hp+' / '+d.maxhp+'</span></div>';
+  h+='<div class="pmBarBg"><div class="pmBarFill" style="width:'+hpPct+'%;background:#e0453a"></div></div>';
+  h+='<div class="pmStatRow"><span>MP</span><span>'+d.mp+' / '+d.maxmp+'</span></div>';
+  h+='<div class="pmBarBg"><div class="pmBarFill" style="width:'+mpPct+'%;background:#3a7ae0"></div></div>';
+  h+='<div class="pmStatRow"><span>EXP（Lv.'+d.lv+'）</span><span>'+(d.exp||0)+' / '+need+'</span></div>';
+  h+='<div class="pmBarBg"><div class="pmBarFill" style="width:'+expPct+'%;background:#e8c060"></div></div>';
+  h+='<div class="pmStatRow"><span>性向</span><span style="color:'+alignCol+'">'+alignNameOf(d.align||0)+' '+Math.floor(d.align||0)+'</span></div>';
+  h+='<div class="pmStatRow"><span>可配點數</span><span>'+(d.statPoints||0)+'（登入該角色時可分配，50級起自動累積）</span></div>';
+  h+='<div class="pmStatRow"><span>擊殺數</span><span>'+(d.kills||0)+'</span></div>';
+  return h; }
+function renderPmEquip(d){
+  var eq=d.equip||{};
+  var h='<div class="pmEqGrid">'+EQSLOTS.map(function(pair){ var s=pair[0],l=pair[1]; var id=eq[s];
+    return '<div class="eqcell"><span class="eqlbl">'+l+'</span><div class="eqico">'+(id?itemIcon(id):'<span class="eqempty">—</span>')+'</div></div>'; }).join('')+'</div>';
+  h+='<div class="atsNote" style="margin-top:8px">裝備僅供檢視，無法在此欄位更換</div>';
+  return h; }
+function pAtsT(sec){ var a=allyAts(_pmSlot); a[sec].on=!a[sec].on; persistSaves(); renderPmBody(); }
+function pAtsV(sec,k,v){ var a=allyAts(_pmSlot); a[sec][k]=v; persistSaves(); renderPmBody(); }
+function pAtsBuffV(name,v){ var a=allyAts(_pmSlot); a.buff[name]=v; persistSaves(); renderPmBody(); }
+function _ptog(sec,on,dis){ return '<button class="atsTog '+(on?'on':'')+'" '+(dis?'disabled':'')+' onclick="pAtsT(\''+sec+'\')">'+(on?'開':'關')+'</button>'; }
+function _pnum(sec,k,v,w){ return '<input class="atsNum" style="width:'+(w||44)+'px" type="text" inputmode="numeric" value="'+v+'" onchange="pAtsV(\''+sec+'\',\''+k+'\',parseInt(this.value)||0)">'; }
+function _pchk(sec,k,v,label){ return '<label class="atsChk"><input type="checkbox" '+(v?'checked':'')+' onchange="pAtsV(\''+sec+'\',\''+k+'\',this.checked)"> '+label+'</label>'; }
+function _pbuffChk(name,v){ return '<label class="atsChk"><input type="checkbox" '+(v?'checked':'')+' onchange="pAtsBuffV(\''+name+'\',this.checked)"> '+name+'</label>'; }
+var _pmSelSeq=0;
+function _psel(sec,k,opts,cur,dis){ var vid='pmSel_'+(_pmSelSeq++);
+  var h='<span class="atsSelWrap" id="'+vid+'">';
+  h+='<button type="button" class="atsSelBtn" '+(dis?'disabled':'')+' onclick="atsSelToggle(this)">'+(cur||'')+' <span class="atsSelArrow">▾</span></button>';
+  h+='<div class="atsSelList">';
+  opts.forEach(function(o){ h+='<div class="atsSelOpt'+(o===cur?' cur':'')+'" onclick="pAtsSelPick(this,\''+sec+'\',\''+k+'\')" data-v="'+String(o).replace(/"/g,'&quot;')+'">'+o+'</div>'; });
+  h+='</div></span>'; return h; }
+function pAtsSelPick(el,sec,k){ pAtsV(sec,k,el.getAttribute('data-v')); }
+function renderPmAts(slot,d){
+  var a=allyAts(slot);
+  var h='<div class="atsNote" style="margin-bottom:8px;color:#ffd24a">⚠ 這裡是『'+d.name+'』專屬的設定，跟你主角自己的 SUPER ATS（左上角⚡按鈕）是完全分開的兩套。每一小節（自動喝水／主動技能…）都要各自點下「開」按鈕才會生效，只選技能、沒按「開」是不會執行的。</div>';
+  h+='<div class="atsSec"><div class="atsHead">自動喝水 '+_ptog('hp',a.hp.on)+'</div>'
+    +'<div class="atsRow">HP 低於 '+_pnum('hp','pct',a.hp.pct)+' % 喝 '+_psel('hp','potion',['紅色藥水','橙色藥水','白色藥水','安特的水果'],a.hp.potion)+'</div>'
+    +'<div class="atsRow">'+_pchk('hp','buy',a.hp.buy,'自動購買（用主角的金幣，一次100）')+'</div></div>';
+  h+='<div class="atsSec"><div class="atsHead">自動喝魔法水 '+_ptog('mp',a.mp.on)+'</div>'
+    +'<div class="atsRow">MP 低於 '+_pnum('mp','pct',a.mp.pct)+' % 喝 '+_psel('mp','potion',['藍色藥水'],a.mp.potion)+'</div>'
+    +'<div class="atsRow">'+_pchk('mp','buy',a.mp.buy,'自動購買（用主角的金幣，一次100）')+'</div></div>';
+  h+='<div class="atsSec"><div class="atsHead">自動一段加速 '+_ptog('haste',a.haste.on)+'</div>'
+    +'<div class="atsRow">'+_psel('haste','potion',['自我加速藥水','強化自我加速藥水'],a.haste.potion)+'</div>'
+    +'<div class="atsRow">'+_pchk('haste','buy',a.haste.buy,'自動購買（用主角的金幣，一次×1）')+'</div></div>';
+  var h2i=ATS_H2[d.cls], noH2=!h2i;
+  h+='<div class="atsSec'+(noH2?' atsDis':'')+'"><div class="atsHead">自動二段加速 '+_ptog('h2',a.h2.on,noH2)+'</div>'
+    +'<div class="atsRow">道具：'+(h2i?(h2i+'（'+d.cls+'）'):'魔法師無二段加速道具')+'</div>'
+    +'<div class="atsRow">'+_pchk('h2','buy',a.h2.buy,'自動購買（用主角的金幣，一次×1）')+'</div></div>';
+  var atkSpells=(d.spells||[]).filter(function(s){ var fx=(typeof SPELL_FX!=='undefined')?SPELL_FX[s.name]:null; return fx && fx.type==='atk'; }).map(function(s){return s.name;});
+  var aOpts=['（不使用）'].concat(atkSpells);
+  if(atkSpells.length && !a.act.skill) a.act.skill=atkSpells[0];
+  h+='<div class="atsSec'+(atkSpells.length?'':' atsDis')+'"><div class="atsHead">主動技能 '+_ptog('act',a.act.on,!atkSpells.length)+'</div>'
+    +(atkSpells.length?(
+       '<div class="atsRow">MP ≥ '+_pnum('act','mpMin',a.act.mpMin)+'</div>'
+      +'<div class="atsRow">攻擊技能 '+_psel('act','skill',aOpts,a.act.skill||'（不使用）')+'</div>')
+      :'<div class="atsRow"><span class="atsNote">這位隊友尚未學會攻擊魔法</span></div>')
+    +'</div>';
+  var buffSpells=(d.spells||[]).filter(function(s){ var sp=spellDef(s.name); return sp && sp.dur!=='瞬間' && String(sp.desc||'').indexOf('傷害')<0 && sp.name!=='傳送術'; }).map(function(s){return s.name;});
+  h+='<div class="atsSec"><div class="atsHead">被動技能維持</div>'
+    +(buffSpells.length? buffSpells.map(function(n){ return '<div class="atsRow">'+_pbuffChk(n,!!a.buff[n])+'</div>'; }).join('')
+       : '<div class="atsRow atsNote">這位隊友尚未學會任何輔助魔法</div>')
+    +'</div>';
+  return h; }
+/* 被動技能維持：簡化為攻擊/防禦倍率加成（防禦倍率目前保留供未來擴充，因為怪物AI目前只會攻擊主角，還不會主動攻擊隊友）*/
+function partyBuffMult(p){
+  var a=allyAts(p.slot); if(!a||!a.buff) return {dmg:1, def:1};
+  var dmg=1, def=1;
+  for(var name in a.buff){ if(!a.buff[name]) continue;
+    if(name==='神聖武器'||name==='火焰武器'||name==='烈炎武器'||name==='體魄強健術'||name==='狂暴術'||name==='灼熱靈氣'||name==='勇敢靈氣') dmg*=1.1;
+    else if(name==='保護罩'||name==='魔法防禦'||name==='鎧甲護持'||name==='增幅防禦'||name==='大地防護'||name==='鋼鐵防護'||name==='大地屏障') def*=0.92;
+  }
+  return {dmg:dmg, def:def}; }
+/* 主動技能：隊友依設定選用的攻擊魔法施法，取代普通攻擊；沒設定/MP不足則回傳false，改用普通攻擊 */
+function partyActCast(p, tgt){
+  var a=allyAts(p.slot); if(!a||!a.act||!a.act.on) return false;
+  var d=SAVES[p.slot];
+  if((!a.act.skill || a.act.skill==='（不使用）') && d && d.spells && d.spells.length){   // 保險：開了主動技能卻沒選招式時，自動挑第一個學會的攻擊魔法
+    var firstAtk=d.spells.map(function(s){return s.name;}).find(function(n){ var fx=(typeof SPELL_FX!=='undefined')?SPELL_FX[n]:null; return fx&&fx.type==='atk'; });
+    if(firstAtk){ a.act.skill=firstAtk; persistSaves(); }
+  }
+  if(!a.act.skill || a.act.skill==='（不使用）') return false;
+  var sp=(typeof spellDef==='function')?spellDef(a.act.skill):null; if(!sp) return false;
+  var mpCost=(typeof spellMp==='function')?spellMp(sp):0;
+  if(mpCost>0 && mpCost>(p.maxmp||0)){                    // MP上限本身就不夠：無論怎麼等都不可能施放，明確告知原因避免玩家誤以為功能沒生效
+    var now0=Date.now();
+    if(!p._actWarnAt || now0-p._actWarnAt>60000){ p._actWarnAt=now0;
+      sysMsg('『'+p.name+'』的MP上限（'+(p.maxmp||0)+'）不足以施放「'+a.act.skill+'」（需要'+mpCost+' MP），暫時改用普通攻擊，請改選消耗較低的技能，或等級提升後MP上限增加。'); }
+    return false; }
+  var mpMinEff=Math.min(a.act.mpMin||20, p.maxmp||(a.act.mpMin||20));   // 門檻不超過該隊友的MP上限，避免低等級隊友永遠卡在門檻進不去
+  if((p.mp||0)<mpMinEff || (mpCost>0 && (p.mp||0)<mpCost)) return false;
+  p.mp=Math.max(0,(p.mp||0)-mpCost);
+  if(d) d.mp=p.mp;
+  var dmg=Math.max(1, Math.round((typeof magicAttackDamage==='function'?magicAttackDamage(a.act.skill, p.int||9, p.lv||1):(6+(p.lv||1)*2)) * partyBuffMult(p).dmg));
+  var tcx=tgt.x+16, tcy=tgt.y+16, pcx=p.x, pcy=p.y;
+  if(typeof mobFx!=='undefined' && mobFx.length<40){
+    var _vk=(typeof SPELL_VFX_KIND!=='undefined'&&SPELL_VFX_KIND[a.act.skill])||null;
+    if(_vk) mobFx.push({kind:_vk, x0:pcx, y0:pcy, x:tcx, y:tcy, life:(typeof FX_DUR!=='undefined'&&FX_DUR[_vk])||150});
+    else mobFx.push({kind:'bolt', x:tcx, y:tcy, life:400});
+  }
+  var _aoe=(typeof AOE_SPELLS!=='undefined')&&AOE_SPELLS[a.act.skill];
+  if(_aoe){ var _acx=(_aoe.center==='self')?pcx:tcx, _acy=(_aoe.center==='self')?pcy:tcy;         // 範圍技：中心範圍內所有怪物一起受到傷害，跟玩家自己施放的範圍魔法邏輯一致
+    mobs.slice().forEach(function(m){ if(Math.hypot((m.x+16)-_acx,(m.y+16)-_acy)<=_aoe.r){ damageMob(m,dmg); if(a.act.skill.indexOf('冰')>=0 && Math.random()<0.3){ m.stF=Date.now()+1500; } } }); }
+  else { damageMob(tgt,dmg); if(a.act.skill.indexOf('冰')>=0 && Math.random()<0.3){ tgt.stF=Date.now()+1500; } }
+  if(!p._actConfirmed){ p._actConfirmed=true; sysMsg('『'+p.name+'』開始使用「'+a.act.skill+'」禦敵！'+(_aoe?'（範圍技，中心'+_aoe.r+'格內敵人都會受到攻擊）':'')); }   // 只在本次session第一次成功施放時提示一次，方便確認設定確實生效
+  return true; }
+/* 每隔一段時間執行一次隊友ATS自動行為：喝水/喝魔法水/自動加速/自動二段加速，藥水與金幣都從主角的背包扣（隊友沒有獨立背包）*/
+var _partyAtsLast=0;
+function updatePartyAts(){
+  var now=Date.now(); if(now-_partyAtsLast<1000) return; _partyAtsLast=now;   // 每秒檢查一次即可，不用跟著遊戲迴圈跑
+  if(!party.length) return;
+  if(typeof reviveDownedParty==='function') reviveDownedParty();
+  party.forEach(function(p){
+    if(p.down) return;                                      // 被擊倒中：暫停自動喝水/加速/回復，等待自動起身
+    if(p.hp>0 && p.maxmp){ if(p.mp<p.maxmp) p.mp=Math.min(p.maxmp, p.mp+Math.max(1,Math.round(p.maxmp*0.05))); }   // MP自然回復（每秒約5%上限），避免MP見底後永遠無法再施放主動技能
+    if(p.hp>0 && p.maxhp){ if(p.hp<p.maxhp) p.hp=Math.min(p.maxhp, p.hp+Math.max(1,Math.round(p.maxhp*0.02))); }   // HP自然回復（每秒約2%上限）
+    var a=allyAts(p.slot); if(!a) return;
+    if(a.act && a.act.skill && a.act.skill!=='（不使用）' && !a.act.on && !p._actOffWarned){   // 已選好技能但開關沒開：只提醒一次，避免誤以為已經生效
+      p._actOffWarned=true; sysMsg('提醒：『'+p.name+'』的主動技能「'+a.act.skill+'」已選好，但開關還沒按「開」，目前仍在用普通攻擊。');
+    }
+    if(a.hp.on && p.maxhp){ var hpPct=p.hp/p.maxhp*100; if(hpPct<(a.hp.pct||50)){ if(atsDrink(a.hp.potion||'紅色藥水', a.hp.buy, 100)){ p.hp=Math.min(p.maxhp, p.hp+Math.round(p.maxhp*0.3)); } } }
+    if(a.mp.on && p.maxmp){ var mpPct=p.mp/p.maxmp*100; if(mpPct<(a.mp.pct||50)){ if(atsDrink(a.mp.potion||'藍色藥水', a.mp.buy, 100)){ p.mp=Math.min(p.maxmp, p.mp+Math.round(p.maxmp*0.3)); } } }
+    if(a.haste.on && !((p.hasteUntil||0)>now)){ if(atsDrink(a.haste.potion||'自我加速藥水', a.haste.buy, 100)){ p.hasteUntil=now+300000; } }
+    var h2i=ATS_H2[p.cls];
+    if(a.h2.on && h2i && !((p.h2Until||0)>now)){ if(atsDrink(h2i, a.h2.buy, 100)){ p.h2Until=now+300000; } }
+    var d=SAVES[p.slot]; if(d){ d.hp=p.hp; d.mp=p.mp; }
+  });
+}
 var atEnh={item:'', tier:0, mode:'all', lastMsg:''};
 function setAtTab(t){
   var ta=document.getElementById('atTab_ats'), te=document.getElementById('atTab_enh');
@@ -4674,7 +5278,7 @@ function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; 
   el.innerHTML=h; }
 function snapshot(){ return { name:S.name,cls:S.cls,gender:S.gender,acDexBase:S.acDexBase,align:S.align,lv:S.lv,exp:S.exp,
   str:S.str,dex:S.dex,con:S.con,int:S.int,wis:S.wis,cha:S.cha,
-  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),ketaKilledAt:S.ketaKilledAt||0,
+  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,
   equip:Object.assign({},S.equip),inv:Object.assign({},S.inv),invOrder:(S.invOrder||[]).slice(),warehouse:Object.assign({},S.warehouse),
   hotbar:hotbar.map(p=>p.slice()), spells:(S.spells||[]).map(s=>({name:s.name,desc:s.desc||'',icon:s.icon||'📖'})), ats:(S.ats?JSON.parse(JSON.stringify(S.ats)):null), atsProf:(S.atsProf?JSON.parse(JSON.stringify(S.atsProf)):null), trial50:(S.trial50||null), redKnight:!!S.redKnight, seen:Date.now(),
   partySlots:(typeof party!=='undefined'?party.map(function(p){return p.slot;}):[]), partyMode:(typeof partyMode!=='undefined'?partyMode:'focus'), statPoints:S.statPoints||0 }; }
@@ -4815,7 +5419,7 @@ function craftDo(key,idx){ var r=(CRAFT_PX[key]||[])[idx]; if(!r)return;
   r.req.forEach(function(q){ removeItem(q[0],q[1]*qty); }); var _y=(r.yield||1)*qty; addItem(r.result,_y);
   goldMsg('🔨 製作成功：'+r.result+((_y&&_y>1)?(' ×'+_y):'')); refreshUI(); openCraft(key); }
 const SPELL_FX={"初級治癒術":{"type":"heal","mp":4,"valDice":[1,15],"healDice":[1,20],"healBase":20},"日光術":{"type":"buff","mp":4,"dur":7200},"保護罩":{"type":"buff","mp":2,"dur":1200,"d":{"ac":2}},"光箭":{"type":"atk","mp":3,"dmgDice":[1,8]},"傳送術":{"type":"manual","mp":5},"冰箭":{"type":"atk","mp":3,"dmgDice":[1,8]},"風刃":{"type":"atk","mp":3,"dmgDice":[1,8]},"神聖武器":{"type":"buff","mp":10,"dur":1200,"d":{"extraDmg":1,"extraHit":1}},"解毒術":{"type":"heal","mp":8},"寒冷戰慄":{"type":"atk","mp":9,"dmgDice":[2,8]},"毒咒":{"type":"atk","mp":10,"dmgDice":[2,8]},"擬似魔法武器":{"type":"buff","mp":20,"dur":1800,"d":{"extraDmg":2}},"無所遁形術":{"type":"buff","mp":8,"dur":180},"負重強化":{"type":"buff","mp":10,"dur":1800},"火箭":{"type":"atk","mp":3,"dmgDice":[2,8]},"地獄之牙":{"type":"atk","mp":3,"dmgDice":[2,8]},"極光雷電":{"type":"atk","mp":13,"dmgDice":[4,8]},"起死回生術":{"type":"atk","mp":15,"dmgDice":[3,8]},"中級治癒術":{"type":"heal","mp":11,"valDice":[1,30],"healDice":[1,50],"healBase":50},"闇盲咒術":{"type":"atk","mp":20,"dmgDice":[3,8]},"鎧甲護持":{"type":"buff","mp":20,"dur":1800,"d":{"ac":3}},"寒冰氣息":{"type":"atk","mp":9,"dmgDice":[3,8]},"能量感測":{"type":"manual","mp":8},"燃燒的火球":{"type":"atk","mp":16,"dmgDice":[4,8]},"通暢氣脈術":{"type":"buff","mp":45,"dur":1200,"d":{"dex":5}},"壞物術":{"type":"atk","mp":20,"dmgDice":[4,8]},"吸血鬼之吻":{"type":"atk","mp":13,"dmgDice":[4,8]},"緩速術":{"type":"atk","mp":20,"dmgDice":[4,8]},"岩牢":{"type":"atk","mp":11,"dmgDice":[4,8]},"魔法屏障":{"type":"buff","mp":16,"dur":16},"冥想術":{"type":"buff","mp":10,"dur":600,"d":{"mpR":5},"hpCost":40},"木乃伊的詛咒":{"type":"atk","mp":35,"dmgDice":[5,8]},"迷魅術":{"type":"manual","mp":30},"極道落雷":{"type":"atk","mp":25,"dmgDice":[6,8]},"高級治癒術":{"type":"heal","mp":20,"valDice":[2,30],"healDice":[1,100],"healBase":100},"聖潔之光":{"type":"heal","mp":10},"冰錐":{"type":"atk","mp":21,"dmgDice":[5,8]},"魔力奪取":{"type":"convert","mp":0,"hpCost":50},"黑闇之影":{"type":"atk","mp":25,"dmgDice":[5,8]},"造屍術":{"type":"buff","mp":35,"dur":3600},"加速術":{"type":"buff","mp":40,"dur":1200,"haste":1},"魔法相消術":{"type":"heal","mp":40},"地裂術":{"type":"atk","mp":25,"dmgDice":[6,8]},"烈炎術":{"type":"atk","mp":30,"dmgDice":[8,8]},"體魄強健術":{"type":"buff","mp":50,"dur":1200,"d":{"str":5}},"祝福魔法武器":{"type":"buff","mp":20,"dur":1200,"d":{"extraDmg":2,"extraHit":2}},"弱化術":{"type":"atk","mp":25,"dmgDice":[6,8]},"體力回復術":{"type":"heal","mp":35,"valDice":[1,20],"healDice":[1,30],"healBase":30},"強力加速術":{"type":"buff","mp":60,"dur":2400,"haste":1},"冰矛圍籬":{"type":"atk","mp":30,"dmgDice":[7,8]},"龍捲風":{"type":"atk","mp":45,"dmgDice":[8,8]},"狂暴術":{"type":"buff","mp":40,"dur":1200,"d":{"meleeDmg":5,"ac":-10}},"召喚術":{"type":"buff","mp":50,"dur":3600},"神聖疾走":{"type":"buff","mp":20,"dur":64,"d":{"er":15},"moveHaste":2},"疾病術":{"type":"atk","mp":30,"dmgDice":[7,8]},"全部治癒術":{"type":"heal","mp":30,"valDice":[3,30],"healDice":[3,50],"healBase":150},"冰雪暴":{"type":"atk","mp":60,"dmgDice":[10,8]},"震裂術":{"type":"atk","mp":40,"dmgDice":[8,8]},"隱身術":{"type":"buff","mp":45,"dur":64,"hpCost":20},"返生術":{"type":"passive","mp":50},"魔法封印":{"type":"atk","mp":30,"dmgDice":[8,8]},"聖結界":{"type":"buff","mp":30,"dur":32},"沉睡之霧":{"type":"atk","mp":40,"dmgDice":[9,8]},"雷霆風暴":{"type":"atk","mp":48,"dmgDice":[12,8]},"火風暴":{"type":"atk","mp":48,"dmgDice":[11,8]},"流星雨":{"type":"atk","mp":60,"dmgDice":[14,8]},"堅固防護":{"type":"buff","mp":5,"dur":180,"d":{"er":15},"hpCost":30},"增幅防禦":{"type":"buff","mp":10,"dur":1200},"衝擊之暈":{"type":"atk","mp":12,"dmgDice":[6,8]},"尖刺盔甲":{"type":"buff","mp":10,"dur":1200,"d":{"meleeHit":5}},"魔法防禦":{"type":"buff","mp":10,"dur":1200,"d":{"mr":10}},"心靈轉換":{"type":"convert","mp":0,"hpCost":8,"mpGain":2},"世界樹的呼喚":{"type":"passive","mp":0},"三重矢":{"type":"atk","mp":15,"dmgDice":[3,8]},"淨化精神":{"type":"buff","mp":10,"dur":1200,"d":{"wis":3}},"屬性防禦":{"type":"buff","mp":10,"dur":1200,"d":{"resFire":10,"resWater":10,"resEarth":10,"resWind":10}},"釋放元素":{"type":"atk","mp":30,"dmgDice":[3,8]},"魂體轉換":{"type":"convert","mp":0,"hpCost":50,"mpGain":15},"單屬性防禦":{"type":"buff","mp":10,"dur":64},"火焰武器":{"type":"buff","mp":20,"dur":1200,"d":{"meleeDmg":3}},"風之神射":{"type":"buff","mp":15,"dur":1200,"d":{"rangedHit":5}},"風之疾走":{"type":"buff","mp":20,"dur":1200,"d":{"er":10}},"大地防護":{"type":"buff","mp":15,"dur":1200,"d":{"ac":4}},"地面障礙":{"type":"atk","mp":20,"dmgDice":[3,8]},"魔法消除":{"type":"atk","mp":30,"dmgDice":[4,8]},"召喚屬性精靈":{"type":"buff","mp":30,"dur":3600},"舞躍之火":{"type":"buff","mp":30,"dur":1200,"d":{"meleeDmg":5}},"暴風之眼":{"type":"buff","mp":40,"dur":1200,"d":{"rangedDmg":2,"rangedHit":2}},"大地屏障":{"type":"buff","mp":50,"dur":8},"生命之泉":{"type":"heal","mp":50,"valDice":[4,35],"healDice":[5,50],"healBase":250},"大地的祝福":{"type":"buff","mp":35,"dur":1200,"d":{"ac":5}},"召喚強力屬性精靈":{"type":"buff","mp":50,"dur":3600},"生命的祝福":{"type":"heal","mp":30,"valDice":[1,20],"healDice":[1,28],"healBase":28},"封印禁地":{"type":"atk","mp":40,"dmgDice":[5,8]},"烈炎武器":{"type":"buff","mp":30,"dur":1200,"d":{"meleeDmg":5,"meleeHit":5}},"暴風神射":{"type":"buff","mp":30,"dur":1200,"d":{"rangedDmg":4,"rangedHit":2}},"鋼鐵防護":{"type":"buff","mp":30,"dur":1200,"d":{"ac":7}},"灼熱靈氣":{"type":"buff","mp":30,"dur":1200,"d":{"meleeDmg":1,"meleeHit":1}},"勇敢靈氣":{"type":"buff","mp":40,"dur":1200,"d":{"meleeDmg":3,"meleeHit":3}}};
-const MOB_DROPS_PX={"妖魔":[["歐西斯匕首",1],["歐西斯之矛",1],["歐西斯短劍",5],["歐西斯頭盔",1],["歐西斯環甲",5],["皮革",50]],"妖魔弓箭手":[["歐西斯弓",1],["歐西斯頭盔",2],["歐西斯鏈甲",1],["歐西斯環甲",5],["歐西斯斗篷",3],["皮革",50]],"地靈":[["木棒",3],["短統靴",1],["皮革",50]],"侏儒":[["小侏儒短劍",1],["侏儒鐵盔",2],["侏儒斗篷",5],["侏儒圓盾",3],["純粹的米索莉塊",1],["變形卷軸",1],["金屬塊",100]],"牧羊犬":[["肉",10],["皮革",100]],"狼":[["箭",1],["精靈玉",1],["皮革",100]],"妖魔鬥士":[["抗魔法鏈甲",0.1],["歐西斯頭盔",2],["歐西斯鏈甲",2],["歐西斯環甲",3],["歐西斯斗篷",1],["阿克海盾牌",1],["鏈甲",1]],"狼人":[["抗魔法鏈甲",0.1],["長劍",0.1],["釘錘",1],["木棒",3],["弗萊爾",2],["銀釘皮甲",0.5],["小盾牌",1],["短統靴",0.5]],"骷髏":[["抗魔法頭盔",0.1],["彎刀",1],["頭盔",5],["抗魔法斗篷",0.1],["大盾牌",0.5],["魔法寶石",1],["骨頭碎片",50],["骷髏頭",1],["不死族的鑰匙",1]],"石頭高崙":[["亞連",3],["斧",5],["木棒",5],["弗萊爾",1],["魔法寶石",1],["高品質紅寶石",0.05],["粗糙的米索莉塊",1],["藍色藥水",1],["滅魔戒指",0.0001]],"黑騎士":[["抗魔法頭盔",0.5],["雙手劍",0.1],["戟",1],["槍",1],["帕提森",2],["三叉戟",3],["頭盔",5],["青銅盔甲",1],["T恤",0.1],["保護者斗篷",1],["短統靴",2],["長靴",1],["鑽石",5],["綠寶石",5],["紅寶石",5],["藍寶石",5],["藍色藥水",1],["古老的交易文件",1],["黑騎士的誓約",1]],"長老":[["保護者斗篷",0.5],["魔法寶石",1],["藍色藥水",1],["長者戒指",0.001],["長老項鍊",0.001]],"克特":[["貝卡合金",1],["武士刀",1],["長劍",10],["雙手劍",3],["青銅盔甲",5],["T恤",3],["保護者斗篷",10],["大盾牌",10],["反射之盾",0.5],["長靴",10],["手套",5],["銀騎士之盾",1],["克特手套",1],["克特盔甲",1],["克特長靴",1],["克特頭盔",1],["對武器施法的卷軸",10],["對盔甲施法的卷軸",20],["藍色藥水",1]]};
+const MOB_DROPS_PX={"妖魔":[["歐西斯匕首",1],["歐西斯之矛",1],["歐西斯短劍",5],["歐西斯頭盔",1],["歐西斯環甲",5],["皮革",50]],"妖魔弓箭手":[["歐西斯弓",1],["歐西斯頭盔",2],["歐西斯鏈甲",1],["歐西斯環甲",5],["歐西斯斗篷",3],["皮革",50]],"地靈":[["木棒",3],["短統靴",1],["皮革",50]],"侏儒":[["小侏儒短劍",1],["侏儒鐵盔",2],["侏儒斗篷",5],["侏儒圓盾",3],["純粹的米索莉塊",1],["變形卷軸",1],["金屬塊",100]],"牧羊犬":[["肉",10],["皮革",100]],"狼":[["箭",1],["精靈玉",1],["皮革",100]],"妖魔鬥士":[["抗魔法鏈甲",0.1],["歐西斯頭盔",2],["歐西斯鏈甲",2],["歐西斯環甲",3],["歐西斯斗篷",1],["阿克海盾牌",1],["鏈甲",1]],"狼人":[["抗魔法鏈甲",0.1],["長劍",0.1],["釘錘",1],["木棒",3],["弗萊爾",2],["銀釘皮甲",0.5],["小盾牌",1],["短統靴",0.5]],"骷髏":[["抗魔法頭盔",0.1],["彎刀",1],["頭盔",5],["抗魔法斗篷",0.1],["大盾牌",0.5],["魔法寶石",1],["骨頭碎片",50],["骷髏頭",1],["不死族的鑰匙",1]],"骷髏弓箭手":[["弓",2],["頭盔",5],["抗魔法斗篷",0.3],["自我加速藥水",3],["魔法寶石",1],["魔法書(通暢氣脈術)",0.2],["骨頭碎片",50],["強化自我加速藥水",0.5]],"骷髏斧手":[["斧",2],["頭盔",5],["抗魔法斗篷",0.3],["自我加速藥水",3],["松木魔杖",1],["魔法寶石",1],["骨頭碎片",50],["強化自我加速藥水",0.5]],"骷髏槍兵":[["矛",2],["頭盔",5],["抗魔法斗篷",0.3],["自我加速藥水",3],["魔法寶石",1],["魔法書(通暢氣脈術)",0.2],["骨頭碎片",50],["強化自我加速藥水",0.5]],"石頭高崙":[["亞連",3],["斧",5],["木棒",5],["弗萊爾",1],["魔法寶石",1],["高品質紅寶石",0.05],["粗糙的米索莉塊",1],["藍色藥水",1],["滅魔戒指",0.0001]],"夏洛柏":[["彎刀",2],["頭盔",5],["青銅盔甲",1],["大盾牌",1],["自我加速藥水",3],["楓木魔杖",1],["魔法寶石",1],["強化自我加速藥水",0.5]],"黑騎士":[["抗魔法頭盔",0.5],["雙手劍",0.1],["戟",1],["槍",1],["帕提森",2],["三叉戟",3],["頭盔",5],["青銅盔甲",1],["T恤",0.1],["保護者斗篷",1],["短統靴",2],["長靴",1],["鑽石",5],["綠寶石",5],["紅寶石",5],["藍寶石",5],["藍色藥水",1],["古老的交易文件",1],["黑騎士的誓約",1]],"史巴托":[["彎刀",2],["頭盔",5],["青銅盔甲",2],["大盾牌",2],["自我加速藥水",4],["楓木魔杖",1],["魔法寶石",2],["強化自我加速藥水",1]],"長老":[["保護者斗篷",0.5],["魔法寶石",1],["藍色藥水",1],["長者戒指",0.001],["長老項鍊",0.001]],"巴風特":[["武士刀",2],["雙手劍",2],["巴風特魔杖",1],["金屬盔甲",1.5],["隱身斗篷",0.3],["手套",3],["傳送控制戒指",0.2],["魅力項鍊",0.2],["老舊的身體皮帶",0.3],["老舊的靈魂皮帶",0.3],["身體腰帶",1],["靈魂腰帶",1],["自我加速藥水",8],["對武器施法的卷軸",3],["對盔甲施法的卷軸",3],["復活卷軸",0.5],["黃金鑰匙",0.3],["魔法寶石",5],["鑽石",2],["品質鑽石",1],["高品質鑽石",0.3],["綠寶石",2],["品質綠寶石",1],["高品質綠寶石",0.3],["品質藍寶石",1],["高品質藍寶石",0.3],["魔法書(迷魅術)",0.5],["魔法書(地裂術)",0.5],["魔法書(召喚術)",0.3],["勇敢藥水",1],["神秘慎重藥水",0.5],["強化自我加速藥水",3],["魔法書(岩牢)",0.5],["魔法書(震裂術)",0.3],["精靈玉",1],["精靈水晶(舞躍之火)",0.3],["魔法書(魔法屏障)",0.3],["魔法書(弱化術)",0.5],["魔法書(祝福魔法武器)",0.3]],"克特":[["貝卡合金",1],["武士刀",1],["長劍",10],["雙手劍",3],["青銅盔甲",5],["T恤",3],["保護者斗篷",10],["大盾牌",10],["反射之盾",0.5],["長靴",10],["手套",5],["銀騎士之盾",1],["克特手套",1],["克特盔甲",1],["克特長靴",1],["克特頭盔",1],["對武器施法的卷軸",10],["對盔甲施法的卷軸",20],["藍色藥水",1]]};
 const ITEM_WT_FB={"弓":30,"精靈弓":30,"歐西斯弓":30,"尤米弓":40,"短弓":20,"十字弓":50,"獵人之弓":30,"赤焰之弓":30,"熾炎天使弓":25,"武士刀":40,"長劍":40,"闊劍":70,"精靈匕首":10,"歐西斯匕首":10,"匕首":10,"彎刀":40,"小侏儒短劍":40,"精靈短劍":20,"歐西斯短劍":30,"短劍":30,"瑟魯基之劍":120,"紅騎士之劍":40,"侵略者之劍":40,"骰子匕首":10,"大馬士革刀":45,"短劍的劍身":20,"長劍的劍身":30,"奧里哈魯根的劍身":35,"細劍":60,"鎖子甲破壞者":40,"銀長劍":50,"銀劍":40,"赤焰之劍":40,"橡木魔法杖":15,"美基魔法杖":20,"巫術魔法杖":15,"力量魔法杖":15,"瑪那魔杖":15,"水晶魔杖":15,"冰之女王魔杖":20,"巴風特魔杖":15,"巴列斯魔杖":15,"雙手劍":150,"矛":80,"巴迪須":120,"柴刀":120,"貝卡合金":100,"法丘":60,"闊矛":75,"吉薩":80,"戟":150,"槍":180,"露西錘":150,"帕提森":80,"精靈之矛":30,"歐西斯之矛":30,"三叉戟":25,"潘的角":9,"覆上米索莉的角":24,"覆上奧里哈魯根的角":55,"深紅長矛":100,"亞連":10,"斧":60,"釘錘":30,"戰斧":120,"木棒":30,"弗萊爾":15,"戰錘":50,"流星錘":120,"巨斧":250,"狂戰士斧":200,"銀斧":270,"精靈皮盔":3,"歐西斯頭盔":30,"侏儒鐵盔":40,"頭盔":30,"騎士面甲":40,"抗魔法頭盔":35,"艾爾穆的祝福":13,"治癒魔法頭盔":50,"敏捷魔法頭盔":50,"力量魔法頭盔":50,"皮帽子":10,"銀釘皮帽":20,"皮頭盔":30,"骷髏頭盔":30,"鋼鐵頭盔":50,"法師之帽":20,"死亡騎士頭盔":50,"精靈敏捷頭盔":13,"精靈體質頭盔":13,"騎士頭巾":0,"紅騎士頭巾":20,"巴土瑟之帽":20,"卡士柏之帽":20,"馬庫爾之帽":20,"西瑪之帽":20,"克特頭盔":50,"淨化頭飾":0,"金屬盔甲":450,"水晶盔甲":350,"青銅盔甲":450,"藤甲":400,"皮甲":350,"鏈甲":300,"歐西斯鏈甲":300,"鱗甲":250,"銀釘皮甲":150,"環甲":250,"歐西斯環甲":250,"小藤甲":70,"皮夾克":30,"抗魔法鏈甲":300,"綿質長袍":10,"木甲":80,"精靈護胸金屬板":100,"精靈金屬盔甲":250,"精靈鏈甲":150,"木製的夾克":40,"皮背心":30,"皮盔甲":50,"銀釘皮背心":130,"硬皮背心":150,"骷髏盔甲":150,"鋼鐵金屬盔甲":470,"法師長袍":60,"水龍鱗盔甲":300,"地龍鱗盔甲":300,"火龍鱗盔甲":300,"風龍鱗盔甲":300,"死亡騎士盔甲":250,"黑長者長袍":30,"克特盔甲":250,"T恤":5,"精靈T恤":5,"精靈斗篷":10,"歐西斯斗篷":10,"侏儒斗篷":10,"保護者斗篷":10,"隱身斗篷":10,"抗魔法斗篷":10,"瑪那斗篷":10,"短統靴":10,"長靴":15,"皮涼鞋":8,"銀釘皮涼鞋":10,"皮長靴":10,"鋼鐵長靴":50,"深水長靴":15,"死亡騎士長靴":15,"黑長者涼鞋":10,"克特長靴":15,"手套":10,"腕甲":10,"力量手套":18,"鋼鐵手套":40,"水晶手套":20,"死亡騎士手套":15,"保護者手套":10,"克特手套":15,"小盾牌":30,"精靈盾牌":50,"阿克海盾牌":50,"大盾牌":100,"侏儒圓盾":100,"反射之盾":50,"伊娃之盾":50,"塔盾":120,"木盾":25,"銀騎士之盾":100,"皮盾牌":25,"銀釘皮盾":35,"骷髏盾牌":30,"鋼鐵盾牌":140,"受詛咒的魔法書":0,"魔法能量之書":20,"紅騎士盾牌":50,"瑪那水晶球":50,"力量項鍊":5,"敏捷項鍊":5,"體質項鍊":5,"智力項鍊":5,"精神項鍊":5,"魅力項鍊":5,"妖魔戰士項鍊":5,"守護項鍊":3,"長老項鍊":3,"抗魔項鍊":3,"傳送控制戒指":3,"變形控制戒指":3,"抗魔戒指":3,"滅魔戒指":3,"火靈戒指":3,"水靈戒指":3,"地靈戒指":3,"風靈戒指":3,"守護戒指":3,"長者戒指":3,"老舊的精神腰帶":50,"身體腰帶":50,"精神腰帶":50,"靈魂腰帶":50,"多羅皮帶":50,"歐吉皮帶":50,"勇敢皮帶":50,"光明身體腰帶":50,"光明精神腰帶":50,"光明靈魂腰帶":50,"守護皮帶":50,"抗魔皮帶":50};
 function spellBookSuffix(cls){ var p=String(cls||'').split(',').map(function(x){return x.trim();}).filter(Boolean); if(p.length===1&&p[0]==='騎士')return '技術書'; if(p.length===1&&p[0]==='妖精')return '精靈水晶'; return '魔法書'; }
 function spellBookName(s){ return spellBookSuffix(s.cls)+'('+s.name+')'; }
@@ -4831,14 +5435,14 @@ let adminCat='shop', magicSub='royal';
   const STAT_OV_KEY ='lineage_pixel_stat_overrides';   // { 'mob:名:欄':v, 'item:名:欄':v, 'spell:名:欄':v }
   const SHOP_OV_KEY ='lineage_pixel_shop_overrides';    // { 雜貨店:[名...], 武器店:[...], 防具店:[...] }
   const CAT_OV_KEY  ='lineage_pixel_cat_overrides';     // { 'wkind:名':'sword','aslot:名':'body','icat:名':'potion' }
-  const SPAWN_OV_KEY='lineage_pixel_spawn_overrides';   // { mobKey:[map...] | null(還原為全區) }
   const DROP_OV_KEY ='lineage_pixel_drop_overrides';    // { 怪物名:[[物品,數量]...] }
 
   /* --- 地區 / 地圖 --- */
   const REGIONS=[['island01','說話之島'],['elf_forest','妖精森林'],['silver_knight','銀騎士村莊']];              // 目前只有一個地區，之後可再擴充
   const SPAWN_MAPS=[['north_island','北島'],['port_n','北邊港口'],['port_e','東邊港口'],
     ['hunt_w','西邊狩獵區'],['hunt_s','南邊狩獵區'],['hunt_e','東邊狩獵區'],['scarecrow','稻草人訓練場'],
-    ['cross_e','東邊岔路'],['cross_w','西邊岔路'],['cross_s','南邊岔路'],['cross_n','北邊岔路'],['cave','冒險洞穴']];
+    ['cross_e','東邊岔路'],['cross_w','西邊岔路'],['cross_s','南邊岔路'],['cross_n','北邊岔路'],
+    ['cave','冒險洞穴1樓'],['cave2','冒險洞穴2樓']];
   const REGION_MAPS={island01:SPAWN_MAPS.map(m=>m[0])};
   function allWildMaps(){ let a=[]; for(const r in REGION_MAPS)a=a.concat(REGION_MAPS[r]); return a; }
 
@@ -4867,7 +5471,7 @@ let adminCat='shop', magicSub='royal';
   const FLABEL={atk:'攻擊',ac:'AC',mr:'MR',hp:'HP',mp:'MP',food:'飽食',light:'照明',buyQty:'購買量',dmg:'傷害',dmgS:'小怪傷害',dmgL:'大怪傷害',wt:'重量',drop:'掉落%',job:'可用職業',mat:'材質',enh:'強化',dur:'損傷',eff:'裝備效果',def:'防禦力'};
   const ITEM_TEXT_F={job:1,mat:1,enh:1,dur:1,eff:1,desc:1,note:1};    // 武器/藥水/卷軸的文字欄位
 
-  let _stat={}, _shop={}, _cat={}, _spawn={}, _drop={}, _orig={}, _origShop={}, _origSpawn=null, _origDrop=null;
+  let _stat={}, _shop={}, _cat={}, _drop={}, _orig={}, _origShop={}, _origDrop=null;
   let _sub='', _region='island01', _shopNpc='pandora', _shopSeg='all', _shopCat='item', _shopSub='bow';
   let _mobSel='', _dropCat='weapon', _dropSeg='bow';
 
@@ -4875,13 +5479,11 @@ let adminCat='shop', magicSub='royal';
     try{_stat =JSON.parse(localStorage.getItem(STAT_OV_KEY ))||{};}catch(e){_stat ={};}
     try{_shop =JSON.parse(localStorage.getItem(SHOP_OV_KEY ))||{};}catch(e){_shop ={};}
     try{_cat  =JSON.parse(localStorage.getItem(CAT_OV_KEY  ))||{};}catch(e){_cat  ={};}
-    try{_spawn=JSON.parse(localStorage.getItem(SPAWN_OV_KEY))||{};}catch(e){_spawn={};}
     try{_drop =JSON.parse(localStorage.getItem(DROP_OV_KEY ))||{};}catch(e){_drop ={};}
   }
   const saveStat =()=>{try{localStorage.setItem(STAT_OV_KEY ,JSON.stringify(_stat ));}catch(e){}};
   const saveShop =()=>{try{localStorage.setItem(SHOP_OV_KEY ,JSON.stringify(_shop ));}catch(e){}};
   const saveCat  =()=>{try{localStorage.setItem(CAT_OV_KEY  ,JSON.stringify(_cat  ));}catch(e){}};
-  const saveSpawn=()=>{try{localStorage.setItem(SPAWN_OV_KEY,JSON.stringify(_spawn));}catch(e){}};
   const saveDrop =()=>{try{localStorage.setItem(DROP_OV_KEY ,JSON.stringify(_drop ));}catch(e){}};
 
   function spellByName(nm){ return (typeof MAGE_SPELLS!=='undefined')?(MAGE_SPELLS.find(s=>s.name===nm)||null):null; }
@@ -4900,15 +5502,10 @@ let adminCat='shop', magicSub='royal';
   function applyStat(){ for(const key in _stat){ const p=key.split(':'); const o=statObj(p[0],p[1]); const f=p[2];
     if(o&&f){ if(_orig[key]===undefined)_orig[key]=(o[f]!==undefined?o[f]:null); o[f]=_stat[key]; } } }
   function applyShop(){ if(typeof SHOPS==='undefined')return; for(const sk in _shop){ if(Array.isArray(_shop[sk])){ if(_origShop[sk]===undefined)_origShop[sk]=(SHOPS[sk]?SHOPS[sk].slice():[]); SHOPS[sk]=_shop[sk].slice(); } } }
-  function applySpawn(){ if(typeof SPAWN_RESTRICT==='undefined')return;
-    if(_origSpawn===null){ _origSpawn={}; for(const k in SPAWN_RESTRICT)_origSpawn[k]=SPAWN_RESTRICT[k].slice(); }
-    var LOCKED={'稻草人':['scarecrow'],'克特':['port_n','port_e'],'夏洛柏':['hunt_e','hunt_s'],'骷髏':['hunt_e','hunt_s'],'長老':['hunt_e','hunt_s'],'人形殭屍':['hunt_e','hunt_s']};
-    for(const k in _spawn){ if(LOCKED[k])continue; const v=_spawn[k]; if(v===null)delete SPAWN_RESTRICT[k]; else if(Array.isArray(v))SPAWN_RESTRICT[k]=v.slice(); }
-    for(const k in LOCKED) SPAWN_RESTRICT[k]=LOCKED[k].slice(); }   // 世界王與不死系菁英怪永遠鎖定原始出生地圖，不受後台覆蓋影響
   function applyDrop(){ if(typeof MOB_DROPS_PX==='undefined')return;
     if(_origDrop===null){ _origDrop={}; for(const k in MOB_DROPS_PX)_origDrop[k]=MOB_DROPS_PX[k].map(x=>x.slice()); }
     for(const k in _drop){ const v=_drop[k]; if(v===null)delete MOB_DROPS_PX[k]; else if(Array.isArray(v))MOB_DROPS_PX[k]=v.map(x=>x.slice()); } }
-  window.applyPixelEditorOverrides=function(){ load(); applyCat(); applyStat(); applyShop(); applySpawn(); applyDrop(); };
+  window.applyPixelEditorOverrides=function(){ load(); applyCat(); applyStat(); applyShop(); applyDrop(); };
 
   function esc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
   function attr(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
@@ -4936,19 +5533,41 @@ let adminCat='shop', magicSub='royal';
     if(typeof SHOPS!=='undefined')SHOPS[shopKey]=list; _shop[shopKey]=list.slice(); saveShop();
     const c=document.getElementById('adminCount'); if(c)c.textContent=c.textContent.replace(/販售 \d+ 項/,'販售 '+list.length+' 項');
   };
-  // 怪物分佈：以「地圖」為主的勾選（勾＝該怪會在此地圖出沒）
-  const KETA_DEFAULT=['port_n','port_e'];                 // 克特（世界王）預設出沒港口
-  window.editorToggleSpawn=function(mobKey,mapId,checked){
-    if(typeof SPAWN_RESTRICT==='undefined')return;
-    const isKeta=(mobKey==='克特');
-    let cur=SPAWN_RESTRICT[mobKey]?SPAWN_RESTRICT[mobKey].slice():(isKeta?KETA_DEFAULT.slice():null); // null＝目前全區出沒
-    if(cur===null){ if(checked)return; cur=allWildMaps().filter(m=>m!==mapId); }
-    else { const i=cur.indexOf(mapId); if(checked&&i===-1)cur.push(mapId); else if(!checked&&i!==-1)cur.splice(i,1); }
-    if(!isKeta){ const wm=allWildMaps(); if(wm.length>0&&wm.every(m=>cur.indexOf(m)!==-1)){ delete SPAWN_RESTRICT[mobKey]; _spawn[mobKey]=null; saveSpawn(); updateSpawnCount(mapId); return; } }
-    SPAWN_RESTRICT[mobKey]=cur; _spawn[mobKey]=cur.slice(); saveSpawn(); updateSpawnCount(mapId);
+  // 怪物出沒設定：勾選後先暫存在畫面上，按「存檔」才真正寫入並讓地圖立即出現勾選的怪物
+  let _pendingEnabled={};   // {mapId:[type,...]} 工作副本，勾選只改這裡，存檔才寫回 MOB_ENABLED
+  function getPendingEnabled(mapId){ if(!_pendingEnabled[mapId]) _pendingEnabled[mapId]=(MOB_ENABLED[mapId]||[]).slice(); return _pendingEnabled[mapId]; }
+  window.editorToggleEnabled=function(mapId,type,checked){
+    var arr=getPendingEnabled(mapId); var i=arr.indexOf(type);
+    if(checked&&i===-1) arr.push(type); else if(!checked&&i!==-1) arr.splice(i,1);
+    var c=document.getElementById('adminCount'); if(c) c.textContent=c.textContent.replace(/已勾選 \d+ 種（尚未存檔）/,'已勾選 '+arr.length+' 種（尚未存檔）');
   };
-  function updateSpawnCount(mapId){ const c=document.getElementById('adminCount'); if(c){ const n=Object.keys(MOBS).filter(k=>spawnsAt(k,mapId)).length; c.textContent=c.textContent.replace(/出沒 \d+ 種/,'出沒 '+n+' 種'); } }
-  function spawnsAt(mobKey,mapId){ if(typeof SPAWN_RESTRICT==='undefined')return true; const a=SPAWN_RESTRICT[mobKey]; if(a)return a.indexOf(mapId)!==-1; return mobKey==='克特'?KETA_DEFAULT.indexOf(mapId)!==-1:true; }
+  window.editorSaveEnabled=function(mapId){
+    var arr=getPendingEnabled(mapId).slice();
+    MOB_ENABLED[mapId]=arr; saveMobEnabledToStorage();
+    if(typeof curMapId!=='undefined' && curMapId===mapId && typeof spawnMobs==='function') spawnMobs();   // 若玩家正好在這張地圖，立即依新設定重新生怪
+    var lbl=(SPAWN_MAPS.filter(x=>x[0]===mapId)[0]||[,mapId])[1];
+    showSaveToast('✅ 已儲存「'+lbl+'」，共'+arr.length+'種怪物，地圖已更新。');
+    renderAdminSpawn();
+  };
+  window.editorResetDungeon=function(mapId){
+    var lbl=(SPAWN_MAPS.filter(x=>x[0]===mapId)[0]||[,mapId])[1];
+    var cascadeMsg = mapId==='cave' ? '（2樓的回程樓梯是根據1樓的位置決定的，會一併重置2樓版面）' : '';
+    if(!confirm('確定要捨棄「'+lbl+'」目前的迷宮版面嗎？下次進入這張地圖時會重新亂數產生新的格局，暗道／樓梯／房間位置都會不一樣。'+cascadeMsg))return;
+    if(typeof resetDungeonLayout==='function'){
+      resetDungeonLayout(mapId);
+      if(mapId==='cave') resetDungeonLayout('cave2');   // 1樓的下樓梯位置變了，2樓的回程樓梯座標也要跟著重新生成，避免傳到舊版面已經不存在的座標
+    }
+    if(typeof curMapId!=='undefined' && curMapId===mapId && typeof loadMap==='function') loadMap(mapId);   // 若玩家正好在這張地圖，立即重新生成
+    showSaveToast('✅ 已重新生成「'+lbl+'」的迷宮版面。');
+    renderAdminSpawn();
+  };
+  var _saveToastTimer=null;
+  function showSaveToast(msg){
+    var t=document.getElementById('adminSaveToast'); if(!t) return;
+    t.textContent=msg; t.style.display='block';
+    if(_saveToastTimer) clearTimeout(_saveToastTimer);
+    _saveToastTimer=setTimeout(function(){ t.style.display='none'; }, 2600);
+  }
 
   /* ---- UI 小工具 ---- */
   function numField(scope,id,f,label,val,step){ const dc=(_stat[scope+':'+id+':'+f]!==undefined)?' adirty':'';
@@ -5164,7 +5783,7 @@ let adminCat='shop', magicSub='royal';
     const ids=Object.keys(MOBS);
     if(!_mobSel || !MOBS[_mobSel]){
       // 第一層：怪物清單（僅顯示圖片/名稱/等級，點選才進入編輯）
-      let h='<div class="aed-count" id="adminCount">共 '+ids.length+' 種　（點選怪物進入編輯；出沒地圖請至「怪物分佈」分頁設定）</div>';
+      let h='<div class="aed-count" id="adminCount">共 '+ids.length+' 種　（點選怪物進入編輯；出沒地圖請至「怪物擺放」分頁設定）</div>';
       h+='<div class="aed-mobgrid">'+ids.map(id=>{ const m=MOBS[id];
         return '<div class="aed-mobcard" onclick="setAdminMobSel(&quot;'+esc(id)+'&quot;)">'
           +'<div class="aed-mobthumb">'+mobThumbHTML(id)+'</div>'
@@ -5191,18 +5810,24 @@ let adminCat='shop', magicSub='royal';
     const regionBar=subbar(REGIONS,_region,'setAdminRegion');
     const maps=REGION_MAPS[_region]||[];
     const mapSubs=SPAWN_MAPS.filter(m=>maps.includes(m[0]));
-    const curMapId=(_sub&&maps.includes(_sub))?_sub:(mapSubs[0]?mapSubs[0][0]:''); _sub=curMapId;
-    const mapBar=subbar(mapSubs,curMapId,'setAdminSub','sub2');
+    const selMapId=(_sub&&maps.includes(_sub))?_sub:(mapSubs[0]?mapSubs[0][0]:''); _sub=selMapId;
+    const mapBar=subbar(mapSubs,selMapId,'setAdminSub','sub2');
     let h=regionBar+mapBar;
-    if(typeof MOBS==='undefined'||!curMapId){ body.innerHTML=h+'<div class="aed-empty">尚無資料。</div>'; navBuildPanel('adminw'); return; }
-    const _lockedMobs={'稻草人':1,'克特':1,'夏洛柏':1,'骷髏':1,'長老':1,'人形殭屍':1};
-    const mobIds=Object.keys(MOBS).filter(k=>!_lockedMobs[k]);   // 訓練假人／世界王／不死系菁英怪永遠鎖定，不開放後台調整分佈
-    const n=mobIds.filter(k=>spawnsAt(k,curMapId)).length;
-    const lbl=(SPAWN_MAPS.filter(x=>x[0]===curMapId)[0]||[,curMapId])[1];
-    h+='<div class="aed-count" id="adminCount">'+lbl+'　目前出沒 '+n+' 種怪物（勾選＝該怪會在此地圖出沒；全部不勾＝此地圖不出怪）</div>';
-    h+='<div class="aed-shopgrid">'+mobIds.map(k=>{ const m=MOBS[k]; const ck=spawnsAt(k,curMapId)?'checked':'';
-      const tag=m.boss?'（世界王）':(m.aggressive?'（主動）':'');
-      return '<label class="aed-shopitem"><input type="checkbox" '+ck+' onchange="editorToggleSpawn(\''+esc(k)+'\',\''+esc(curMapId)+'\',this.checked)"><span>'+m.name+'<span class="aed-tags">'+tag+'</span></span></label>'; }).join('')+'</div>';
+    if(typeof MOBS==='undefined'||!selMapId){ body.innerHTML=h+'<div class="aed-empty">尚無資料。</div>'; navBuildPanel('adminw'); return; }
+    const lbl=(SPAWN_MAPS.filter(x=>x[0]===selMapId)[0]||[,selMapId])[1];
+    if(selMapId==='scarecrow'){ h+='<div class="aed-count">'+lbl+'</div><div class="aed-empty">訓練場固定佈局（36隻稻草人），不開放調整出沒設定。</div>'; body.innerHTML=h; navBuildPanel('adminw'); return; }
+    if(selMapId==='cave'||selMapId==='cave2'){
+      h+='<div class="aed-field wide"><button class="socBtn" style="width:100%;background:#7a2a1a" onclick="editorResetDungeon(\''+selMapId+'\')">🔀 重新生成「'+lbl+'」的迷宮版面</button></div>';
+      h+='<div class="aed-empty" style="padding:10px 4px;text-align:left;">地城的迷宮格局第一次進入時會亂數產生，之後會固定保留同一個版面，不會每次進去都不一樣。按上面這顆按鈕可以捨棄目前的版面、下次進圖時重新亂數產生一個新的（暗道／樓梯／房間位置都會一併重新安排）。</div>';
+    }
+    const mobIds=Object.keys(MOBS).filter(k=>k!=='稻草人');   // 訓練假人固定佈局不開放勾選，其餘怪物(含世界王、原本鎖定的骷髏系等)全部開放
+    const cur=getPendingEnabled(selMapId);
+    h+='<div class="aed-count" id="adminCount">'+lbl+'　已勾選 '+cur.length+' 種（尚未存檔）</div>';
+    h+='<div class="aed-shopgrid">'+mobIds.map(function(k){ const m=MOBS[k]; const ck=cur.indexOf(k)>=0?'checked':'';
+      const tag=m.boss?'（世界王，全區僅一隻）':(m.aggressive?'（主動）':'');
+      return '<label class="aed-shopitem"><input type="checkbox" '+ck+' onchange="editorToggleEnabled(\''+esc(selMapId)+'\',\''+esc(k)+'\',this.checked)"><span>'+m.name+'<span class="aed-tags">'+tag+'</span></span></label>'; }).join('')+'</div>';
+    h+='<div class="aed-field wide" style="margin-top:10px"><button class="socBtn" style="width:100%" onclick="editorSaveEnabled(\''+selMapId+'\')">💾 存檔（地圖立即依勾選重新出現怪物）</button></div>';
+    h+='<div id="adminSaveToast" class="aed-savetoast" style="display:none"></div>';
     body.innerHTML=h; navBuildPanel('adminw');
   }
 
@@ -5214,9 +5839,12 @@ let adminCat='shop', magicSub='royal';
       if(typeof SHOPS!=='undefined')SHOPS[shopKey]=[]; _shop[shopKey]=[]; saveShop(); renderAdminShop(); return;
     }
     if(adminCat==='spawn'){
-      if(!confirm('確定要還原「怪物分佈」到初始設定嗎？'))return;
-      if(typeof SPAWN_RESTRICT!=='undefined'&&_origSpawn){ for(const k in SPAWN_RESTRICT)delete SPAWN_RESTRICT[k]; for(const k in _origSpawn)SPAWN_RESTRICT[k]=_origSpawn[k].slice(); }
-      _spawn={}; saveSpawn(); renderAdminSpawn(); return;
+      var mapId=_sub||'';
+      if(!mapId){ alert('請先選擇地圖'); return; }
+      if(!confirm('確定要清空這張地圖目前勾選（含已存檔）的怪物出沒設定嗎？'))return;
+      delete MOB_ENABLED[mapId]; saveMobEnabledToStorage(); delete _pendingEnabled[mapId];
+      if(typeof curMapId!=='undefined'&&curMapId===mapId&&typeof spawnMobs==='function') spawnMobs();
+      renderAdminSpawn(); return;
     }
     const scope=adminCat==='mob'?'mob':adminCat==='magic'?'spell':'item';
     let cnt=0;
@@ -5226,8 +5854,9 @@ let adminCat='shop', magicSub='royal';
     renderAdminCurrent();
   };
 
-  window.openAdmin=function(){ load(); applyCat(); applyStat(); applyShop(); applySpawn(); document.getElementById('adminw').classList.add('on'); setAdminTab(adminCat||'shop'); navBuildPanel('adminw'); };
+  window.openAdmin=function(){ load(); applyCat(); applyStat(); applyShop(); document.getElementById('adminw').classList.add('on'); setAdminTab(adminCat||'shop'); navBuildPanel('adminw'); };
   window.closeAdmin=function(){ document.getElementById('adminw').classList.remove('on'); navBuild('title'); };
+
 
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ const w=document.getElementById('adminw'); if(w&&w.classList.contains('on'))closeAdmin(); } });
 
@@ -5363,7 +5992,7 @@ function loadCharacter(data){
   S.atsProf=(data.atsProf&&typeof data.atsProf==='object')?data.atsProf:null;
   S.trial50=data.trial50||null; S.redKnight=!!data.redKnight; S.st={}; S.statPoints=data.statPoints||0;
   if(typeof ensureEnhDefs==='function') try{ ensureEnhDefs(); }catch(_e){}
-  deriveStats(); S.hp=((data.hp||0)>0)?data.hp:Math.max(1,Math.floor(S.maxhp*0.1)); S.mp=data.mp||S.maxmp; S.food=(data.food!=null?data.food:100); S.kills=data.kills||0; S.mapId=((data.hp||0)>0)?(data.mapId||'village'):'village'; S.ketaKilledAt=data.ketaKilledAt||0; recalcStats();
+  deriveStats(); S.hp=((data.hp||0)>0)?data.hp:Math.max(1,Math.floor(S.maxhp*0.1)); S.mp=data.mp||S.maxmp; S.food=(data.food!=null?data.food:100); S.kills=data.kills||0; S.mapId=((data.hp||0)>0)?(data.mapId||'village'):'village'; S.ketaKilledAt=data.ketaKilledAt||0; S.baphoKilledAt=data.baphoKilledAt||0; recalcStats();
   if(typeof gainExp==='function') gainExp(0);   // 結算讀檔時累積的經驗值(例如經驗表調整後，把舊存檔的超額經驗正確轉換成等級)
   if(data.hotbar){ for(let p=0;p<4;p++)for(let i=0;i<8;i++){ const id=data.hotbar[p]&&data.hotbar[p][i]; hotbar[p][i]=(id&&((typeof id==='string'&&id.indexOf('spell:')===0)||ITEM_DEF[id]))?id:null; } }
   else { for(let p=0;p<4;p++)for(let i=0;i<8;i++) hotbar[p][i]=null; }
