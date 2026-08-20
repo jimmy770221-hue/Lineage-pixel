@@ -1500,6 +1500,7 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
 <li><b>牆壁透明化</b>：走到牆後被擋住時，該面牆會自動變半透明</li>
 <li><b>怪物分佈復原</b>：依原始資料重新設定各地圖的怪物出沒，冒險洞穴1-2樓也一併調整</li>
 <li><b>後台強化</b>：怪物掉落物設定新增「魔法」書籤，可設定掉落魔法書、精靈水晶、技術書等</li>
+<li><b>ESC 關閉視窗</b>：ESC 可依序關閉開啟中的視窗；全螢幕模式下也不會誤退出全螢幕（需長按 ESC 才會退出，Chrome／Edge 支援）</li>
 <li>其他修正：傳送到洞穴2樓卡死、怪物分佈消失、名條血條被擋、樓梯重複觸發、變身選單顯示錯誤等問題</li>
 </ul>
 <div class="noticeVer">◆ v72（2026-08-19）</div>
@@ -5654,9 +5655,46 @@ function confirmStatAlloc(){
   sysMsg('強化完成！共分配了 '+sum+' 點屬性點數');
   _statAllocPending={};
   if((S.statPoints||0)>0) renderStatAlloc(); else cancelStatAlloc(); }
+/* 全螢幕時把 ESC 鍵「借」給遊戲用：
+   瀏覽器規定全螢幕下按 ESC 一定會退出全螢幕，網頁沒辦法用一般方式攔截。
+   但 Chrome/Edge 提供 Keyboard Lock API，正是為了這種情境設計的——鎖定之後
+   ESC 的按鍵事件會交給網頁處理，玩家改成「長按 ESC」才會退出全螢幕。
+   不支援這個 API 的瀏覽器(如 Firefox/Safari)會自動略過，行為維持原樣。*/
+function lockEscKey(){
+  try{ if(navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape']).catch(function(){}); }catch(e){}
+}
+function unlockEscKey(){
+  try{ if(navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); }catch(e){}
+}
+document.addEventListener('fullscreenchange', function(){
+  if(document.fullscreenElement) lockEscKey(); else unlockEscKey();
+  if(typeof fitFrame==='function') fitFrame();
+});
+/* ESC：由上而下關閉目前開啟的視窗(一次關一個，最後才是開啟系統選單)。*/
+const ESC_WIN_ORDER=['discardModal','tradew','shopw','shopw2','adminw','statAllocW','teleportw','partyMemberw','socialw','atsw','magicw','inv','mapw','charw','settingsw'];
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Escape') return;
+  const ae=document.activeElement;
+  if(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;      // 正在輸入文字：交給輸入框自己處理
+  for(let i=0;i<ESC_WIN_ORDER.length;i++){
+    const el=document.getElementById(ESC_WIN_ORDER[i]);
+    if(!el) continue;
+    const open=el.classList.contains('on');
+    if(!open) continue;
+    e.preventDefault();
+    if(ESC_WIN_ORDER[i]==='tradew' && typeof tradeCancel==='function') tradeCancel();          // 交易視窗：關閉時要把物品退回背包
+    else if(ESC_WIN_ORDER[i]==='discardModal' && typeof discardCancel==='function') discardCancel();
+    else if(ESC_WIN_ORDER[i]==='shopw' && typeof closeShop==='function') closeShop();
+    else if(ESC_WIN_ORDER[i]==='adminw' && typeof closeAdmin==='function') closeAdmin();
+    else el.classList.remove('on');
+    if(typeof renderStateBar==='function') renderStateBar();
+    return;
+  }
+}, true);
 function setWinMode(m){ SETTINGS.winMode=m; saveSettings();
-  if(m==='full'){ var el=document.documentElement; if(el.requestFullscreen)el.requestFullscreen().catch(function(){}); }
-  else if(document.fullscreenElement&&document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
+  if(m==='full'){ var el=document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen().then(lockEscKey).catch(function(){}); }
+  else if(document.fullscreenElement&&document.exitFullscreen){ unlockEscKey(); document.exitFullscreen().catch(function(){}); }
   fitFrame(); refreshSettings(); }
 function setNight(v){ SETTINGS.night=!!v; saveSettings(); refreshSettings(); }
 function clampMult(v){ v=parseFloat(v); if(!isFinite(v)||v<0)v=0; return Math.round(v*10)/10; }
