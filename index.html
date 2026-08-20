@@ -161,6 +161,46 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
                （傳送術主動施法時的提示訊息維持不變，那是玩家主動下
                指令觸發的，跟被動走路踩到暗道不同）
 ========================================
+v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變身選單顯示：
+             ・依玩家提供的「說話之島怪物分佈.pdf」，把怪物出沒系統復原成
+               PDF上記載的原始分佈，並存為預設值：
+               新增 DEFAULT_MOB_ENABLED 常數，對照PDF逐一比對地圖名稱
+               (例如PDF的「西邊狩獵場」對應遊戲內的hunt_w「西邊狩獵區」、
+               「冒險洞穴一樓」對應cave「冒險洞穴1樓」)與怪物名稱寫入。
+               PDF上幾個字面對不上的名稱，比對MOBS實際定義後判斷是手誤
+               或別名、對應到同一隻怪物：「漂浮之眼」→飄浮之眼、「杜賓狗」
+               →杜賓犬、「夏洛伯」→夏洛柏；「哥布林」在遊戲內部的資料key
+               其實是goblinG(顯示名稱才是"哥布林")，也一併對應好。
+               loadMobEnabled() 改成：玩家還沒自己存檔調整過(localStorage
+               沒有資料)時，回傳這份DEFAULT_MOB_ENABLED當預設值，等於是
+               把PDF記載的分佈復原成新玩家一開始就會看到的出沒設定；玩家
+               只要沒有動過後台「怪物擺放」分頁，各地圖看到的勾選狀態就會
+               直接是PDF上的內容。已寫程式逐一核對：DEFAULT_MOB_ENABLED
+               裡列出的每一種怪物key，都確認能在MOBS物件裡找到對應的真實
+               定義，沒有打錯字或漏掉未實作的怪物。
+             ・修正變身卷軸選單顯示「goblinG」而不是「哥布林」的問題：
+               根因是atsTransformOptions()直接回傳Object.keys(MOBS)當
+               選單內容，_sel()又把陣列元素同時當「儲存的值」跟「顯示的
+               文字」使用，對大多數怪物來說key本來就等於顯示名稱(例如
+               '史萊姆':{name:'史萊姆'})所以看不出問題，但哥布林是唯一
+               的例外(內部key是goblinG，顯示名稱才是「哥布林」)，因此
+               只有這一項會把內部key直接顯示出來。
+               修法：_sel()新增支援{v,label}物件(v=實際儲存的值，
+               label=顯示文字)，同時保留純字串陣列的舊用法(這時v跟label
+               相同，其餘呼叫端如法術技能選單不受影響)；
+               atsTransformOptions()改回傳{v:key,label:MOBS[key].name}，
+               讓下拉選單顯示中文名稱，但實際存檔/查表用的值仍然是正確
+               的key(不會影響mobSheetReady()/MOB_SCALE[]等既有查找邏輯)。
+               另外變身效果到期的系統訊息(clearTransformIfExpired())也
+               一併修正，改顯示怪物名稱而不是內部key。
+               已模擬測試：選到哥布林時下拉選單按鈕正確顯示「哥布林」，
+               純字串陣列的舊呼叫端(如法術選單)顯示邏輯不受影響。
+             ・依玩家提供的更新版PDF，調整冒險洞穴1-2樓的怪物出沒清單：
+               1樓拿掉「妖魔弓箭手」、新增「人形殭屍」；2樓新增「人形殭屍」
+               「夏洛柏」「飄浮之眼」。同樣更新在DEFAULT_MOB_ENABLED常數
+               裡，並用程式逐一核對這些怪物key都能在MOBS物件裡找到對應
+               的真實定義。
+========================================
 -->
 <html lang="zh-TW">
 <head>
@@ -914,7 +954,13 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     <div id="titleLogo">天堂 · 像素版</div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
-      <div id="noticeBody"><div class="noticeVer">◆ v72（2026-08-19）</div>
+      <div id="noticeBody"><div class="noticeVer">◆ v73（2026-08-20）</div>
+<ul>
+<li>依原始資料復原各地圖的怪物出沒分佈，並存為新玩家的預設值（後台「怪物擺放」也會直接顯示對應的勾選狀態）</li>
+<li>修正變身卷軸選單顯示「goblinG」而不是「哥布林」的問題</li>
+<li>依最新資料調整冒險洞穴1-2樓的怪物出沒：1樓拿掉妖魔弓箭手、新增人形殭屍；2樓新增人形殭屍、夏洛柏、飄浮之眼</li>
+</ul>
+<div class="noticeVer">◆ v72（2026-08-19）</div>
 <ul>
 <li>遊戲更名為「天堂．像素版」，公告欄改版</li>
 <li>修正背包/魔法欄拖曳抖動、登入畫面細線等視覺瑕疵</li>
@@ -1768,7 +1814,7 @@ function applyHaste(tier, ms){ const now=Date.now();
   player.hasteTier=tier; player.hasteUntil=now+ms;
   sysMsg(tier>=2?'★ 強力加速！移動大幅提升。':'★ 身法加速！移動提升。'); }
 function clearHasteIfExpired(){ if(player.hasteTier>0 && Date.now()>player.hasteUntil){ player.hasteTier=0; sysMsg('加速效果結束。'); } }
-function clearTransformIfExpired(){ if(S && S.transformInto && Date.now()>(S.transformUntil||0)){ var _n=S.transformInto; S.transformInto=null; sysMsg('『'+_n+'』的變身效果結束，恢復原本模樣。'); } }
+function clearTransformIfExpired(){ if(S && S.transformInto && Date.now()>(S.transformUntil||0)){ var _n=S.transformInto; var _label=(typeof MOBS!=='undefined'&&MOBS[_n]&&MOBS[_n].name)||_n; S.transformInto=null; sysMsg('『'+_label+'』的變身效果結束，恢復原本模樣。'); } }
 const npcs=[
   {name:'朵琳', mob:'侏儒', art:'dwarf', x:26*TS, y:25*TS, warehouse:true, lines:['朵琳：「要寄放東西嗎？我幫你看管倉庫。」']},
   {name:'潘朵拉', mob:'潘朵拉', art:'mage', x:22*TS, y:20*TS, shop:'雜貨店', lines:['潘朵拉：「歡迎光臨雜貨舖，需要點什麼嗎？」']},
@@ -1830,9 +1876,28 @@ const MOBS={
 };
 let mobs=[], drops=[];
 /* 怪物出沒設定：後台編輯器勾選「這張地圖要出沒哪些怪物」，按存檔後才會真正生效。
-   資料格式：{ 地圖id: [type, type, ...] }，存在 localStorage，遊戲一開始預設是空的（也就是所有地圖預設沒有怪物，直到玩家自己去後台勾選存檔）*/
+   資料格式：{ 地圖id: [type, type, ...] }，存在 localStorage。
+   DEFAULT_MOB_ENABLED：依玩家提供的「說話之島怪物分佈.pdf」整理出的預設值，
+   在玩家從未自行存檔調整過(localStorage裡沒有資料)的情況下套用，
+   等於是把當初的怪物分佈「復原」回來。哥布林在MOBS裡的key是goblinG(顯示名稱才是"哥布林")，
+   飄浮之眼／杜賓犬／夏洛柏 這三個是依名稱直接比對過去的(PDF上分別寫成"漂浮之眼"／"杜賓狗"／"夏洛伯"，
+   一個字不同，判斷是同一隻怪物的手誤/別名)。*/
+const DEFAULT_MOB_ENABLED = {
+  north_island: ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','石頭高崙','飄浮之眼'],
+  port_n:       ['史萊姆','妖魔','妖魔鬥士','狼','石頭高崙','牧羊犬','杜賓犬','克特'],
+  port_e:       ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','骷髏','夏洛柏','石頭高崙','牧羊犬','杜賓犬','黑騎士','克特'],
+  hunt_w:       ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','goblinG','地靈','石頭高崙','飄浮之眼'],
+  hunt_e:       ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','骷髏','人形殭屍','夏洛柏','長老','石頭高崙','牧羊犬','杜賓犬'],
+  hunt_s:       ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','骷髏','人形殭屍','夏洛柏','長老','牧羊犬','杜賓犬'],
+  cross_n:      ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','goblinG','地靈','石頭高崙','飄浮之眼'],
+  cross_w:      ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','goblinG','地靈','石頭高崙','飄浮之眼'],
+  cross_e:      ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','骷髏','人形殭屍','夏洛柏','長老','石頭高崙','牧羊犬','杜賓犬'],
+  cross_s:      ['史萊姆','妖魔','妖魔弓箭手','妖魔鬥士','狼','狼人','骷髏','人形殭屍','夏洛柏','長老','牧羊犬','杜賓犬'],
+  cave:         ['史萊姆','骷髏','骷髏弓箭手','狼人','妖魔','妖魔鬥士','人形殭屍','石頭高崙','長老','飄浮之眼'],
+  cave2:        ['史萊姆','骷髏','骷髏弓箭手','骷髏斧手','骷髏槍兵','史巴托','狼人','人形殭屍','夏洛柏','飄浮之眼','石頭高崙','巴風特'],
+};
 const MOB_ENABLED_KEY='lineage_pixel_mob_enabled_v1';
-function loadMobEnabled(){ try{ var r=localStorage.getItem(MOB_ENABLED_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
+function loadMobEnabled(){ try{ var r=localStorage.getItem(MOB_ENABLED_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return JSON.parse(JSON.stringify(DEFAULT_MOB_ENABLED)); }
 function saveMobEnabledToStorage(){ try{ localStorage.setItem(MOB_ENABLED_KEY, JSON.stringify(MOB_ENABLED)); }catch(e){} }
 let MOB_ENABLED = loadMobEnabled();
 const KETA_RESPAWN_MS = 4*60*60*1000;                // 克特重生等待：4 小時
@@ -4851,7 +4916,7 @@ function atsLearnedAttacks(){ return (S.spells||[]).map(function(x){return spell
   if(!sp) return false; var fx=(typeof SPELL_FX!=='undefined')?SPELL_FX[sp.name]:null;
   return fx && fx.type==='atk'; }); }
 function atsLearnedHeals(){ return (S.spells||[]).map(function(x){return spellDef(x.name);}).filter(function(sp){ return sp && sp.name.indexOf('治癒')>=0; }); }
-function atsTransformOptions(){ if(typeof MOBS==='undefined')return []; return Object.keys(MOBS).filter(function(k){ return k!=='克特'&&k!=='稻草人'&&(MOBS[k].lv||1)<=(S.lv||1); }); }
+function atsTransformOptions(){ if(typeof MOBS==='undefined')return []; return Object.keys(MOBS).filter(function(k){ return k!=='克特'&&k!=='稻草人'&&(MOBS[k].lv||1)<=(S.lv||1); }).map(function(k){ return {v:k,label:MOBS[k].name||k}; }); }
 function atsBuy(id,qty){ var d=ITEM_DEF[id]; var price=((d&&d.price)||0)*qty; if(price<=0)return false; if((S.gold||0)<price)return false; S.gold-=price; addItem(id,qty); if(typeof goldMsg==='function')goldMsg('【ATS】自動購買 '+id+' ×'+qty+'（-'+price+' 金幣）'); return true; }
 function atsDrink(id,buy,qty){ if((S.inv[id]||0)>0){ useItem(id); return true; } if(buy&&atsBuy(id,qty)){ useItem(id); return true; } return false; }
 var _atsBuffT={}, _atsActLast=0, _huntLX=null,_huntLY=null,_huntStuck=0;
@@ -4954,10 +5019,12 @@ function atsV(sec,k,v){ ATS()[sec][k]=v; renderATS(); }
 function _tog(sec,on,dis){ return '<button class="atsTog '+(on?'on':'')+'" '+(dis?'disabled':'')+' onclick="atsT(\''+sec+'\')">'+(on?'開':'關')+'</button>'; }
 var _selSeq=0;
 function _sel(sec,k,opts,cur,dis){ var vid='asel_'+(_selSeq++);
+  var norm=opts.map(function(o){ return (o&&typeof o==='object')?o:{v:o,label:o}; });   // 支援純字串或{v,label}物件：字串時value跟顯示文字相同(維持相容)，物件時可以顯示名稱、內部存key(例如哥布林內部key是goblinG)
+  var curLabel=(norm.filter(function(o){return o.v===cur;})[0]||{}).label || cur || '';
   var h='<span class="atsSelWrap" id="'+vid+'">';
-  h+='<button type="button" class="atsSelBtn" '+(dis?'disabled':'')+' onclick="atsSelToggle(this)">'+(cur||'')+' <span class="atsSelArrow">▾</span></button>';
+  h+='<button type="button" class="atsSelBtn" '+(dis?'disabled':'')+' onclick="atsSelToggle(this)">'+curLabel+' <span class="atsSelArrow">▾</span></button>';
   h+='<div class="atsSelList">';
-  opts.forEach(function(o){ h+='<div class="atsSelOpt'+(o===cur?' cur':'')+'" onclick="atsSelPick(this,\''+sec+'\',\''+k+'\')" data-v="'+o.replace(/"/g,'&quot;')+'">'+o+'</div>'; });
+  norm.forEach(function(o){ h+='<div class="atsSelOpt'+(o.v===cur?' cur':'')+'" onclick="atsSelPick(this,\''+sec+'\',\''+k+'\')" data-v="'+o.v.replace(/"/g,'&quot;')+'">'+o.label+'</div>'; });
   h+='</div></span>'; return h; }
 function atsSelToggle(btn){ var wrap=btn.closest('.atsSelWrap'); if(!wrap)return; var open=wrap.classList.contains('open');
   document.querySelectorAll('.atsSelWrap.open').forEach(function(w){ w.classList.remove('open'); }); if(!open) wrap.classList.add('open'); }
