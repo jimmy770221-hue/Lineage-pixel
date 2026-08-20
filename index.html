@@ -385,6 +385,300 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
                已模擬驗證：刻意重現「後台存檔覆寫導致陣列重新指派」的
                情境，確認修正後二階段查到的掉落表內容跟一階段(含玩家
                新增的項目)完全一致，不會再對不上。
+             ・調整克特／巴風特(一階段)的感應追敵範圍：aggro從260px(約
+               8格)改成480px(15格×32px)，玩家一踏進王座之間、還在南側
+               不算太靠近北方王座位置時，就會提早被BOSS察覺開始追擊，
+               比原本要走到很近才會被發現更有壓迫感。
+             ・二階段(克特二段／巴風特二段)的感應範圍也一併同步為480px
+               (原本是400px)，玩家反映「一二階要一樣」，改成四隻世界王
+               (含兩個階段)的感應範圍統一都是15格。
+             ・修正隊友在迷宮裡可以直接穿牆的bug：追查發現隊友的移動邏輯
+               (updateParty()裡追擊怪物、跟隨主角軌跡這兩段)，原本完全
+               沒有做任何牆壁碰撞檢查，就只是單純把位移量直接加到p.x/
+               p.y上——這在一般村莊、開闊野外不容易被注意到，但冒險洞穴
+               改成迷宮之後，隊友完全不受薄石牆阻擋，等於是作弊般直接
+               貫穿迷宮，跟玩家自己(movePlayer())、怪物(mobAttack前的
+               移動判定)兩邊都早就有牆壁碰撞檢查的狀況很不一致。
+               修法：新增共用函式moveEntityCollide()，套用先前修正怪物
+               穿牆bug時用的同一套安全做法(X軸先提交、Y軸再用最新x檢查，
+               避免斜角切角穿牆；並自動拆成多個子步進，避免隊友被設定
+               高速加速時一步跳過整片薄牆)，讓updateParty()的兩段移動
+               (追擊怪物、沿主角軌跡跟隨)都改用這個函式，不再是毫無阻擋
+               的直接位移。
+               已模擬測試：舊行為在牆前不斷位移會直接貫穿整面牆(從牆前
+               一路推進到牆後8格遠)，修正後同樣的操作會正確卡在牆的
+               前一格、完全過不去；另外也驗證了斜角移動穿過牆角的情境，
+               確認不會利用切角bug繞過薄牆。
+             ・修正隊友可以隔牆攻擊的問題，並新增路徑規劃讓隊友能在迷宮
+               裡自己找路：
+               1)【隔牆不能攻擊】updateParty()新增hasLineOfSight()判定，
+                 隊友要「距離夠近」且「視線沒被牆擋住」兩個條件同時成立
+                 才會出手攻擊；只要中間隔著牆，即使距離在攻擊範圍內也
+                 不會開打，改成移動靠近(嘗試繞路)，跟怪物、玩家攻擊的
+                 隔牆判定規則一致。
+               2)【隊友會自己找路】新增bfsPath()：在40×34的地圖格子上
+                 用廣度優先搜尋(BFS)找出從隊友目前位置到目標的合法路徑
+                 (不會穿牆，效能上一張地圖最差也只需掃過約1300多格，
+                 很輕量)；新增moveTowardWithPathfinding()：視線暢通時
+                 直接朝目標直線移動(效能好、動作自然)，視線被牆擋住時
+                 才觸發BFS找路，沿著算出來的路徑點依序前進，每1.5秒或
+                 目標所在格子改變時才重新計算(避免每影格都重算、也避免
+                 移動看起來一直抖動重新規劃)。updateParty()原本兩段直線
+                 移動(追擊怪物、沿主角軌跡跟隨)都改用這個函式，隊友遇到
+                 死路或繞遠路的地形，會自己找到正確方向繞過去，不會再
+                 卡在牆邊乾等或憑空穿牆。
+               已用從實際檔案抽出的函式，在真實生成的迷宮地圖上做完整
+               模擬測試：BFS算出的路徑(152步，從迷宮一端走到另一端)每一
+               步都合法(相鄰格、非牆)且確實抵達終點；讓隊友物件在同一張
+               迷宮裡實際逐影格移動、套用完整的moveTowardWithPathfinding
+               邏輯，驗證真的能夠一路繞過牆壁、成功抵達迷宮另一端的目標
+               位置，沒有卡死；隔牆視線判定也確認正確攔截。
+             ・修正上面路徑規劃系統推出後，隊友反而會卡在牆邊完全不動的
+               回歸問題：
+               根因出在moveTowardWithPathfinding()裡「真的找不到路時」
+               的退路邏輯——bfsPath()原本只要「目標所在的那一格」剛好是
+               牆(可能因為座標換算誤差、或目標剛好貼著牆邊)，就會直接
+               回傳null放棄找路；而找不到路時的退路寫的是「直接朝目標
+               方向直線移動」，問題是會走到這個退路分支，正是因為視線
+               已經確認被牆擋住了——所以這個「退路」實際上就是命令隊友
+               直挺挺地朝著已知有牆的方向走過去，撞牆後就會被
+               moveEntityCollide()正常擋下，然後永遠卡在牆邊，因為
+               bfsPath()每次重算都一樣回傳null、退路邏輯每次都一樣叫它
+               去撞同一道牆。
+               修法：
+               1) bfsPath()新增起點/終點吸附：如果起點或終點座標換算出
+                  來的格子剛好是牆，先用findNearestWalkable()吸附到最近
+                  的可走格再開始找路，迷宮保證全連通，這樣幾乎不會再
+                  出現真的找不到路的情況。
+               2) moveTowardWithPathfinding()新增卡住偵測：每600ms檢查
+                  一次實際移動了多少距離，幾乎沒動(小於5px)就標記為卡住，
+                  強制提前重新規劃路徑，不用等滿原本的1.5秒重算週期才
+                  發現路徑失效。
+               3) 徹底移除「直接朝已知有牆的方向硬衝」這段錯誤的退路
+                  邏輯——現在如果真的完全找不到路(理論上不會發生)，隊友
+                  會原地待命，不會再做「明知有牆還往那個方向走」這種
+                  不合理的事。
+               已重現原本會導致卡住的情境(故意讓目標座標換算後剛好落在
+               牆上)做模擬測試：修正前bfsPath會回傳null，修正後正確吸附
+               到可走格並成功找到路徑；完整跑一次移動模擬(有牆隔開兩個
+               房間，中間只有一個窄門)，確認隊友能順利繞過牆走到目標，
+               全程不會卡住；也重新跑了先前的完整迷宮路徑測試(152步跨越
+               迷宮兩端)，確認這次修正沒有破壞原本正常運作的情境，過程
+               中連續卡住的影格數維持在0。
+             ・修正冒險洞穴走樓梯/暗道後，會直接站在觸發格上的問題：
+               原本1樓下樓梯傳到2樓的落地點，剛好精準對到2樓自己「回1樓」
+               那個回程樓梯的座標；反過來2樓回1樓的落地點，也剛好精準
+               對到1樓下樓梯本身的座標；暗道兩端也是同樣狀況，A端傳過去
+               剛好就站在B端的觸發格上。玩家一到，人就站在另一組傳送
+               觸發點上，雖然有900毫秒的冷卻保護不會立刻反彈，但只要
+               冷卻一過還沒走開，就會不小心又原地觸發一次，來回反彈。
+               修法：所有樓梯/暗道的目的地座標都往同一個2格通道格內
+               偏移1格(利用carveMaze()產生的每個通道格本身就是2×2大小、
+               保證可走的特性)，讓玩家傳送過去後，落地點跟任何傳送觸發
+               格都保持1格距離，不會一到就站在觸發點上。
+               已用從實際檔案抽出的函式模擬驗證：1樓兩組暗道共4個傳送
+               點、1樓下樓梯、2樓回程樓梯，全部核對落地點磚塊都是可走
+               地板(不是牆)，而且跟對應的觸發格距離都精準是1格。
+               另外把地城版面快取的localStorage key從v2升級為v3，讓已經
+               生成過版面的玩家也能拿到新的偏移座標，不會繼續套用舊版
+               「落地點疊在觸發格上」的資料。
+             ・修正「隊友不能隔牆打，但玩家自己可以」的規則不一致問題：
+               先前只幫隊友(updateParty)跟怪物(mobAttack觸發判定)加上
+               hasLineOfSight()視線判定，漏掉了玩家自己的攻擊途徑，變成
+               玩家反而是唯一能隔牆攻擊的一方。這次把玩家所有的攻擊途徑
+               都補上同一套視線判定：
+               1) playerAttackFront()近戰面向攻擊：範圍內但隔著牆看不到
+                  的怪物打不到。
+               2) doAttack()鎖定目標攻擊：隔牆時直接中止，不進冷卻、也
+                  不會白白消耗箭矢。
+               3) castSpell()施法攻擊：隔牆時提示「目標被阻擋，看不到」，
+                  不消耗MP、不進冷卻。
+               4) ATS自動戰鬥的施法：隔牆時跳過不施放(先前也會隔牆自動
+                  攻擊)。
+               5) 箭矢彈道(arrows更新迴圈)：新增撞牆判定，箭矢碰到牆就
+                  消失，不會再穿牆命中後方的怪物。
+               已模擬驗證：隔著牆時視線判定正確回傳false(攻擊被擋)、牆有
+               開口的方向正確回傳true(可正常攻擊)、箭矢也確認會在撞到牆
+               的那一格消失，不會穿過去。現在玩家、隊友、怪物三方的隔牆
+               規則完全一致。
+             ・強化克特／巴風特(含二階段)：玩家反映組隊時太容易被打倒。
+               1)【血量10倍】依玩家要求全部提升10倍：
+                  克特800→8000、巴風特750→7500、
+                  克特二段1450→14500、巴風特二段1400→14000。
+               2)【閃避(ac)調整】先分析了命中率公式：
+                  hv = 玩家等級 + 命中加成 - 怪物等級 + 怪物ac，
+                  再夾在1~19之間擲d20判定(所以命中率永遠在5%~95%)。
+                  ac越低代表越難被打中。分析後發現一件重要的事：這幾隻
+                  BOSS原本的ac對「中等強度玩家」來說早就觸底了——例如
+                  Lv65玩家打克特，算出來的原始值是-43，遠低於下限1，
+                  夾取後固定就是最低的5%命中率，這種情況下再怎麼調低ac
+                  都完全不會有任何效果。真正會有差別的是高等級高裝備的
+                  玩家(例如Lv99、命中加成+30)，這時原始值才會脫離下限、
+                  ac的數值才真正發揮作用。
+                  因此這次把ac往下調整為：克特-67→-97、巴風特-60→-90、
+                  克特二段-82→-122、巴風特二段-78→-118。
+               已驗證：血量確實都是原本的10倍；閃避的部分，以Lv99高裝
+               玩家模擬，巴風特被打中的機率從95%降到5%、克特從55%降到
+               5%，確認調整對高強度玩家確實有明顯效果(對中等玩家則本來
+               就已經是5%下限，維持不變)。
+             ・新增「牆壁遮擋角色時自動半透明」：玩家反映角色走到牆後面
+               被擋住時，看起來很像卡在牆裡或穿牆，造成視覺誤會。
+               做法：繪製立體牆之前，先收集畫面上所有角色(玩家/隊友/
+               怪物)的格子座標；接著逐一檢查每面牆會不會擋到某個角色。
+               判定用等角投影的深度關係：同一條深度線(tx+ty)上，深度較大
+               的物件會畫在後面蓋住前面的，所以「牆的深度大於角色深度」
+               且兩者在畫面上位置夠接近(深度差3.2格內、橫向偏移2.2格內)
+               時，就是會擋到的情況。會擋到的牆改用 globalAlpha=0.4
+               (40%不透明度，依玩家指定)繪製，其餘的牆維持原本的完全
+               不透明，畫完立刻ctx.restore()還原，不影響其他繪製。
+               已模擬驗證判定邏輯：角色正前方近距離的牆、斜前方的牆正確
+               判定為要半透明；角色「後方」的牆、深度差太遠的牆、橫向
+               偏移太多的牆，則正確維持不透明，不會整片牆無謂地變透明。
+               ※後續依玩家要求調整：怪物不列入透明化的判定對象，只有
+                 玩家跟隊友被牆擋住時牆才會變半透明。怪物躲在牆後不會
+                 讓牆變透明，保留「看不到牆後有什麼」的探索感。
+             ・修正隊友原地抖動的問題：玩家反映明明靜止不動，隊友卻一直
+               在抖。追查後發現兩個成因，都跟「基準不一致」有關：
+               1)【交戰距離沒有緩衝區(主因)】updateParty()的戰鬥分支是
+                  單純判斷「距離>交戰範圍就移動、否則就攻擊」，中間沒有
+                  任何緩衝。隊友一旦停在交戰範圍的邊界上(例如怪物在緩慢
+                  移動)，就會每一影格反覆「進入範圍→停下→飄出範圍→
+                  再移動」，看起來就是原地抖動。
+                  修法：加入緩衝區(hysteresis)——正在接近時要走進交戰
+                  範圍的80%才停下，停下之後要飄出交戰範圍以外才會重新
+                  起步，中間這段區間維持原狀不切換狀態。
+               2)【距離計算基準不一致】戰鬥分支的距離d原本是拿「隊友的
+                  左上角座標(p.x)」跟「目標的中心點(tgt.x+16)」相減，
+                  但同一段程式裡的視線判定、實際移動用的都是中心點，
+                  基準差了16px；跟隨主角軌跡那段也有同樣問題(軌跡點是
+                  左上角，moveTowardWithPathfinding內部卻用中心點比對)，
+                  導致隊友永遠對不準目標、不斷過衝再修正。
+                  修法：兩段的距離判定與移動目標一律統一改用中心點；
+                  moveTowardWithPathfinding()也加上過衝保護(已經很接近
+                  目標時不再移動、單步位移不超過剩餘距離)。
+               已模擬重現並驗證：以「怪物緩慢遠離、隊友反覆進出交戰邊界」
+               的情境測試，修正前60影格內「移動/攻擊」狀態切換了47次
+               (幾乎每1~2影格就跳一次，正是視覺上的抖動)，修正後只切換
+               2次，變成穩定的「停一段、走一段」。
+             ・修正換地圖／傳送後隊友被留在牆裡的問題：玩家從王座之間
+               出來後，發現隊友整個人卡在牆壁裡面。
+               根因是loadMap()從頭到尾都沒有處理隊友的位置——只有玩家會
+               被移動到新地圖的入口座標，隊友則直接沿用「上一張地圖」的
+               舊座標。在開闊的野外可能剛好還站得住，但換到迷宮這種到處
+               是牆的地圖，那個座標很可能正好就是一面牆的位置。
+               修法：
+               1) 新增regroupParty()：以玩家為中心，往外一圈圈找「可站立
+                  且還沒被其他隊友佔用」的格子，依序安置每位隊友；同時
+                  清空跟隨軌跡與路徑快取、交戰狀態，避免隊友還照著上一張
+                  地圖算出來的舊路徑亂走。
+               2) 三個會讓玩家瞬間換位置的地方都補上呼叫：loadMap()(換
+                  地圖/走樓梯)、checkWarps()的同地圖暗道傳送、以及地監內
+                  的傳送術。
+               3) updateParty()每一影格加上保險檢查：萬一隊友因為任何我
+                  沒預期到的原因卡進牆裡，會自動吸附到最近的可站立格脫困。
+               已用真實生成的迷宮地圖模擬驗證：刻意把3個隊友的座標塞進
+               牆裡再呼叫regroupParty()，確認全部都被正確安置到玩家身邊
+               的可走格，而且沒有兩人重疊在同一格。
+             ・背包新增垃圾桶：可以把賣不掉又不想留的物品直接丟棄。
+               在背包面板的右下角新增一個小垃圾桶圖示(絕對定位固定在
+               角落，不佔用格子空間)，把物品拖過去放開就會丟棄。
+               實作重點：
+               1) 沿用既有的拖曳系統(touchDragStart/touchDropResolve，
+                  滑鼠與觸控通用)，在拖放解析裡新增垃圾桶這個目標，
+                  跟原本的「拖到快捷列」「拖到其他背包格」並列。
+               2) 拖曳懸停偵測也一併加入垃圾桶，滑到上面時會放大、
+                  變紅並發光，給明確的視覺回饋。
+               3) 安全防護：裝備中的物品會擋下並提示要先卸下(避免誤刪
+                  身上正在穿的裝備)；魔法(快捷欄的spell:項目)不能丟；
+                  持有多個時會先詢問要丟幾個，最後再跳一次確認對話框，
+                  避免手滑誤刪。丟棄後會重新計算負重與背包顯示。
+               ※原本一度把垃圾桶放在背包底部的負重列(.invfoot)裡，但
+                 檢查後發現該列的CSS是display:none、程式裡也從來沒有
+                 打開過，放在那裡會完全看不到，因此改成獨立的絕對定位
+                 元素掛在面板右下角。
+               ※修正回報：玩家實測拖到垃圾桶時完全沒有跳出確認訊息。
+                 原本判定「有沒有丟到垃圾桶」是靠 elementFromPoint() 取得
+                 放開處最上層的元素再往上找 #invTrash，但這種堆疊命中測試
+                 容易被其他覆蓋層、或背包格線的捲軸區域攔截，導致抓到的
+                 不是垃圾桶本身，判定就失敗了。
+                 修法：改用幾何座標判定——新增 _pointInTrash()，直接拿
+                 垃圾桶的 getBoundingClientRect() 跟指標放開的座標比對，
+                 只要落在矩形內(另外放寬6px容錯，圖示小比較好丟中)就算
+                 命中，完全不依賴堆疊命中測試。pointerup 時把座標一併
+                 傳進 touchDropResolve()；拖曳懸停的高亮回饋也改用同一套
+                 判定，確保「看起來會丟中」跟「實際會丟中」完全一致。
+                 另外加上背包沒開啟時不判定的保護。
+                 已模擬驗證各種放開位置：矩形內、邊界、容錯範圍內外、
+                 以及背包關閉的情況，判定結果全部正確。
+               ※二次回報：改用幾何判定後仍然沒有跳出確認訊息。這次找到
+                 真正的根因——問題根本不在命中判定，而是原生的
+                 confirm()／prompt() 對話框，在沙箱化的 iframe(例如
+                 Claude 的預覽視窗)裡會被瀏覽器「靜默封鎖」：不會報錯、
+                 不會顯示任何東西，confirm() 直接回傳 false，所以流程
+                 走到確認那一步就無聲地結束了，看起來就像完全沒反應。
+                 修法：改用遊戲自己的視窗系統。新增 #discardModal 丟棄
+                 確認視窗(沿用既有 .modal / .modal.on 的樣式與顯示機制，
+                 跟「結束遊戲」那個確認視窗same一套)，內含物品名稱、
+                 數量輸入框(持有多個時才顯示)、確定／取消按鈕；
+                 搭配 openDiscard()／discardConfirm()／discardCancel()
+                 三個函式完成整個流程，完全不再依賴原生對話框。
+                 附註：後台編輯器還有3處原生 confirm() 也會受同樣影響，
+                 但那些是「取消就什麼都不做」的保護性確認，被封鎖時會
+                 安全地不執行動作，不會造成資料損壞，暫時保留。
+               ※依玩家要求追加：數量欄位支援「往下按直接選全部」。
+                 在數量為 1 的時候按 ▼(向下方向鍵或輸入框的下箭頭)，
+                 會直接跳到持有的全部數量；反過來在全部數量時按 ▲ 則
+                 跳回 1，形成循環，中間的數值維持正常的加減1。
+                 另外加了一顆「全部」按鈕給習慣用滑鼠的情況，並支援
+                 在輸入框按 Enter 直接確認、按 Esc 取消。
+               ※再次調整：玩家反映只有鍵盤方向鍵有效、數字框自帶的小
+                 箭頭沒有這個功能，且按鈕太小不好按。改版如下：
+                 1) 版面改成「數量 [▼] [ 數字 ] [▲] [全部]」，▼▲做成
+                    38×34 的大方塊按鈕(金色邊框、有 hover 與按下效果)，
+                    左邊是▼、右邊是▲，位置明確好點。
+                 2) 用CSS隱藏數字框原生的小箭頭(webkit的spin-button與
+                    firefox的textfield)，避免畫面上同時出現兩套箭頭、
+                    行為卻不一樣造成混淆。
+                 3) 新增 discardQtyStep(dir) 統一處理加減，▼▲按鈕與
+                    鍵盤方向鍵都改成呼叫同一個函式，兩種操作方式的行為
+                    保證完全一致：在 1 按▼直接跳到全部、在全部按▲跳回
+                    1、中間維持正常加減1。
+                 4) 提示文字改寫得更明確：「數量在 1 的時候，按左邊的 ▼
+                    會直接變成全部數量」。
+             ・新增「村莊內隊友駐守 + 與隊友交易」系統：
+               1)【村莊駐守】updateParty()新增判斷：不在野外(村莊)時，隊友
+                  不再跟著主角跑，改成像村民NPC一樣駐守在固定位置、不移動
+                  也不追擊。新增VILLAGE_PARTY_SPOTS常數，寫死7個座標，位在
+                  村莊東南方那片空曠草皮(x31~41、y30~38)，避開了所有房舍、
+                  水井、大樹與村內十字道路，彼此間隔4格以上分散排開。
+                  因為座標是寫死的、依隊友編號取用，所以出村再回到村莊時，
+                  每位隊友都會回到自己原本的位置，不會亂跑。另外仍保留
+                  findNearestWalkable()作為保險，萬一某格被擋住會自動挪到
+                  最近的可站立處。離開村莊回到野外時清除駐守標記，恢復原本
+                  的跟隨行為。
+                  已用實際村莊地圖驗證：7個座標全部是草地、都可站立、都確實
+                  位在村莊中心十字(cx=27,cy=24)的東南方，且沒有任何兩人重疊。
+               2)【點擊互動】新增partyAt()，比照既有的npcAt()做法找出點擊
+                  位置附近的隊友；commandAt()裡加在「點怪物攻擊」之後、
+                  「點NPC對話」之前，走近後點隊友就會開啟交易視窗，距離
+                  太遠則提示要走近一點。
+               3)【交易視窗】新增#tradew，位置(左上角top:6px/left:6px)、
+                  寬度(300px)、高度(500px)、外框樣式全部比照商店視窗
+                  #shopw，維持介面統一。
+               4)【24格單向交易】因為沒有真人玩家，依玩家指示把原版雙方
+                  各12格的交易欄合併成單一24格欄位(TRADE_SLOTS=24)，做成
+                  單向給予。從背包拖物品到交易格即可放入(沿用既有的
+                  touchDragStart/touchDropResolve拖曳系統，並把交易格
+                  加進拖曳懸停高亮的判定)；點交易格內的物品可單獨取回。
+               5)【確定/取消】按「確定」時，物品會寫進該隊友存檔
+                  (SAVES[slot])的背包並更新invOrder、呼叫persistSaves()
+                  存檔，所以之後切換到那個角色時東西真的在背包裡；按
+                  「取消」或關閉視窗時，交易欄內的物品全部退回玩家背包，
+                  不會憑空消失。裝備中的物品會擋下並提示先卸下。
+               已模擬測試三種情境：放入物品後按確定，物品正確從玩家背包
+               轉入隊友存檔背包(含既有物品的數量累加與invOrder更新)；按
+               取消時物品完整退回玩家背包；嘗試放入30種物品時正確停在
+               24格上限。
 ========================================
 -->
 <html lang="zh-TW">
@@ -564,6 +858,20 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
   .iiVal{color:#f0d9a0;text-align:right;}
   .iiDesc{display:block;color:#e0d4b8;border-bottom:1px solid rgba(139,106,42,.35);padding:2px 0 6px;}
   .invfoot{display:none;font-size:14px;color:#c0a860;padding:2px 6px;border-top:1px solid #6b4d22;justify-content:space-between;align-items:center;}
+  #invTrash{position:absolute;right:6px;bottom:6px;z-index:5;font-size:16px;line-height:1;padding:2px 5px;border:1px solid #6b4d22;border-radius:4px;background:rgba(42,28,12,.92);cursor:pointer;opacity:.7;transition:transform .12s,opacity .12s,border-color .12s,box-shadow .12s;}
+  .qtyBtn{width:38px;height:34px;font-size:18px;font-weight:bold;line-height:1;padding:0;cursor:pointer;
+    background:linear-gradient(#7a5626,#563c18);color:#f2d489;border:2px solid #a97e34;border-radius:5px;}
+  .qtyBtn:hover{background:linear-gradient(#9a6e36,#6d4c20);color:#fff;}
+  .qtyBtn:active{transform:translateY(1px);}
+  .qtyAllBtn{height:34px;padding:0 10px;font-size:14px;cursor:pointer;margin-left:2px;
+    background:linear-gradient(#5a6a3a,#3c4a24);color:#e8f0c0;border:2px solid #8aa04a;border-radius:5px;}
+  .qtyAllBtn:hover{background:linear-gradient(#6f8248,#4c5c2c);color:#fff;}
+  #discardQty{width:78px;height:34px;box-sizing:border-box;padding:2px 6px;font-size:17px;text-align:center;font-weight:bold;
+    background:#1e1a12;color:#ffd94a;border:2px solid #a97e34;border-radius:5px;}
+  #discardQty::-webkit-outer-spin-button,#discardQty::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}   /* 隱藏原生小箭頭，改用旁邊自製的▼▲，避免兩套箭頭混淆 */
+  #discardQty{-moz-appearance:textfield;appearance:textfield;}
+  #invTrash:hover{opacity:1;}
+  #invTrash.draghover{opacity:1;transform:scale(1.4);border-color:#e05a3a;background:#4a1c10;box-shadow:0 0 9px rgba(224,90,58,.75);}
 
   /* 小地圖 / 角色視窗 */
   #mapw{top:6px;left:6px;width:220px;display:none;padding:0 0 6px;}
@@ -591,6 +899,16 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
   /* 商店 */
   #shopw{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:95;}
   #shopw.on{display:block;}
+  /* 交易視窗：位置/大小/外框全部比照商店視窗，維持介面統一 */
+  #tradew{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:96;}
+  #tradew.on{display:block;}
+  #tradew .win{background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 6px 24px rgba(0,0,0,.6);border-radius:5px;width:100%;height:500px;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#e8dcc0;padding:12px;}
+  #tradeGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:6px;flex:1;min-height:0;overflow-y:auto;
+    background:#1a1610;border:1px solid #5a5030;border-radius:3px;}
+  .tslot{position:relative;background:#2a2418;border:1px solid #5a5030;border-radius:3px;display:flex;
+    align-items:center;justify-content:center;font-size:22px;image-rendering:pixelated;cursor:pointer;box-sizing:border-box;}
+  .tslot.draghover{border-color:#ffd94a;box-shadow:0 0 8px rgba(255,217,74,.8);}
+  .tslot .q{position:absolute;right:2px;bottom:0;font-size:12px;color:#ffd94a;font-weight:bold;text-shadow:1px 1px 0 #000;}
   .mtab{background:#2a2a30;color:#cbbf9e;border:1px solid #5a5030;border-radius:3px;padding:3px 12px;cursor:pointer;font-size:16px;}
   .mtab.on{background:#2f6b2f;color:#fff;border-color:#3f8f3f;}
   body.mobilemode .mtab{font-size:19px;padding:6px 18px;}
@@ -1019,6 +1337,7 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
     <div class="invgrid" id="invGrid"></div>
     <div id="invInfo">點一下查看，雙擊使用/裝備</div>
     <div class="invfoot"><span id="invWt">負重 6/40</span><span id="invGold">0</span></div>
+    <div id="invTrash" title="把不要的物品拖到這裡丟棄">🗑</div>
   </div>
 
   <!-- 物品資訊小視窗（半透明，點物品時顯示） -->
@@ -1099,6 +1418,17 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
   <div id="atsw"><h2>⚡ SUPER ATS <button class="sx" onclick="toggleWin('atsw')">關閉</button></h2>
     <div class="atsTabs"><button class="atTab on" id="atTab_ats" onclick="setAtTab('ats')">ATS</button><button class="atTab" id="atTab_enh" onclick="setAtTab('enh')">AT強化</button></div>
     <div id="atsBody"></div><div id="atEnhBody" style="display:none"></div></div>
+  <div id="tradew"><div class="win">
+    <h2 id="tradeTitle">交易 <button class="sx" onclick="tradeCancel()">關閉</button></h2>
+    <div id="tradeGreet" style="font-size:15px;color:#d8c9a6;margin-bottom:6px"></div>
+    <div id="tradeGrid"></div>
+    <div style="font-size:12px;color:#c0a860;margin-top:6px">從背包把物品拖到格子裡，最多 24 件</div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="whbtn wh-blue" style="flex:1" onclick="tradeConfirm()">確定</button>
+      <button class="whbtn wh-red" style="flex:1" onclick="tradeCancel()">取消</button>
+    </div>
+  </div></div>
+
   <div id="shopw2"><div class="win">
     <h2>🧰 矮人倉庫 <button class="sx" onclick="closeWarehouse()">關閉</button></h2>
     <div id="whGreet" style="font-size:16px;color:#d8c9a6;margin-bottom:8px">要存入，還是要取出呢？</div>
@@ -1133,6 +1463,25 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
     <button onclick="hideQuit()">取消</button>
   </div></div>
 
+  <!-- 丟棄物品確認（自製視窗：原生 confirm/prompt 在沙箱 iframe 內會被瀏覽器靜默封鎖，完全不會顯示） -->
+  <div class="modal" id="discardModal"><div class="panel box" style="width:320px;box-sizing:border-box;">
+    <p id="discardText">要丟棄這個物品嗎？</p>
+    <div id="discardQtyRow" style="margin:8px 0;display:none;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;">
+        <span>數量</span>
+        <button type="button" class="qtyBtn" onclick="discardQtyStep(-1)" title="減少；在 1 時按這裡直接選全部">▼</button>
+        <input type="number" id="discardQty" value="1" min="1" onkeydown="discardQtyKey(event)">
+        <button type="button" class="qtyBtn" onclick="discardQtyStep(1)" title="增加；在全部時按這裡回到 1">▲</button>
+        <button type="button" class="qtyAllBtn" onclick="discardQtyAll()">全部</button>
+      </div>
+      <div style="font-size:12px;color:#c0a860;margin-top:5px;">數量在 1 的時候，按左邊的 ▼ 會直接變成全部數量</div>
+    </div>
+    <div style="margin-top:10px;">
+      <button onclick="discardConfirm()">確定丟棄</button>
+      <button onclick="discardCancel()">取消</button>
+    </div>
+  </div></div>
+
   <!-- 建立角色 -->
   <!-- 登入首頁 -->
   <div id="titlew">
@@ -1141,17 +1490,17 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
       <h3>📜 公告</h3>
       <div id="noticeBody"><div class="noticeVer">◆ v73（2026-08-20）</div>
 <ul>
-<li>依原始資料復原各地圖的怪物出沒分佈，並存為新玩家的預設值（後台「怪物擺放」也會直接顯示對應的勾選狀態）</li>
-<li>修正變身卷軸選單顯示「goblinG」而不是「哥布林」的問題</li>
-<li>依最新資料調整冒險洞穴1-2樓的怪物出沒：1樓拿掉妖魔弓箭手、新增人形殭屍；2樓新增人形殭屍、夏洛柏、飄浮之眼</li>
-<li>新增克特／巴風特獨立王座之間BOSS房：在北邊/東邊港口(克特)或冒險洞穴2樓(巴風特)累計擊殺100隻怪物後，地板會出現魔法陣，走進去傳送到專屬BOSS房挑戰。兩位BOSS體型放大為2倍、攻擊距離提升到3格，打倒第一階段後會爬起來變身成更強大的「二階段」(克特二段／巴風特二段)，真正擊敗二階段才能獲得寶物</li>
-<li>修正直接用傳送卷軸/傳送視窗跳到冒險洞穴2樓會出現錯誤訊息、整個卡死的問題</li>
-<li>修正部分玩家「其他地圖的怪物全部消失」的問題：從沒動過的地圖現在會正確套用最新的預設怪物分佈，不需要自己清除任何資料，重新整理就會生效，已經自訂過的地圖維持不變</li>
-<li>修正克特二段/巴風特二段的名條、血條被角色圖片擋住的問題，並把世界王的血條加寬，看起來更有BOSS氣勢</li>
-<li>挑戰王座之間失敗（被打倒）時，魔法陣會關閉，必須重新累積100隻怪物才能再次挑戰</li>
-<li>世界王新增招式輪替系統：不再只會追著你近戰，會穿插衝刺攻擊、原地震地、劍氣、隕石雨、召喚小怪、傳送突襲、昏吼減速等多種攻擊模式，每招都有預警動作讓你能反應閃避；一階段只用簡單招式，二階段變身後全部招式都會用、頻率更高，血量過低還會進入狂暴狀態</li>
-<li>後台「怪物」分頁的掉落物設定新增「魔法」書籤，現在可以幫怪物設定掉落魔法書、精靈水晶、技術書、王族魔法等道具了</li>
-<li>修正克特二段/巴風特二段擊敗後掉落物可能對不上後台設定的問題：二階段跟一階段現在共用同一份掉落表，後台編輯「克特」或「克特二段」看到、改到的都是同一份資料</li>
+<li><b>新增世界王挑戰</b>：在北邊/東邊港口或冒險洞穴2樓累計擊殺100隻怪物後，地上會出現魔法陣，走進去即可挑戰克特／巴風特的專屬王座之間</li>
+<li><b>世界王二階段變身</b>：打倒第一階段後，牠會爬起來變身成更強大的型態，真正擊敗二階段才能拿到寶物。挑戰失敗魔法陣會關閉，需重新累積100隻</li>
+<li><b>世界王招式大改版</b>：不再只會追著你打，會穿插衝刺、震地、劍氣、隕石雨、召喚小怪、傳送突襲、昏吼減速等招式，出招前都有預警動作可以閃避；血量過低會進入狂暴</li>
+<li><b>世界王大幅強化</b>：血量提升10倍、閃避提高、體型放大2倍、攻擊距離3格、感應範圍15格</li>
+<li><b>隊友AI強化</b>：會自己在迷宮裡找路繞開牆壁，不會再穿牆、隔牆攻擊或卡住不動</li>
+<li><b>村莊隊友交易</b>：在村莊裡隊友會固定站在東南方草皮上，走過去點他們可開啟交易視窗，拖入物品最多24件，按確定就送給對方</li>
+<li><b>背包垃圾桶</b>：右下角新增垃圾桶，賣不掉的物品拖過去即可丟棄</li>
+<li><b>牆壁透明化</b>：走到牆後被擋住時，該面牆會自動變半透明</li>
+<li><b>怪物分佈復原</b>：依原始資料重新設定各地圖的怪物出沒，冒險洞穴1-2樓也一併調整</li>
+<li><b>後台強化</b>：怪物掉落物設定新增「魔法」書籤，可設定掉落魔法書、精靈水晶、技術書等</li>
+<li>其他修正：傳送到洞穴2樓卡死、怪物分佈消失、名條血條被擋、樓梯重複觸發、變身選單顯示錯誤等問題</li>
 </ul>
 <div class="noticeVer">◆ v72（2026-08-19）</div>
 <ul>
@@ -1649,7 +1998,7 @@ function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},
 /* 地城(冒險洞穴)版面持久化：迷宮用亂數生成，若每次進圖都重新生成會導致玩家每次進去都是完全不同的
    格局(暗門/樓梯位置也會跟著變)，無法熟悉地圖。改成只在「第一次」生成迷宮，之後存進localStorage，
    下次進圖直接讀取存好的版面，格局、暗道、王房位置都會維持一致，直到玩家自己在後台清除重置。*/
-const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v2';   // v1→v2：2樓回1樓的機制從邊界出口改成內部樓梯傳送，資料格式不同，升版讓舊快取失效、強制重新生成
+const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v3';   // v2→v3：樓梯/暗道的落地點座標改成偏移1格(不再疊在觸發格上)，升版讓舊快取失效、強制重新生成正確版本
 function loadDungeonLayouts(){ try{ var r=localStorage.getItem(DUNGEON_LAYOUT_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
 function saveDungeonLayouts(){ try{ localStorage.setItem(DUNGEON_LAYOUT_KEY, JSON.stringify(DUNGEON_LAYOUTS)); }catch(e){} }
 let DUNGEON_LAYOUTS=loadDungeonLayouts();
@@ -1681,20 +2030,20 @@ const MAP_BUILDERS = {
       const acx=p.x+1, acy=p.y+1, r=2.6;
       for(let y=acy-Math.ceil(r);y<=acy+Math.ceil(r);y++)for(let x=acx-Math.ceil(r);x<=acx+Math.ceil(r);x++){
         if(y>0&&x>0&&y<o.H-1&&x<o.W-1&&Math.hypot(x-acx,y-acy)<=r&&g[y][x]!==T_STONEWALL) g[y][x]=T_ALTAR; } }
-    // 暗道(P)：在路徑上挑兩組間隔夠遠的點，安插可瞬間互通的暗道階梯
+    // 暗道(P)：在路徑上挑兩組間隔夠遠的點，安插可瞬間互通的暗道階梯(落地點刻意偏移1格，不會直接站在對應那一端的觸發格上，避免冷卻一過又誤觸發)
     const warps=[];
     const pick=(f)=>{ const p=path[Math.max(0,Math.min(path.length-1,Math.floor(path.length*f)))]; return info.cellAt(p[0],p[1]); };
     const s1a=pick(0.22), s1b=pick(0.55), s2a=pick(0.38), s2b=pick(0.82);
     [[s1a,s1b],[s2a,s2b]].forEach(([a,b])=>{
       g[a.y][a.x]=T_STAIRS; g[b.y][b.x]=T_STAIRS;
-      warps.push({x:a.x,y:a.y,kind:'same',tx:b.x,ty:b.y});
-      warps.push({x:b.x,y:b.y,kind:'same',tx:a.x,ty:a.y});
+      warps.push({x:a.x,y:a.y,kind:'same',tx:b.x+1,ty:b.y});
+      warps.push({x:b.x,y:b.y,kind:'same',tx:a.x+1,ty:a.y});
     });
     // 通往2樓的樓梯：安插在路徑最深處(最後一段)，可放在迷宮內部任意一點，不受地圖邊界限制
     const sp=info.cellAt(path[path.length-1][0], path[path.length-1][1]);
     g[sp.y][sp.x]=T_STAIRS;
     stairsDown={x:sp.x,y:sp.y};                                    // 記錄下樓梯的座標，供2樓回程樓梯精準傳送回這裡(而不是傳到地圖正中央)
-    warps.push({x:sp.x,y:sp.y,kind:'map',toMap:'cave2',toX:o.cx,toY:2});
+    warps.push({x:sp.x,y:sp.y,kind:'map',toMap:'cave2',toX:o.cx,toY:1});   // 落地點刻意離2樓自己的回程樓梯(o.cx,2)差1格，不會一到就站在回程觸發格上
     MAP_WARPS['cave']=warps;
     });
     m.dungeon=true;
@@ -1723,7 +2072,7 @@ const MAP_BUILDERS = {
         if(!DUNGEON_LAYOUTS.cave) MAP_BUILDERS['cave']();
         const stairsUp=(DUNGEON_LAYOUTS.cave&&DUNGEON_LAYOUTS.cave.stairsDown)||{x:o.cx,y:o.cy};
         g[2][o.cx]=T_STAIRS;
-        MAP_WARPS['cave2']=[{x:o.cx,y:2,kind:'map',toMap:'cave',toX:stairsUp.x,toY:stairsUp.y}];
+        MAP_WARPS['cave2']=[{x:o.cx,y:2,kind:'map',toMap:'cave',toX:stairsUp.x+1,toY:stairsUp.y}];   // 落地點跟1樓下樓梯本身差1格，不會一到就站在下樓觸發格上
       });
       gridBase=m.grid; pxBase=m.px; pyBase=m.py; wBase=m.W; hBase=m.H; bossRoomBase=bossRoom; warpsBase=MAP_WARPS['cave2']||[];
       DUNGEON_LAYOUTS.cave2={grid:gridBase, px:pxBase, py:pyBase, W:wBase, H:hBase, bossRoom:bossRoomBase, warps:warpsBase};
@@ -1758,6 +2107,37 @@ const WILD_MAP_IDS=['north_island','port_n','port_e','hunt_w','hunt_s','hunt_e',
    不會被隨機傳送到野外去；同理野外的傳送術也不會誤把玩家傳進地監裡。冒險洞穴地圖物件會標記 dungeon:true，
    castSpell()施放傳送術時依此旗標決定要「同層隨機移動」還是「傳送到野外的另一張地圖」。*/
 function opp(d){ return d==='n'?'s':d==='s'?'n':d==='e'?'w':'e'; }
+/* 換地圖／傳送後，把隊友重新集合到玩家身邊。
+   原本loadMap()完全沒有處理隊友位置，隊友會直接沿用上一張地圖的座標，
+   換到新地圖(尤其是迷宮)後很可能整個人就落在牆裡面，看起來像卡在牆中。
+   這裡以玩家為中心，往外找可站立的格子依序安置每位隊友，並清空跟隨軌跡與
+   路徑快取，避免隊友還照著上一張地圖算出來的舊路徑亂走。*/
+function regroupParty(){
+  if(typeof party==='undefined' || !party.length) return;
+  playerTrail=[];
+  const pgx=Math.floor((player.x+player.w/2)/TS), pgy=Math.floor((player.y+player.h/2)/TS);
+  const used={};
+  party.forEach(function(p,i){
+    const ang=(i/Math.max(1,party.length))*Math.PI*2;
+    let gx=pgx+Math.round(Math.cos(ang)), gy=pgy+Math.round(Math.sin(ang));
+    for(let r=0;r<12;r++){                                   // 往外一圈圈找還沒被佔用、且可站立的格子
+      let found=false;
+      for(let dy=-r;dy<=r&&!found;dy++)for(let dx=-r;dx<=r&&!found;dx++){
+        if(Math.max(Math.abs(dx),Math.abs(dy))!==r) continue;
+        const tx=pgx+dx, ty=pgy+dy, k=tx+','+ty;
+        if(used[k]) continue;
+        if(tx<0||ty<0||tx>=MAPW||ty>=MAPH||T_SOLID.has(MAP[ty][tx])) continue;
+        gx=tx; gy=ty; found=true;
+      }
+      if(found) break;
+    }
+    used[gx+','+gy]=1;
+    p.x=gx*TS; p.y=gy*TS;
+    p.target=null; p._path=null; p._pathTgt=null; p._pathIdx=0; p._closing=null;   // 清掉上一張地圖殘留的路徑/交戰狀態
+    p._villageAnchor=false;                                  // 換地圖：重新決定要駐守(村莊)還是跟隨(野外)
+    p._stuckCheckAt=null; p._stuckCheckPos=null; p._stuckFlag=false;
+  });
+}
 function loadMap(id, entrySide, explicitSpawn){
   const b=MAP_BUILDERS[id]; if(!b){ sysMsg('地圖尚未開放：'+id); return; }
   curMap=b(); curMapId=id; MAP=curMap.grid; MAPW=curMap.W; MAPH=curMap.H; houses=curMap.houses;
@@ -1770,6 +2150,7 @@ function loadMap(id, entrySide, explicitSpawn){
   player.x=px; player.y=py; moveTarget=null; attackTarget=null;
   if(S) S.mapId=id;
   spawnMobs();
+  regroupParty();                                            // 隊友一併集合到玩家身邊的可站立格，不會被留在牆裡
   const mn=document.getElementById('mapName'); if(mn) mn.textContent=curMap.name;
 }
 function checkEdge(){ if(!curMap) return; const ex=curMap.exits;
@@ -1794,7 +2175,7 @@ function checkWarps(){
   for(let i=0;i<list.length;i++){ const w=list[i];
     if(w.x===cxT && w.y===cyT){
       S.warpCooldownUntil=Date.now()+900;                    // 短暫冷卻，避免傳送過去後立刻又觸發回程暗道
-      if(w.kind==='same'){ player.x=w.tx*TS; player.y=w.ty*TS; moveTarget=null; attackTarget=null; playTeleportFx(); }
+      if(w.kind==='same'){ player.x=w.tx*TS; player.y=w.ty*TS; moveTarget=null; attackTarget=null; regroupParty(); playTeleportFx(); }
       else if(w.kind==='map'){ loadMap(w.toMap, null, {x:w.toX*TS, y:w.toY*TS}); playTeleportFx(); }
       return;
     }
@@ -1810,12 +2191,84 @@ function solidAt(px,py){
   if(gx<0||gy<0||gx>=MAPW||gy>=MAPH) return true;
   return T_SOLID.has(MAP[gy][gx]);
 }
+/* 通用的「有碰撞檢查」移動函式：把(dx,dy)這段位移拆成子步進，並用「X軸先提交、Y軸再用最新x檢查」
+   的循序判定(跟玩家movePlayer()、怪物AI用的是同一套安全做法)，避免斜角切角穿過薄牆、也避免高速時
+   一步跳過整片牆。ent需要有.x/.y屬性，比照怪物/隊友物件的32px左右footprint用+16/+24/+8取樣。*/
+function moveEntityCollide(ent,dx,dy){
+  const stepLen=Math.hypot(dx,dy); if(stepLen<=0) return;
+  const subSteps=Math.max(1,Math.ceil(stepLen/16));
+  for(let s=0;s<subSteps;s++){
+    const sx=dx/subSteps, sy=dy/subSteps;
+    const nx=ent.x+sx;
+    if(!solidAt(nx+16,ent.y+24)&&!solidAt(nx+16,ent.y+8)) ent.x=nx;
+    const ny=ent.y+sy;
+    if(!solidAt(ent.x+16,ny+24)&&!solidAt(ent.x+16,ny+8)) ent.y=ny;
+  }
+}
 function hasLineOfSight(x1,y1,x2,y2){
   const dist=Math.hypot(x2-x1,y2-y1); if(dist<1) return true;
   const steps=Math.max(1,Math.ceil(dist/8));               // 每8px取樣一次，足夠偵測到1格厚的薄牆
   for(let i=1;i<steps;i++){ const t=i/steps;
     if(solidAt(x1+(x2-x1)*t, y1+(y2-y1)*t)) return false; }
   return true;
+}
+/* 格子座標BFS找路：從(sx,sy)走到(tx,ty)，回傳沿路的格子座標陣列(不含起點，含終點)；
+   若怎麼走都到不了(理論上迷宮應該全連通，但保險起見)回傳null。40×34的地圖規模，
+   BFS最差情況也只需要掃過約1300多格，效能上很夠用。*/
+function bfsPath(sx,sy,tx,ty){
+  // 起點/終點若因座標誤差剛好落在牆上，先吸附到最近的可走格再開始找路(迷宮保證全連通，這樣幾乎不會再找不到路)
+  if(sx<0||sy<0||sx>=MAPW||sy>=MAPH||T_SOLID.has(MAP[sy][sx])){ const w=findNearestWalkable(MAP,sx,sy); sx=w.x; sy=w.y; }
+  if(tx<0||ty<0||tx>=MAPW||ty>=MAPH||T_SOLID.has(MAP[ty][tx])){ const w=findNearestWalkable(MAP,tx,ty); tx=w.x; ty=w.y; }
+  if(sx===tx&&sy===ty) return [];
+  const visited=new Set(); const key=(x,y)=>x*1000+y;
+  visited.add(key(sx,sy));
+  const queue=[[sx,sy]]; const cameFrom={}; cameFrom[key(sx,sy)]=null;
+  let qi=0, found=false;
+  const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
+  while(qi<queue.length){
+    const [cx,cy]=queue[qi++];
+    if(cx===tx&&cy===ty){ found=true; break; }
+    for(let d=0;d<4;d++){ const nx=cx+DIRS[d][0], ny=cy+DIRS[d][1], nk=key(nx,ny);
+      if(visited.has(nk)||nx<0||ny<0||nx>=MAPW||ny>=MAPH||T_SOLID.has(MAP[ny][nx])) continue;
+      visited.add(nk); cameFrom[nk]=key(cx,cy); queue.push([nx,ny]); }
+  }
+  if(!found) return null;
+  const path=[]; let ck=key(tx,ty);
+  while(ck!==null){ path.push([Math.floor(ck/1000), ((ck%1000)+1000)%1000]); ck=cameFrom[ck]; }
+  path.reverse(); path.shift();   // 去掉起點自己，只保留要走的格子
+  return path;
+}
+/* 隊友專用的「會找路」移動：視線暢通(hasLineOfSight)時直接朝目標直線移動(效能好、動作自然)；
+   視線被牆擋住時，用bfsPath()在迷宮裡找一條路，沿著路徑點依序前進，每1.5秒或目標所在格子
+   改變時才重新計算路徑(節省效能，也讓移動看起來不會一直抖動重新規劃)；新增卡住偵測：每600ms
+   檢查實際移動了多少距離，幾乎沒動就提前強制重新規劃，不用等滿1.5秒才發現路徑失效。 */
+function moveTowardWithPathfinding(ent,targetWx,targetWy,spd){
+  const ecx=ent.x+16, ecy=ent.y+16;
+  if(hasLineOfSight(ecx,ecy,targetWx,targetWy)){
+    ent._path=null;
+    const dx=targetWx-ecx, dy=targetWy-ecy, d=Math.hypot(dx,dy);
+    if(d<2) return;                                  // 已經到位：不再移動，避免在目標點附近來回過衝而原地抖動
+    const step=Math.min(spd,d);                      // 單步不超過剩餘距離，不會衝過頭再往回修正
+    moveEntityCollide(ent, dx/d*step, dy/d*step);
+    return;
+  }
+  const curTx=Math.floor(ecx/TS), curTy=Math.floor(ecy/TS);
+  const tgtTx=Math.floor(targetWx/TS), tgtTy=Math.floor(targetWy/TS);
+  const now=Date.now();
+  if(ent._stuckCheckAt==null || now-ent._stuckCheckAt>600){                 // 卡住偵測：600ms內幾乎沒移動就標記，強制提前重算
+    const moved=ent._stuckCheckPos?Math.hypot(ent.x-ent._stuckCheckPos[0],ent.y-ent._stuckCheckPos[1]):999;
+    ent._stuckFlag=moved<5; ent._stuckCheckAt=now; ent._stuckCheckPos=[ent.x,ent.y];
+  }
+  const stale=!ent._path || !ent._path.length || !ent._pathTgt || ent._pathTgt[0]!==tgtTx || ent._pathTgt[1]!==tgtTy || (now-(ent._pathAt||0)>1500) || ent._stuckFlag;
+  if(stale){ ent._path=bfsPath(curTx,curTy,tgtTx,tgtTy); ent._pathTgt=[tgtTx,tgtTy]; ent._pathAt=now; ent._pathIdx=0; ent._stuckFlag=false; }
+  if(ent._path && ent._path.length){
+    if(ent._pathIdx==null||ent._pathIdx>=ent._path.length) ent._pathIdx=0;
+    let [wx,wy]=ent._path[ent._pathIdx];
+    let wpx=wx*TS+16, wpy=wy*TS+16, dx=wpx-ecx, dy=wpy-ecy, d=Math.hypot(dx,dy);
+    if(d<10 && ent._pathIdx<ent._path.length-1){ ent._pathIdx++; [wx,wy]=ent._path[ent._pathIdx]; wpx=wx*TS+16; wpy=wy*TS+16; dx=wpx-ecx; dy=wpy-ecy; d=Math.hypot(dx,dy); }
+    moveEntityCollide(ent, dx/(d||1)*spd, dy/(d||1)*spd);
+  }
+  // 真的找不到任何路徑(迷宮保證全連通+起訖點都已吸附到可走格，理論上不會發生)：原地待命，不會再往已知有牆的方向硬衝卡死
 }
 
 /* ============ 等角投影 (Isometric 45°) ============ */
@@ -2105,10 +2558,10 @@ const MOBS={
   '史巴托':{name:'史巴托', lv:16, size:'small', undead:true, boss:false, aggressive:true, calls:[], hp:180, dmg:14, dmgMin:2, dmgMax:20, hitBonus:6, db:1, ac:-6, mr:14, atkSpd:1.9, spd:1, aggro:260, exp:270, gold:95, goldMin:52, goldMax:95, align:3.4},
   '長老':{name:'長老', lv:21, size:'small', undead:false, boss:false, aggressive:false, calls:['長老'], hp:250, dmg:16, dmgMin:1, dmgMax:30, hitBonus:3, db:0, ac:-5, mr:30, atkSpd:2.0, spd:1, aggro:260, exp:442, gold:140, goldMin:80, goldMax:140, align:4.2, atk:224, caster:true, mmp:200, mpCost:20},
   '稻草人':{name:'稻草人', hp:9999, exp:0, gold:0, goldMin:0, goldMax:0, dmg:0, spd:0, aggro:0, align:0, dummy:true},
-  '巴風特':{name:'巴風特', lv:50, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:750, dmg:45, dmgMin:1, dmgMax:95, hitBonus:63, db:110, ac:-60, mr:60, atkSpd:1.0, spd:1, aggro:260, atk:96, exp:480, gold:380, goldMin:190, goldMax:380, align:10.0},
-  '克特':{name:'克特', lv:51, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:800, dmg:50, dmgMin:1, dmgMax:100, hitBonus:67, db:120, ac:-67, mr:65, atkSpd:1.0, spd:1, aggro:260, atk:96, exp:500, gold:400, goldMin:200, goldMax:400, align:10.2},
-  '巴風特二段':{name:'巴風特二段', lv:55, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:1400, dmg:70, dmgMin:1, dmgMax:145, hitBonus:78, db:145, ac:-78, mr:72, atkSpd:1.6, spd:1.8, aggro:400, atk:96, exp:850, gold:650, goldMin:320, goldMax:650, align:14.5},
-  '克特二段':{name:'克特二段', lv:56, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:1450, dmg:75, dmgMin:1, dmgMax:150, hitBonus:82, db:155, ac:-82, mr:76, atkSpd:1.6, spd:1.8, aggro:400, atk:96, exp:900, gold:700, goldMin:350, goldMax:700, align:15.0}
+  '巴風特':{name:'巴風特', lv:50, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:7500, dmg:45, dmgMin:1, dmgMax:95, hitBonus:63, db:110, ac:-90, mr:60, atkSpd:1.0, spd:1, aggro:480, atk:96, exp:480, gold:380, goldMin:190, goldMax:380, align:10.0},
+  '克特':{name:'克特', lv:51, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:8000, dmg:50, dmgMin:1, dmgMax:100, hitBonus:67, db:120, ac:-97, mr:65, atkSpd:1.0, spd:1, aggro:480, atk:96, exp:500, gold:400, goldMin:200, goldMax:400, align:10.2},
+  '巴風特二段':{name:'巴風特二段', lv:55, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:14000, dmg:70, dmgMin:1, dmgMax:145, hitBonus:78, db:145, ac:-118, mr:72, atkSpd:1.6, spd:1.8, aggro:480, atk:96, exp:850, gold:650, goldMin:320, goldMax:650, align:14.5},
+  '克特二段':{name:'克特二段', lv:56, size:'small', undead:false, boss:true, aggressive:true, calls:[], hp:14500, dmg:75, dmgMin:1, dmgMax:150, hitBonus:82, db:155, ac:-122, mr:76, atkSpd:1.6, spd:1.8, aggro:480, atk:96, exp:900, gold:700, goldMin:350, goldMax:700, align:15.0}
 };
 let mobs=[], drops=[];
 /* 怪物出沒設定：後台編輯器勾選「這張地圖要出沒哪些怪物」，按存檔後才會真正生效。
@@ -2635,11 +3088,22 @@ function ptWorld(e){ const r=cv.getBoundingClientRect();
   const sx=(e.clientX-r.left)*(VW/r.width), sy=(e.clientY-r.top)*(VH/r.height); return screenToWorld(sx,sy); }
 function mobAt(wx,wy){ return mobs.find(mm=>Math.hypot((mm.x+16)-wx,(mm.y+16)-wy)<24); }
 function npcAt(wx,wy){ var _ns=(typeof curNpcs==='function')?curNpcs():((curMapId==='village')?npcs:[]); if(!_ns||!_ns.length) return null; var _best=null,_bd=1e9; _ns.forEach(function(nn){ var _d=Math.hypot((nn.x+16)-wx,(nn.y+16)-wy); if(_d<(nn.reach||48)&&_d<_bd){_bd=_d;_best=nn;} }); return _best; }
+function partyAt(wx,wy){                                   // 找出點擊位置附近的隊友(村莊內駐守時才可互動)
+  if(typeof party==='undefined' || !party.length) return null;
+  if(curMap && curMap.wild) return null;
+  let best=null, bd=1e9;
+  party.forEach(function(p){ if(p.down) return;
+    const d=Math.hypot((p.x+16)-wx,(p.y+16)-wy);
+    if(d<48 && d<bd){ bd=d; best=p; } });
+  return best;
+}
 function commandAt(e, initial){
   const {wx,wy}=ptWorld(e);
   if(ctrlHeld){ const _hn=npcAt(wx,wy); if(_hn && typeof NPC_HARVEST!=='undefined' && NPC_HARVEST[_hn.name]){ harvestTarget=_hn; attackTarget=null; moveTarget=null; return; } }
   const m=mobAt(wx,wy);
   if(m){ attackTarget=m; lockTarget=m; moveTarget=null; return; }          // ② 點怪物→攻擊（同時設為施法鎖定目標，優先於自動鎖定）
+  if(initial){ const _pm=partyAt(wx,wy);                                   // 點村莊內駐守的隊友→開啟交易
+    if(_pm){ if(Math.hypot(player.x-_pm.x,player.y-_pm.y)<TS*2.6){ openTrade(_pm); } else { sysMsg('離「'+_pm.name+'」太遠了，走近一點再點一次。'); } return; } }
   if(initial){ const n=npcAt(wx,wy); if(n && Math.hypot(player.x-n.x,player.y-n.y)<TS*2.2){ talkNpc(n); return; } }
   moveTarget={x:wx-player.w/2, y:wy-player.h/2}; attackTarget=null; // ① 點地面→移動
 }
@@ -2734,6 +3198,11 @@ function restorePartyFromSlots(slots, mode){
   });
   if(typeof renderPartyHud==='function') renderPartyHud();
   if(party.length) sysMsg('隊伍已恢復：'+party.map(function(p){return p.name;}).join('、')); }
+/* 村莊內隊友的固定駐守座標(格子)。選在村莊東南方那片空曠草皮：
+   x 31~41、y 30~38 這一帶沒有房舍(最近的房子在x43,y26起與x34,y40起)、
+   也避開了村內十字道路(cx=27, cy=24)與水井/大樹，7個點彼此隔開不會擠在一起。
+   因為是寫死的座標，出村再回到村莊時每位隊友都會回到自己原本的位置。*/
+const VILLAGE_PARTY_SPOTS=[[32,31],[36,30],[40,31],[31,35],[35,34],[39,35],[36,38]];
 function updateParty(dt){
   if(!playerTrail.length || Math.hypot(player.x-playerTrail[0].x, player.y-playerTrail[0].y)>4){
     playerTrail.unshift({x:player.x,y:player.y});
@@ -2744,6 +3213,23 @@ function updateParty(dt){
   const GAP=13;                          // 軌跡取樣間隔：每位隊友間隔幾個記錄點（數字越小跟得越緊）
   for(let i=0;i<party.length;i++){ const p=party[i];
     if(p.down) continue;                                    // 被擊倒中：暫停戰鬥與移動，直到自動起身
+    if(!wild){
+      // 村莊內：隊友不跟著主角跑，改成像村民NPC一樣駐守在村莊東南方的草皮上，
+      // 位置是固定寫死的(依隊友編號分散排開，最多7人)，所以出村再回村也一定回到同一個位置。
+      if(!p._villageAnchor){
+        const sp=VILLAGE_PARTY_SPOTS[i%VILLAGE_PARTY_SPOTS.length];
+        let gx=sp[0], gy=sp[1];
+        if(typeof findNearestWalkable==='function'){ const w=findNearestWalkable(MAP,gx,gy); gx=w.x; gy=w.y; }   // 保險：萬一該格被擋住就挪到最近可站立處
+        p.x=gx*TS; p.y=gy*TS; p.dir8='down'; p._villageAnchor=true;
+        p.target=null; p._path=null; p._pathTgt=null; p._pathIdx=0; p._closing=null;
+      }
+      continue;                                             // 駐守中：不追擊、不跟隨
+    }
+    p._villageAnchor=false;                                  // 回到野外：恢復正常跟隨
+    if(typeof solidAt==='function' && solidAt(p.x+16,p.y+16) && typeof findNearestWalkable==='function'){
+      const w=findNearestWalkable(MAP,Math.floor((p.x+16)/TS),Math.floor((p.y+16)/TS));   // 保險：不管什麼原因卡進牆裡，自動吸附到最近可站立格脫困
+      p.x=w.x*TS; p.y=w.y*TS; p._path=null; p._pathTgt=null; p._pathIdx=0;
+    }
     if(p.atkCd==null) p.atkCd=0; p.atkCd=Math.max(0,p.atkCd-dt);
     let tgt=null;
     if(wild && typeof mobs!=='undefined'){
@@ -2758,13 +3244,21 @@ function updateParty(dt){
         tgt=p.target; }
     } else { p.target=null; }
     if(tgt){
-      const dx=(tgt.x+16)-p.x, dy=(tgt.y+16)-p.y, d=Math.hypot(dx,dy)||1;
+      const dx=(tgt.x+16)-(p.x+16), dy=(tgt.y+16)-(p.y+16), d=Math.hypot(dx,dy)||1;   // 一律用角色中心點計算距離，跟移動/視線判定的基準一致
       const _pa=(typeof allyAts==='function')?allyAts(p.slot):null;
       const hasActiveSpell=!!(_pa&&_pa.act&&_pa.act.on&&_pa.act.skill&&_pa.act.skill!=='（不使用）');
       const ranged=(p.cls==='妖精')||(p.cls==='魔法師')||hasActiveSpell;
       const engageR=ranged?170:44;
       const hm=(typeof partyHasteMult==='function')?partyHasteMult(p):1;
-      if(d>engageR){ const spd=(player.speed||2.4)*1.05*(dt/16.67)*hm; const mx=dx/d*spd, my=dy/d*spd; p.x+=mx; p.y+=my;
+      const hasLos=(typeof hasLineOfSight==='function')?hasLineOfSight(p.x+16,p.y+16,tgt.x+16,tgt.y+16):true;   // 隔牆看不到目標就不能出手攻擊，要自己找路靠近才行
+      // 交戰距離緩衝區(hysteresis)：正在接近時要走進engageR*0.8才停下，停下後要飄出engageR以外才重新起步。
+      // 中間這段緩衝區內維持原狀不切換，避免隊友剛好停在邊界上、每一影格反覆「進入範圍→停下→飄出→再移動」而原地抖動。
+      if(p._closing==null) p._closing=(d>engageR);
+      if(p._closing){ if(d<=engageR*0.8) p._closing=false; }
+      else { if(d>engageR) p._closing=true; }
+      if(p._closing || !hasLos){ const spd=(player.speed||2.4)*1.05*(dt/16.67)*hm;
+        if(typeof moveTowardWithPathfinding==='function') moveTowardWithPathfinding(p, tgt.x+16, tgt.y+16, spd);
+        else moveEntityCollide(p, dx/d*spd, dy/d*spd);
         const d8a=(typeof dir8of==='function')?dir8of(dx,dy):null; if(d8a) p.dir8=d8a; }
       else if(p.atkCd<=0){ p.atkCd=(ranged?900:700)/hm;
         const casted=(typeof partyActCast==='function')?partyActCast(p,tgt):false;
@@ -2779,9 +3273,13 @@ function updateParty(dt){
     // 沒有戰鬥目標：沿著主角走過的軌跡排隊跟隨，每位隊友取用軌跡上更深的一段（像小火車依序走同一條路）
     const idx=Math.min(playerTrail.length-1, (i+1)*GAP);
     const tp=playerTrail[idx]||player;
-    const dxp=tp.x-p.x, dyp=tp.y-p.y, dp=Math.hypot(dxp,dyp);
-    if(dp>4){ const hm2=(typeof partyHasteMult==='function')?partyHasteMult(p):1; const spd=Math.min(dp,(player.speed||2.4)*1.3*(dt/16.67)*hm2);
-      const mx=dxp/dp*spd, my=dyp/dp*spd; p.x+=mx; p.y+=my;
+    // 一律用「角色中心點」為基準做距離判定與移動目標，跟moveTowardWithPathfinding()內部的基準一致；
+    // 否則兩邊基準差了16px，隊友會永遠對不準目標、不斷過衝再修正，看起來就是原地抖動
+    const tpcx=tp.x+16, tpcy=tp.y+16, pcx2=p.x+16, pcy2=p.y+16;
+    const dxp=tpcx-pcx2, dyp=tpcy-pcy2, dp=Math.hypot(dxp,dyp);
+    if(dp>8){ const hm2=(typeof partyHasteMult==='function')?partyHasteMult(p):1; const spd=Math.min(dp,(player.speed||2.4)*1.3*(dt/16.67)*hm2);
+      if(typeof moveTowardWithPathfinding==='function') moveTowardWithPathfinding(p, tpcx, tpcy, spd);
+      else moveEntityCollide(p, dxp/dp*spd, dyp/dp*spd);
       if(dp>10){ const d8c=(typeof dir8of==='function')?dir8of(dxp,dyp):null; if(d8c) p.dir8=d8c; } }
   } }
 /* 隊友加速倍率：二段加速(h2Until)優先於一段加速(hasteUntil)，數值比照玩家HASTE_MULT{0:1,1:1.5,2:2} */
@@ -3109,9 +3607,13 @@ function playerAttackFront(){ if(typeof stStop==='function'&&stStop()) return;
   if(w.kind==='ranged'){ arrows.push({x:player.x+player.w/2,y:player.y+player.h/2,dx:_wdx*w.spd,dy:_wdy*w.spd,trav:0,range:w.range});
     for(var _ei=0;_ei<_extraAtk;_ei++){ if(!consumeArrow()) break; arrows.push({x:player.x+player.w/2,y:player.y+player.h/2,dx:_wdx*w.spd,dy:_wdy*w.spd,trav:0,range:w.range}); } }
   else { const cx=player.x+player.w/2+_wdx*24, cy=player.y+player.h/2+_wdy*24;
-    mobs.slice().forEach(m=>{ if(Math.hypot((m.x+16)-cx,(m.y+16)-cy)<w.range){ for(var _ej=0;_ej<=_extraAtk;_ej++) damageMob(m,atkPower(m)); } }); }
+    const _pcx=player.x+player.w/2, _pcy=player.y+player.h/2;
+    mobs.slice().forEach(m=>{ if(Math.hypot((m.x+16)-cx,(m.y+16)-cy)<w.range
+      && (typeof hasLineOfSight!=='function' || hasLineOfSight(_pcx,_pcy,m.x+16,m.y+16))){   // 隔牆看不到的怪物打不到
+      for(var _ej=0;_ej<=_extraAtk;_ej++) damageMob(m,atkPower(m)); } }); }
 }
 function doAttack(m){ if(typeof stStop==='function'&&stStop()) return; const w=curWpn();
+  if(typeof hasLineOfSight==='function' && !hasLineOfSight(player.x+player.w/2,player.y+player.h/2,m.x+16,m.y+16)) return;   // 隔著牆看不到目標：不能攻擊(不進冷卻、不消耗箭矢)
   if(w.kind==='ranged' && !consumeArrow()) return;   // 沒有箭矢：不進冷卻、直接中止
   player.atkCd=w.cd/hasteMult(); player.atkFlash=140;
   const _extraAtk2=Math.max(0,S.extraAtk||0);
@@ -3366,6 +3868,26 @@ function render(){
   // 3) 立體物件 + 實體，統一依深度排序
   const talls=[];
   const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE,T_STONEWALL]);
+  /* 遮擋透明化：先收集玩家與隊友的格子座標(不含怪物)，等一下畫立體牆時，
+     如果這面牆會擋住其中某一個就改用半透明繪製，避免角色被牆完全遮住、看起來像卡在牆裡或穿牆。
+     等角投影下，同一條深度線(tx+ty)上、深度較大的物件會畫在後面(蓋住前面的)，
+     所以「牆的深度 > 角色深度」且兩者在畫面上位置接近時，就是會擋到的情況。*/
+  const _occActors=[];
+  { const _pgx=(player.x+player.w/2)/TS, _pgy=(player.y+player.h/2)/TS; _occActors.push([_pgx,_pgy]); }
+  party.forEach(p=>{ _occActors.push([(p.x+12)/TS,(p.y+18)/TS]); });
+  // 注意：怪物「不」列入透明化判定——只有玩家跟隊友被牆擋住時牆才會變半透明，
+  // 怪物躲在牆後不會讓牆變透明，保留「看不到牆後有什麼」的探索感。
+  function _wallOccludes(tx,ty){                               // 這面牆(tx,ty)是否會擋住某個角色
+    const wd=tx+ty;
+    for(let i=0;i<_occActors.length;i++){
+      const ax=_occActors[i][0], ay=_occActors[i][1];
+      if(wd<=ax+ay) continue;                                  // 牆比角色更「後面」：不會擋到，正常畫
+      if(wd-(ax+ay)>3.2) continue;                             // 距離太遠：擋不到
+      if(Math.abs((tx-ty)-(ax-ay))>2.2) continue;              // 橫向偏移太多：擋不到
+      return true;
+    }
+    return false;
+  }
   { const _dLo2=Math.floor((-HW-40-originX)/HW)-1, _dHi2=Math.ceil((VW+HW+40-originX)/HW)+1;
     const _sLo2=Math.floor((-120-originY)/HH)-2, _sHi2=Math.ceil((VH+HH+40-originY)/HH)+1;
   for(let ty=0;ty<MAPH;ty++){ const _a2=Math.max(0, ty+_dLo2, _sLo2-ty), _b2=Math.min(MAPW-1, ty+_dHi2, _sHi2-ty);
@@ -3373,7 +3895,8 @@ function render(){
     const t=MAP[ty][tx]; if(!TALL.has(t)) continue;
     const s=tileCenter(tx,ty);
     if(s.x<-HW-40||s.x>VW+HW+40||s.y<-120||s.y>VH+HH+40) continue;
-    talls.push({d:tx+ty, f:()=>drawIsoObject(t,s.x,s.y)});
+    const _fade=_wallOccludes(tx,ty);                          // 會擋到角色 → 用40%不透明度畫，看得到後面的人
+    talls.push({d:tx+ty, f:()=>{ if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y); ctx.restore(); } else drawIsoObject(t,s.x,s.y); }});
   } } }
   curNpcs().forEach(n=>{ const gx=(n.x+16)/TS, gy=(n.y+16)/TS;
     talls.push({d:gx+gy+0.1, f:()=>drawNpcIso(n)}); });
@@ -3388,6 +3911,7 @@ function render(){
 
   // 4) 箭矢
   arrows=arrows.filter(a=>{ a.x+=a.dx;a.y+=a.dy;a.trav+=Math.hypot(a.dx,a.dy);
+    if(typeof solidAt==='function' && solidAt(a.x,a.y)) return false;   // 撞到牆：箭矢消失，不會穿牆命中後面的怪物
     let hit=false;
     mobs.slice().forEach(m=>{ if(!hit&&Math.hypot((m.x+16)-a.x,(m.y+16)-a.y)<18){ damageMob(m,atkPower(m)); hit=true; } });
     const s=groundScreen(a.x,a.y), sp=groundScreen(a.x-a.dx*1.3,a.y-a.dy*1.3); ctx.strokeStyle='#ffe84a'; ctx.lineWidth=2.5; ctx.lineCap='round';
@@ -4454,12 +4978,87 @@ function touchDragStart(id, fromIdx, x, y, srcEl){ touchDrag={ id, from:fromIdx,
 function dragClearHi(){ if(dragHi){ dragHi.classList.remove('draghover'); dragHi=null; } }
 function dragEnd(){ if(_dragRafId!=null){ cancelAnimationFrame(_dragRafId); _dragRafId=null; } _dragPendingEv=null;
   if(dragGhost){ dragGhost.remove(); dragGhost=null; } dragClearHi(); if(touchDrag&&touchDrag.srcEl) touchDrag.srcEl.classList.remove('drag'); touchDrag=null; }
-function touchDropResolve(el){                       // el＝放開處最上層元素
+let _discardId=null;                                 // 目前待確認丟棄的物品
+function openDiscard(id){
+  _discardId=id;
+  const have=S.inv[id]||0;
+  const m=document.getElementById('discardModal'); if(!m) return;
+  const txt=document.getElementById('discardText');
+  const row=document.getElementById('discardQtyRow');
+  const qty=document.getElementById('discardQty');
+  if(txt) txt.innerHTML='確定要丟棄「<b style="color:#ffd94a">'+itemName(id)+'</b>」嗎？<br><span style="color:#e08a6a">丟棄後無法復原。</span>';
+  if(row) row.style.display=(have>1)?'block':'none';
+  if(qty){ qty.max=have; qty.value=1; }
+  m.classList.add('on');
+}
+function discardQtyStep(dir){                        // ▼▲按鈕：跟鍵盤方向鍵same一套邏輯(在1按▼跳全部、在全部按▲跳回1，中間正常加減1)
+  const qty=document.getElementById('discardQty'); if(!qty||!_discardId) return;
+  const have=S.inv[_discardId]||1, cur=parseInt(qty.value,10)||1;
+  let n;
+  if(dir<0){ n=(cur<=1)?have:(cur-1); }
+  else     { n=(cur>=have)?1:(cur+1); }
+  qty.value=Math.max(1,Math.min(have,n));
+}
+function discardQtyAll(){                            // 一鍵選全部
+  const qty=document.getElementById('discardQty'); if(!qty||!_discardId) return;
+  qty.value=(S.inv[_discardId]||1);
+}
+function discardQtyKey(ev){                          // 鍵盤方向鍵：直接沿用▼▲按鈕的同一套邏輯，兩種操作方式行為完全一致
+  if(ev.key==='ArrowDown'){ ev.preventDefault(); discardQtyStep(-1); }
+  else if(ev.key==='ArrowUp'){ ev.preventDefault(); discardQtyStep(1); }
+  else if(ev.key==='Enter'){ ev.preventDefault(); discardConfirm(); }
+  else if(ev.key==='Escape'){ ev.preventDefault(); discardCancel(); }
+}
+function discardCancel(){ _discardId=null; const m=document.getElementById('discardModal'); if(m) m.classList.remove('on'); }
+function discardConfirm(){
+  const id=_discardId; if(!id){ discardCancel(); return; }
+  const have=S.inv[id]||0;
+  const qty=document.getElementById('discardQty');
+  let n=(have>1&&qty)?Math.max(1,Math.min(have,parseInt(qty.value,10)||1)):1;
+  if(have<=0){ discardCancel(); return; }
+  removeItem(id,n); invSel=-1; invMove=null;
+  sysMsg('已丟棄「'+itemName(id)+'」×'+n);
+  if(typeof recalcStats==='function') recalcStats();
+  if(typeof refreshInv==='function') refreshInv();
+  if(typeof refreshUI==='function') refreshUI();
+  if(typeof persistSaves==='function') persistSaves();
+  discardCancel();
+}
+function _pointInTrash(x,y){                         // 用幾何座標判定是否放在垃圾桶上(比elementFromPoint可靠，不受堆疊/覆蓋層影響)
+  const t=document.getElementById('invTrash');
+  if(!t) return false;
+  const inv=document.getElementById('inv');
+  if(inv && !inv.classList.contains('on')) return false;        // 背包沒開就不算
+  const r=t.getBoundingClientRect();
+  if(r.width<=0||r.height<=0) return false;
+  const pad=6;                                                  // 稍微放寬命中範圍，圖示小、比較好丟中
+  return x>=r.left-pad && x<=r.right+pad && y>=r.top-pad && y<=r.bottom+pad;
+}
+function touchDropResolve(el,px,py){                 // el＝放開處最上層元素；px,py＝放開的座標(供垃圾桶幾何判定)
   if(!touchDrag) return false;
   const id=touchDrag.id, from=touchDrag.from; let done=false;
   const fs=el&&el.closest?el.closest('.fslot'):null;
   const is=el&&el.closest?el.closest('.islot'):null;
-  if(fs&&fs.dataset.slot!=null){                     // 放到快捷列 → 設定快捷
+  const tr=(el&&el.closest&&el.closest('#invTrash')) || (px!=null && _pointInTrash(px,py));
+  const ts=el&&el.closest?el.closest('.tslot'):null;                       // 拖到交易格
+  if(ts && typeof tradeTarget!=='undefined' && tradeTarget){
+    if(typeof id==='string' && id.indexOf('spell:')===0){ sysMsg('魔法無法交易。'); }
+    else {
+      const have=S.inv[id]||0;
+      if(have>0 && typeof tradePut==='function'){ if(tradePut(id,have)) done=true; }
+    }
+    if(done && typeof persistSaves==='function') persistSaves();
+    return done;
+  }
+  if(tr){                                            // 放到垃圾桶 → 開啟丟棄確認視窗
+    if(typeof id==='string'&&id.indexOf('spell:')===0){ sysMsg('魔法無法丟棄。'); }
+    else if(typeof isEquipped==='function'&&isEquipped(id)&&typeof equippedCount==='function'&&equippedCount(id)>=(S.inv[id]||0)){
+      sysMsg('「'+itemName(id)+'」正在裝備中，請先卸下再丟棄。');       // 避免誤刪身上正在穿的裝備
+    } else if((S.inv[id]||0)>0){
+      openDiscard(id);                               // 用自製視窗詢問(原生confirm/prompt在沙箱iframe會被封鎖)
+      done=true;
+    }
+  } else if(fs&&fs.dataset.slot!=null){              // 放到快捷列 → 設定快捷
     const slot=+fs.dataset.slot;
     for(let p=0;p<4;p++)for(let k=0;k<8;k++){ if(hotbar[p][k]===id) hotbar[p][k]=null; }
     hotbar[hotbarPage][slot]=id; invMove=null; buildHotbar();
@@ -4477,7 +5076,8 @@ function _dragApplyPendingFrame(){                    // 每影格最多執行�
   const ev=_dragPendingEv; _dragPendingEv=null;
   if(dragGhost){ dragGhost.style.left=ev.clientX+'px'; dragGhost.style.top=ev.clientY+'px'; }
   const el=document.elementFromPoint(ev.clientX, ev.clientY);
-  const tgt=el&&el.closest?(el.closest('.fslot')||el.closest('.islot')):null;
+  const _trEl=_pointInTrash(ev.clientX,ev.clientY)?document.getElementById('invTrash'):null;   // 用跟實際丟棄相同的幾何判定，視覺回饋才會一致
+  const tgt=_trEl || (el&&el.closest?(el.closest('#invTrash')||el.closest('.tslot')||el.closest('.fslot')||el.closest('.islot')):null);
   if(tgt!==dragHi){ dragClearHi(); if(tgt){ tgt.classList.add('draghover'); dragHi=tgt; } }
 }
 window.addEventListener('pointermove', ev=>{ if(!touchDrag)return;
@@ -4493,7 +5093,7 @@ window.addEventListener('pointermove', ev=>{ if(!touchDrag)return;
   }
 }, {passive:false});
 window.addEventListener('pointerup', ev=>{ if(!touchDrag)return;
-  if(touchDrag.moved){ if(_dragRafId!=null){ cancelAnimationFrame(_dragRafId); _dragRafId=null; } const el=document.elementFromPoint(ev.clientX, ev.clientY); touchDropResolve(el); }
+  if(touchDrag.moved){ if(_dragRafId!=null){ cancelAnimationFrame(_dragRafId); _dragRafId=null; } const el=document.elementFromPoint(ev.clientX, ev.clientY); touchDropResolve(el, ev.clientX, ev.clientY); }
   dragEnd(); });
 window.addEventListener('pointercancel', ()=>{ dragEnd(); });
 function useHotbarSlot(i){ if(i<0||i>7)return; const id=hotbar[hotbarPage][i];
@@ -4568,7 +5168,7 @@ function castSpell(sp){ if(!sp) return; var name=(typeof sp==='string')?sp:(sp.n
       do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tries++; }
       while(tries<300 && T_SOLID.has(MAP[gy][gx]));
       if(T_SOLID.has(MAP[gy][gx])){ sysMsg('這裡無法使用傳送術。'); refreshUI(); return; }
-      player.x=gx*TS; player.y=gy*TS; moveTarget=null; attackTarget=null;
+      player.x=gx*TS; player.y=gy*TS; moveTarget=null; attackTarget=null; regroupParty();
       playTeleportFx(); sysMsg('施放「傳送術」，在這一層隨機移動了位置。'); refreshUI(); return;
     }
     var _tpPool=(typeof WILD_MAP_IDS!=='undefined')?WILD_MAP_IDS.filter(function(id){return id!==curMapId;}):[];
@@ -4621,6 +5221,7 @@ function castSpell(sp){ if(!sp) return; var name=(typeof sp==='string')?sp:(sp.n
     var tgt = _atkMobile ? ((lockTarget&&mobs.indexOf(lockTarget)>=0)?lockTarget:nearestMob()) : ((lockTarget&&mobs.indexOf(lockTarget)>=0)?lockTarget:null);
     if(!tgt){ sysMsg(_atkMobile?'附近沒有目標':'請先點選要攻擊的目標'); return; }
     var pcx=player.x+player.w/2, pcy=player.y+player.h/2; if(Math.hypot((tgt.x+16)-pcx,(tgt.y+16)-pcy)>260){ sysMsg('目標太遠'); return; }
+    if(typeof hasLineOfSight==='function' && !hasLineOfSight(pcx,pcy,tgt.x+16,tgt.y+16)){ sysMsg('目標被阻擋，看不到'); return; }   // 隔著牆看不到目標：不能施法(不消耗MP、不進冷卻)
     S._spellCdMap[name]=Date.now()+1000/hasteMult();    // 施法冷卻：每個法術各自獨立計算，不同法術可組合連放；無加速約1秒一發，有加速/二段加速時等比縮短
     S.mp-=mp; lockTarget=tgt; var dmg=magicAttackDamage(name, S.int||10, S.lv||1);
     if(typeof mobFx!=='undefined'){ var _vk=(typeof SPELL_VFX_KIND!=='undefined'&&SPELL_VFX_KIND[name])||null;
@@ -4710,6 +5311,87 @@ function openShop(type, greet){ shopType=type; shopMode=null;
   const gr=document.getElementById('shopGreet'); if(gr){ gr.textContent=greet||'要購買，還是要販售呢？'; gr.style.display=''; }
   renderShop(); el.classList.add('on'); navBuildPanel('shopw'); }
 function setShopMode(m){ shopMode=m; renderShop(); }
+/* ===== 與隊友交易 =====
+   村莊內隊友會原地駐守，點他們就開啟這個視窗。
+   因為沒有真人玩家，所以是單向給予：把原本雙方各12格的交易欄合併成一個24格的欄位，
+   玩家從背包拖物品進去，按「確定」就轉進該隊友存檔的背包，按「取消」則全部退回玩家背包。*/
+const TRADE_SLOTS = 24;
+let tradeTarget=null;         // 目前交易的隊友
+let tradeItems=[];            // 已放入交易欄的物品 [{id, n}, ...]
+function openTrade(p){
+  if(!p) return;
+  tradeTarget=p; tradeItems=[];
+  const t=document.getElementById('tradeTitle');
+  if(t) t.innerHTML='與「'+p.name+'」交易 <button class="sx" onclick="tradeCancel()">關閉</button>';
+  const g=document.getElementById('tradeGreet');
+  if(g) g.textContent='要把什麼東西交給我呢？';
+  const w=document.getElementById('tradew'); if(w) w.classList.add('on');
+  if(typeof closeShop==='function'){ const s=document.getElementById('shopw'); if(s) s.classList.remove('on'); }
+  renderTrade();
+  if(typeof toggleWin==='function'){ const inv=document.getElementById('inv'); if(inv && !inv.classList.contains('on')) toggleWin('inv'); }
+}
+function renderTrade(){
+  const g=document.getElementById('tradeGrid'); if(!g) return;
+  g.innerHTML='';
+  for(let i=0;i<TRADE_SLOTS;i++){
+    const it=tradeItems[i]||null;
+    const d=document.createElement('div');
+    d.className='tslot'; d.dataset.tidx=i;
+    d.style.height='52px';
+    if(it){
+      d.innerHTML=(typeof itemIcon==='function'?itemIcon(it.id):'')+(it.n>1?'<span class="q">'+it.n+'</span>':'');
+      d.title=(typeof itemName==='function'?itemName(it.id):it.id)+' ×'+it.n+'（點一下取回背包）';
+      d.onclick=(function(idx){ return function(){ tradeTakeBack(idx); }; })(i);
+    }
+    g.appendChild(d);
+  }
+}
+function tradePut(id,n){                                  // 從背包放入交易欄
+  if(!tradeTarget) return false;
+  if((S.inv[id]||0)<n) return false;
+  if(typeof isEquipped==='function' && isEquipped(id) && typeof equippedCount==='function' && equippedCount(id)>=(S.inv[id]||0)){
+    sysMsg('「'+itemName(id)+'」正在裝備中，請先卸下再交易。'); return false; }
+  const ex=tradeItems.filter(function(x){ return x.id===id; })[0];
+  if(!ex && tradeItems.length>=TRADE_SLOTS){ sysMsg('交易欄已滿（最多 '+TRADE_SLOTS+' 件）'); return false; }
+  removeItem(id,n);
+  if(ex) ex.n+=n; else tradeItems.push({id:id,n:n});
+  renderTrade(); if(typeof refreshInv==='function') refreshInv(); if(typeof refreshUI==='function') refreshUI();
+  return true;
+}
+function tradeTakeBack(idx){                              // 從交易欄取回背包
+  const it=tradeItems[idx]; if(!it) return;
+  addItem(it.id,it.n); tradeItems.splice(idx,1);
+  renderTrade(); if(typeof refreshInv==='function') refreshInv(); if(typeof refreshUI==='function') refreshUI();
+}
+function tradeConfirm(){
+  if(!tradeTarget){ tradeClose(); return; }
+  if(!tradeItems.length){ sysMsg('交易欄是空的。'); return; }
+  const d=(typeof SAVES!=='undefined')?SAVES[tradeTarget.slot]:null;
+  if(!d){ sysMsg('找不到「'+tradeTarget.name+'」的存檔，交易取消。'); tradeCancel(); return; }
+  if(!d.inv) d.inv={};
+  if(!d.invOrder) d.invOrder=[];
+  const names=[];
+  tradeItems.forEach(function(it){
+    d.inv[it.id]=(d.inv[it.id]||0)+it.n;
+    if(d.invOrder.indexOf(it.id)<0) d.invOrder.push(it.id);
+    names.push((typeof itemName==='function'?itemName(it.id):it.id)+'×'+it.n);
+  });
+  if(typeof persistSaves==='function') persistSaves();
+  sysMsg('已把 '+names.join('、')+' 交給「'+tradeTarget.name+'」');
+  tradeItems=[]; tradeClose();
+}
+function tradeCancel(){                                   // 取消：交易欄裡的東西全部退回玩家背包
+  tradeItems.forEach(function(it){ addItem(it.id,it.n); });
+  if(tradeItems.length) sysMsg('取消交易，物品已退回背包。');
+  tradeItems=[];
+  if(typeof refreshInv==='function') refreshInv(); if(typeof refreshUI==='function') refreshUI();
+  tradeClose();
+}
+function tradeClose(){
+  tradeTarget=null;
+  const w=document.getElementById('tradew'); if(w) w.classList.remove('on');
+  if(typeof navClear==='function') navClear();
+}
 function closeShop(){ document.getElementById('shopw').classList.remove('on'); navClear(); }
 let shopType='雜貨店', shopMode='buy', shopQty={};
 function updateShopTotal(){ let sum=0;
@@ -5364,6 +6046,7 @@ function atsRun(){ var a=ATS(); if(!a.on||!S||S.hp<=0||typeof player==='undefine
       if(S.mp<amc) continue;
       var d0=Math.hypot((lockTarget.x+16)-(player.x+player.w/2),(lockTarget.y+16)-(player.y+player.h/2));
       if(d0>224) continue;
+      if(typeof hasLineOfSight==='function' && !hasLineOfSight(player.x+player.w/2,player.y+player.h/2,lockTarget.x+16,lockTarget.y+16)) continue;   // 隔牆看不到目標：不施放
       S.mp-=amc; _atsActLast=now; var dmg=magicAttackDamage(acName, S.int||10, S.lv||1);
       if(mobFx.length<40){ var _atVk=(typeof SPELL_VFX_KIND!=='undefined'&&SPELL_VFX_KIND[acName])||'arrow'; mobFx.push({kind:_atVk,x0:player.x+player.w/2,y0:player.y+player.h/2,x:lockTarget.x+16,y:lockTarget.y+16,life:FX_DUR[_atVk]||150}); }
       var tt=MOBS[lockTarget.type];
@@ -6370,6 +7053,12 @@ function chooseMode(mode){ gameMode=mode; document.body.classList.toggle('mobile
 })();
 function fadeSplash(){ const s=document.getElementById('splashw'); if(!s||s.classList.contains('fade'))return;
   s.classList.add('fade'); setTimeout(()=>{ s.style.display='none'; navBuild('title'); }, 1000); }
+/* 保險：頁面載入完成時，只要還沒選過PC/手遊模式(開場尚未淡出)，就強制把開場畫面顯示出來，
+   避免任何殘留的行內樣式或狀態讓開場被跳過、一打開就直接看到登入畫面。 */
+window.addEventListener('load', function(){
+  var s=document.getElementById('splashw');
+  if(s && !s.classList.contains('fade')) s.style.display='flex';
+});
 let endDeath=false;
 function openEndMenu(isDeath){ endDeath=!!isDeath; paused=true;
   if(typeof closeAllWins==='function') closeAllWins();
@@ -6495,6 +7184,6 @@ document.getElementById('createw').style.display='none';
 // 顯示登入首頁（paused 仍 true，世界在背景待命）
 requestAnimationFrame(loop);
 </script>
-<div id="vpadL"><div class="vmenus"><button class="vbtn vmenu" onpointerdown="vMenu('charw')">角色</button><button class="vbtn vmenu" onpointerdown="vMenu('inv')">背包</button><button class="vbtn vmenu" onpointerdown="vMenu('magicw')">魔法</button><button class="vbtn vmenu" onpointerdown="vMenu('socialw')">社群</button><button class="vbtn vmenu" onpointerdown="vMenu('mapw')">地圖</button><button class="vbtn vmenu" onpointerdown="vMenu('atsw')">行動</button><button class="vbtn vmenu" onpointerdown="openSettings()">設定</button><button class="vbtn vmenu" onpointerdown="toggleEndMenu()">結束</button></div><div class="vdpad"><button class="vbtn vd-up" onpointerdown="vHold('arrowup',true)" onpointerup="vHold('arrowup',false)" onpointerleave="vHold('arrowup',false)" onpointercancel="vHold('arrowup',false)">▲</button><button class="vbtn vd-lf" onpointerdown="vHold('arrowleft',true)" onpointerup="vHold('arrowleft',false)" onpointerleave="vHold('arrowleft',false)" onpointercancel="vHold('arrowleft',false)">◀</button><button class="vbtn vd-rt" onpointerdown="vHold('arrowright',true)" onpointerup="vHold('arrowright',false)" onpointerleave="vHold('arrowright',false)" onpointercancel="vHold('arrowright',false)">▶</button><button class="vbtn vd-dn" onpointerdown="vHold('arrowdown',true)" onpointerup="vHold('arrowdown',false)" onpointerleave="vHold('arrowdown',false)" onpointercancel="vHold('arrowdown',false)">▼</button></div><div class="vstick" id="vstick"><div class="vknob" id="vknob"></div></div></div><div id="vpadR"><div class="vfgrid"><button class="vbtn vf" onpointerdown="pressF(1)">F1</button><button class="vbtn vf" onpointerdown="pressF(2)">F2</button><button class="vbtn vf" onpointerdown="pressF(3)">F3</button><button class="vbtn vf" onpointerdown="pressF(4)">F4</button><button class="vbtn vf" onpointerdown="pressF(5)">F5</button><button class="vbtn vf" onpointerdown="pressF(6)">F6</button><button class="vbtn vf" onpointerdown="pressF(7)">F7</button><button class="vbtn vf" onpointerdown="pressF(8)">F8</button><button class="vbtn vf" onpointerdown="pressF(9)">F9</button><button class="vbtn vf" onpointerdown="pressF(10)">F10</button><button class="vbtn vf" onpointerdown="pressF(11)">F11</button><button class="vbtn vf" onpointerdown="pressF(12)">F12</button></div><div class="vacts"><div class="vactrow"><button class="vbtn vact2" onpointerdown="vClickAttack()">🖱攻擊</button><button class="vbtn vact2 stop" onpointerdown="vStopAttack()">停攻</button></div><div class="vactrow"><button class="vbtn vact" style="flex:1" onpointerdown="vConfirm()">✔ 確認</button><button class="vbtn vact" style="flex:1" onpointerdown="navDblClick()">雙擊</button></div></div>
+<div id="vpadL"><div class="vmenus"><button class="vbtn vmenu" onpointerdown="vMenu('charw')">角色</button><button class="vbtn vmenu" onpointerdown="vMenu('inv')">背包</button><button class="vbtn vmenu" onpointerdown="vMenu('magicw')">魔法</button><button class="vbtn vmenu" onpointerdown="vMenu('socialw')">社群</button><button class="vbtn vmenu" onpointerdown="vMenu('mapw')">地圖</button><button class="vbtn vmenu" onpointerdown="vMenu('atsw')">行動</button><button class="vbtn vmenu" onpointerdown="openSettings()">設定</button><button class="vbtn vmenu" onpointerdown="toggleEndMenu()">結束</button></div><div class="vdpad"><button class="vbtn vd-up" onpointerdown="vHold('arrowup',true)" onpointerup="vHold('arrowup',false)" onpointerleave="vHold('arrowup',false)" onpointercancel="vHold('arrowup',false)">▲</button><button class="vbtn vd-lf" onpointerdown="vHold('arrowleft',true)" onpointerup="vHold('arrowleft',false)" onpointerleave="vHold('arrowleft',false)" onpointercancel="vHold('arrowleft',false)">◀</button><button class="vbtn vd-rt" onpointerdown="vHold('arrowright',true)" onpointerup="vHold('arrowright',false)" onpointerleave="vHold('arrowright',false)" onpointercancel="vHold('arrowright',false)">▶</button><button class="vbtn vd-dn" onpointerdown="vHold('arrowdown',true)" onpointerup="vHold('arrowdown',false)" onpointerleave="vHold('arrowdown',false)" onpointercancel="vHold('arrowdown',false)">▼</button></div><div class="vstick" id="vstick"><div class="vknob" id="vknob"></div></div></div><div id="vpadR"><div class="vfgrid"><button class="vbtn vf" onpointerdown="pressF(1)">F1</button><button class="vbtn vf" onpointerdown="pressF(2)">F2</button><button class="vbtn vf" onpointerdown="pressF(3)">F3</button><button class="vbtn vf" onpointerdown="pressF(4)">F4</button><button class="vbtn vf" onpointerdown="pressF(5)">F5</button><button class="vbtn vf" onpointerdown="pressF(6)">F6</button><button class="vbtn vf" onpointerdown="pressF(7)">F7</button><button class="vbtn vf" onpointerdown="pressF(8)">F8</button><button class="vbtn vf" onpointerdown="pressF(9)">F9</button><button class="vbtn vf" onpointerdown="pressF(10)">F10</button><button class="vbtn vf" onpointerdown="pressF(11)">F11</button><button class="vbtn vf" onpointerdown="pressF(12)">F12</button></div><div class="vacts"><div class="vactrow"><button class="vbtn vact2" onpointerdown="vClickAttack()">🖱攻擊</button><button class="vbtn vact2 stop" onpointerdown="vStopAttack()">停攻</button></div><div class="vactrow"><button class="vbtn vact" style="flex:1" onpointerdown="vConfirm()">✔ 確認</button><button class="vbtn vact" style="flex:1" onpointerdown="navDblClick()">雙擊</button></div></div></div>
 </body>
 </html>
