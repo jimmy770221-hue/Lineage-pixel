@@ -961,8 +961,8 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
   #arenaw .aname{flex:1;min-width:0;font-size:15px;font-weight:bold;color:#f2d489;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   #arenaw .aodds{flex:none;font-size:15px;font-weight:bold;color:#8fd06a;}
   #arenaw .asub{font-size:12px;color:#a89878;}
-  #arenaw .abtn{flex:none;padding:5px 10px;font-size:13px;font-weight:bold;cursor:pointer;color:#f2d489;
-    background:linear-gradient(#7a5626,#563c18);border:2px solid #a97e34;border-radius:5px;}
+  #arenaw .abtn{flex:none;min-width:52px;min-height:38px;padding:6px 10px;font-size:14px;font-weight:bold;cursor:pointer;color:#f2d489;
+    background:linear-gradient(#7a5626,#563c18);border:2px solid #a97e34;border-radius:5px;}   /* 手指也好按：至少38px高 */
   #arenaw .abtn:hover{background:linear-gradient(#9a6e36,#6d4c20);color:#fff;}
   #arenaw .abig{width:100%;padding:9px 0;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:2px;
     color:#fff8e0;background:linear-gradient(#6a8a3a,#3a5a1e);border:2px solid #a9c060;border-radius:5px;margin-top:6px;}
@@ -1338,6 +1338,10 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
         #adminw .aei.adirty{border-color:#e8c060;color:#ffd97a;background:#2a2410;}
         #adminw .aed-shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;}
         #adminw .aed-shopitem{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:4px;cursor:pointer;font-size:20px;color:#e8dcc0;}
+        #adminw .dropRate{width:92px;flex:none;padding:6px 8px;font-size:17px;font-weight:bold;text-align:right;cursor:text;
+          background:#140f08;color:#ffd94a;border:2px solid #e8c060;border-radius:4px;box-shadow:0 0 6px rgba(232,192,96,.35);}
+        #adminw .aed-shopitem.hasDrop{background:rgba(232,192,96,.10);border:1px solid #6b4d22;}
+        #adminw .rateUnit{flex:none;color:#e8c060;font-size:15px;font-weight:bold;margin-left:2px;}
         #adminw .aed-shopitem:hover{background:#2a2a20;}
         #adminw .aed-shopitem input{width:20px;height:20px;flex:none;cursor:pointer;}
         #adminw .aed-empty{text-align:center;color:#9a8a68;padding:48px;font-size:20px;}
@@ -1658,22 +1662,19 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
       <h3>📜 公告</h3>
       <div id="noticeBody"><div class="noticeVer">◆ v74（2026-08-21）</div>
 <ul>
-<li>修正帶隊友打稻草人時隊友拿不到訓練經驗的問題：現在玩家與隊友各自判斷等級，5級以下都能獲得訓練經驗</li>
-<li><b>新增寵物系統</b>：吃下「漂浮之眼肉」後 60 秒內打倒野生動物（狼／牧羊犬／杜賓犬）即可收服，收服成功後會獲得一個「項圈」作為憑證（放生時收回）。寵物會跟隨、自動戰鬥、分經驗升級、也有自己的性向值；倒地不會離開，只有放生才會消失。可同時攜帶數量依魅力計算（魅力÷4，妖精保底3隻，上限8隻）</li>
-<li><b>寵物管理</b>：社交視窗新增「隊友／寵物」兩個書籤，點寵物名字可進入專屬分頁，能查看等級、血量、經驗、性向與能力數值，也可以改名或放生。每隻寵物在捕獲當下會隨機決定三圍（力量→傷害、體力→血量、敏捷→命中，各項8～18、總和40），所以同種類的每一隻資質都不一樣。寵物會像隊友一樣沿著你走過的路徑一隻接一隻排隊跟隨，並自成一列與隊友錯開，不會擠在一起。使用「哨子」可把散開的寵物召回身邊</li>
-<li><b>新增史萊姆競技場（賭場）</b>：可從傳送清單前往。場內有5條30格長的賽道，13隻史萊姆選手輪番上陣（含傳奇明星「流星」），每場隨機抽5隻出賽，比賽全程約40秒可實際觀戰（開跑讀秒、即時名次、領先播報），跑完後隔10分鐘開下一場。找<b>售票員咕嚕</b>買票下注（一張200金幣，可連買10張），找<b>競賽場管理員嘀咕</b>查看本場出賽名單、勝率、賠率與歷史戰績。押中依賠率兌換獎金。賽道四周完全圍起、玩家無法進入；場內還有10位不同職業的賭客會互相討論賭盤、慫恿你跟注。進入競技場時隊友不會跟進場</li>
-<li><b>角色可以改名了</b>：角色資訊視窗（Ctrl+A）最上方新增改名欄，不會因為創角時忘記命名就永遠叫「勇者」。隊友資訊視窗也有同樣功能，而且改名會連動更新該角色自己的存檔，之後切換過去玩也是新名字</li>
-<li>隊友現在會跟著你移動到任何村莊：不再只固定在說話之島村，走到銀騎士村莊等其他安全區時，隊友也會一起過去並就地駐守成為NPC（位置由系統自動挑選可站立且互不重疊的空地，出村再回來也會在原位）</li>
-<li>修正部分 NPC 與怪物看起來浮在空中或陷入地面的問題：改為依每張圖實際的腳底位置校正，讓所有角色都確實踩在地上</li>
-<li><b>物品說明改版</b>：點擊背包物品時，說明框會直接浮現在該格子旁邊（比照天堂的物品資訊樣式），點畫面其他地方就會自動消失，不用再按關閉</li>
-<li><b>捲動軸美化</b>：所有功能視窗的捲動軸統一改成遊戲的金框深色質感，不再是瀏覽器原生的灰白色</li>
-<li>修正被擊倒後仍能喝水的問題：死亡狀態下無法使用任何道具、攻擊或施法</li>
-<li><b>回村自動補滿</b>：回到村莊等安全區時，玩家與所有隊友的 HP／MP 會直接回滿，被擊倒的隊友也會一併復原</li>
-<li><b>新增擊殺計數器</b>：進入北邊港口、東邊港口或冒險洞穴2樓時，畫面正上方會顯示「擊殺數 N/100」，滿100後改顯示「魔法陣已開啟！」</li>
-<li><b>ATS 新增自動購買箭矢</b>：可選擇購買「箭」或「銀箭」，箭矢低於設定門檻時會自動向商店買 999 份補滿（箭 9990 支、銀箭 4995 支）</li>
-<li><b>世界王節奏加快</b>：改為固定節奏出招——一階段每招結束後隔 1 秒接下一招，二階段 0.5 秒，狂暴狀態 0.25 秒，壓迫感大幅提升</li>
-<li><b>王座之間魔法陣改版</b>：進入王座之間的傳送陣換成全新的「惡魔召喚魔法陣」圖像，並從原本的1格放大為 2x2 共4格，站上任一格都會傳送，氣勢更足</li>
-<li><b>製作視窗改版</b>：改成兩層式介面，先看到配方的圖示與名稱清單，點進去才顯示完整的材料需求。材料種類多的配方不會再把畫面擠壓變形。整體視覺也重新美化，統一為遊戲的金框質感。數量欄兩側有大顆的 ▼▲ 按鈕（手遊模式也好點選），數量在 1 時按 ▼ 會依你手上的材料直接跳到可製作的最大數量</li>
+<li><b>掉落系統大改版</b>：怪物死亡時會依等級保底掉落（1-9等至少1件、10-19等2件、20-29等3件，每10等再+1），高等怪更有價值。同時補上史萊姆、人形殭屍、杜賓犬、飄浮之眼、野豬原本完全沒有的掉落表</li>
+<li><b>後台掉落設定強化</b>：每個已勾選的掉落物旁邊都能直接修改掉落機率（%），武器、防具、道具、藥水、卷軸、魔法書全部適用</li>
+<li><b>新增寵物系統</b>：吃下「漂浮之眼肉」後 5 分鐘內打倒狼／牧羊犬／杜賓犬即可收服，成功會獲得「項圈」。寵物會跟隨、自動戰鬥、分經驗升級，每隻的力量／體力／敏捷都是捕獲當下隨機決定，同種類資質也不同。可帶數量依魅力計算</li>
+<li><b>寵物管理</b>：社交視窗新增「隊友／寵物」書籤，可查看寵物數值、改名、放生</li>
+<li><b>新增史萊姆競技場（賭場）</b>：可從傳送清單前往。13 隻選手輪番上陣（含傳奇明星「流星」），每場隨機抽 5 隻，全程約 40 秒可實際觀戰。找售票員買票下注（一張 200 金幣），找管理員查看勝率、賠率與歷史戰績</li>
+<li><b>世界王強化</b>：出招節奏大幅加快（一階段 1 秒、二階段 0.5 秒、狂暴 0.25 秒一招）；王座之間的傳送陣換成全新的惡魔召喚魔法陣，並放大為 2×2 共 4 格</li>
+<li><b>製作視窗改版</b>：改成兩層式，先看配方清單、點進去才顯示完整材料，畫面不再被擠壓。數量欄兩側有大顆 ▼▲ 按鈕，在 1 時按 ▼ 可直接跳到可製作的最大數量</li>
+<li><b>角色可以改名了</b>：角色資訊與隊友資訊視窗都能改名，隊友改名會連動更新該角色的存檔</li>
+<li><b>隊友改善</b>：會跟著你移動到任何村莊並就地駐守；帶隊友打稻草人時隊友也能獲得訓練經驗</li>
+<li><b>回村自動補滿</b>：回到安全區時，玩家與所有隊友的 HP／MP 直接回滿，倒地的隊友也會復原</li>
+<li><b>新增擊殺計數器</b>：在北邊／東邊港口、冒險洞穴 2 樓時，畫面上方會顯示「擊殺數 N/100」</li>
+<li><b>介面優化</b>：物品說明改為浮現在格子旁、點別處自動消失；所有視窗的捲動軸統一為金框質感；ATS 新增自動購買箭矢</li>
+<li>其他修正：角色浮空／陷地、被擊倒後仍能使用道具、以及多項顯示問題</li>
 </ul>
 <div class="noticeVer">◆ v73（2026-08-20）</div>
 <ul>
@@ -3054,7 +3055,9 @@ function drawArenaRunner(r){
 /* ---- 競技場視窗 ---- */
 let _arenaTab='bet';
 function openArena(tab){ _arenaTab=tab||'bet'; renderArena();
-  var w=document.getElementById('arenaw'); if(w) w.classList.add('on'); }
+  var w=document.getElementById('arenaw'); if(w) w.classList.add('on');
+  if(typeof navBuildPanel==='function') navBuildPanel('arenaw');   // 手遊模式：註冊虛擬按鍵導覽，才能用方向鍵/確認鍵操作
+}
 function closeArena(){ var w=document.getElementById('arenaw'); if(w) w.classList.remove('on'); if(typeof navClear==='function') navClear(); }
 function openArenaBet(){ openArena('bet'); }
 function openArenaInfo(){ openArena('info'); }
@@ -3113,6 +3116,8 @@ function renderArena(){
     h+='<button class="abig" onclick="openArenaBet()">前往售票處下注</button>';
   }
   body.innerHTML=h;
+  var w=document.getElementById('arenaw');
+  if(w && w.classList.contains('on') && typeof navBuildPanel==='function') navBuildPanel('arenaw');   // 重繪後重新註冊導覽
 }
 /* 每場比賽由「時段編號」決定，同一時段不管誰去看、看幾次，出賽名單都一樣（但每場都不同）。
    用固定亂數種子從時段編號推導，不需要存檔也能保證一致。*/
@@ -4547,7 +4552,20 @@ function killMob(m){ const t=MOBS[m.type];
   var PHASE2_LOOT_SOURCE={'克特二段':'克特','巴風特二段':'巴風特'};   // 二階段沒有獨立掉落表，一律動態讀取phase1當下的掉落表(後台編輯phase1即可同步生效，不受存檔覆寫的陣列參照問題影響)
   var _lootName=PHASE2_LOOT_SOURCE[t.name]||t.name;
   var _dtb=(typeof MOB_DROPS_PX!=='undefined')?MOB_DROPS_PX[_lootName]:null; var _got=[];
-  if(_dtb){ for(var _i4=0;_i4<_dtb.length;_i4++){ if(Math.random()*100<_dtb[_i4][1]){ addItem(_dtb[_i4][0],1); _got.push(_dtb[_i4][0]); } } }
+  if(_dtb && _dtb.length){
+    // ① 依各項自己的機率獨立判定
+    for(var _i4=0;_i4<_dtb.length;_i4++){ if(Math.random()*100<_dtb[_i4][1]){ addItem(_dtb[_i4][0],1); _got.push(_dtb[_i4][0]); } }
+    // ② 保底掉落：怪物等級越高，死亡時至少掉的件數越多(1-9等→1件、10-19等→2件、每10等再+1)。
+    //    機率判定沒抽中足夠件數時，從該怪的掉落清單裡「依機率加權」隨機補足，讓高等怪確實有價值。
+    var _need=Math.max(1, Math.floor((t.lv||1)/10)+1);
+    var _guard=0;
+    while(_got.length<_need && _guard++<40){
+      var _tw=0; for(var _a=0;_a<_dtb.length;_a++) _tw+=Math.max(0.0001,_dtb[_a][1]);
+      var _pick=Math.random()*_tw, _sel=_dtb[0][0];
+      for(var _b=0;_b<_dtb.length;_b++){ _pick-=Math.max(0.0001,_dtb[_b][1]); if(_pick<=0){ _sel=_dtb[_b][0]; break; } }
+      addItem(_sel,1); _got.push(_sel);
+    }
+  }
   else if(Math.random()<0.15){ addItem('紅色藥水',1); _got.push('紅色藥水'); }
   if(_got.length) goldMsg(t.name+' 掉落：'+_got.join('、'));
   const i=mobs.indexOf(m); if(i>=0)mobs.splice(i,1);
@@ -7785,6 +7803,13 @@ function craftDo(key,idx){ var r=(CRAFT_PX[key]||[])[idx]; if(!r)return;
   if(typeof renderCraft==='function' && _craftKey===key) renderCraft(); else openCraft(key); }   // 製作完停留在同一頁刷新數量，不會跳回清單
 const SPELL_FX={"初級治癒術":{"type":"heal","mp":4,"valDice":[1,15],"healDice":[1,20],"healBase":20},"日光術":{"type":"buff","mp":4,"dur":7200},"保護罩":{"type":"buff","mp":2,"dur":1200,"d":{"ac":2}},"光箭":{"type":"atk","mp":3,"dmgDice":[1,8]},"傳送術":{"type":"manual","mp":5},"冰箭":{"type":"atk","mp":3,"dmgDice":[1,8]},"風刃":{"type":"atk","mp":3,"dmgDice":[1,8]},"神聖武器":{"type":"buff","mp":10,"dur":1200,"d":{"extraDmg":1,"extraHit":1}},"解毒術":{"type":"heal","mp":8},"寒冷戰慄":{"type":"atk","mp":9,"dmgDice":[2,8]},"毒咒":{"type":"atk","mp":10,"dmgDice":[2,8]},"擬似魔法武器":{"type":"buff","mp":20,"dur":1800,"d":{"extraDmg":2}},"無所遁形術":{"type":"buff","mp":8,"dur":180},"負重強化":{"type":"buff","mp":10,"dur":1800},"火箭":{"type":"atk","mp":3,"dmgDice":[2,8]},"地獄之牙":{"type":"atk","mp":3,"dmgDice":[2,8]},"極光雷電":{"type":"atk","mp":13,"dmgDice":[4,8]},"起死回生術":{"type":"atk","mp":15,"dmgDice":[3,8]},"中級治癒術":{"type":"heal","mp":11,"valDice":[1,30],"healDice":[1,50],"healBase":50},"闇盲咒術":{"type":"atk","mp":20,"dmgDice":[3,8]},"鎧甲護持":{"type":"buff","mp":20,"dur":1800,"d":{"ac":3}},"寒冰氣息":{"type":"atk","mp":9,"dmgDice":[3,8]},"能量感測":{"type":"manual","mp":8},"燃燒的火球":{"type":"atk","mp":16,"dmgDice":[4,8]},"通暢氣脈術":{"type":"buff","mp":45,"dur":1200,"d":{"dex":5}},"壞物術":{"type":"atk","mp":20,"dmgDice":[4,8]},"吸血鬼之吻":{"type":"atk","mp":13,"dmgDice":[4,8]},"緩速術":{"type":"atk","mp":20,"dmgDice":[4,8]},"岩牢":{"type":"atk","mp":11,"dmgDice":[4,8]},"魔法屏障":{"type":"buff","mp":16,"dur":16},"冥想術":{"type":"buff","mp":10,"dur":600,"d":{"mpR":5},"hpCost":40},"木乃伊的詛咒":{"type":"atk","mp":35,"dmgDice":[5,8]},"迷魅術":{"type":"manual","mp":30},"極道落雷":{"type":"atk","mp":25,"dmgDice":[6,8]},"高級治癒術":{"type":"heal","mp":20,"valDice":[2,30],"healDice":[1,100],"healBase":100},"聖潔之光":{"type":"heal","mp":10},"冰錐":{"type":"atk","mp":21,"dmgDice":[5,8]},"魔力奪取":{"type":"convert","mp":0,"hpCost":50},"黑闇之影":{"type":"atk","mp":25,"dmgDice":[5,8]},"造屍術":{"type":"buff","mp":35,"dur":3600},"加速術":{"type":"buff","mp":40,"dur":1200,"haste":1},"魔法相消術":{"type":"heal","mp":40},"地裂術":{"type":"atk","mp":25,"dmgDice":[6,8]},"烈炎術":{"type":"atk","mp":30,"dmgDice":[8,8]},"體魄強健術":{"type":"buff","mp":50,"dur":1200,"d":{"str":5}},"祝福魔法武器":{"type":"buff","mp":20,"dur":1200,"d":{"extraDmg":2,"extraHit":2}},"弱化術":{"type":"atk","mp":25,"dmgDice":[6,8]},"體力回復術":{"type":"heal","mp":35,"valDice":[1,20],"healDice":[1,30],"healBase":30},"強力加速術":{"type":"buff","mp":60,"dur":2400,"haste":1},"冰矛圍籬":{"type":"atk","mp":30,"dmgDice":[7,8]},"龍捲風":{"type":"atk","mp":45,"dmgDice":[8,8]},"狂暴術":{"type":"buff","mp":40,"dur":1200,"d":{"meleeDmg":5,"ac":-10}},"召喚術":{"type":"buff","mp":50,"dur":3600},"神聖疾走":{"type":"buff","mp":20,"dur":64,"d":{"er":15},"moveHaste":2},"疾病術":{"type":"atk","mp":30,"dmgDice":[7,8]},"全部治癒術":{"type":"heal","mp":30,"valDice":[3,30],"healDice":[3,50],"healBase":150},"冰雪暴":{"type":"atk","mp":60,"dmgDice":[10,8]},"震裂術":{"type":"atk","mp":40,"dmgDice":[8,8]},"隱身術":{"type":"buff","mp":45,"dur":64,"hpCost":20},"返生術":{"type":"passive","mp":50},"魔法封印":{"type":"atk","mp":30,"dmgDice":[8,8]},"聖結界":{"type":"buff","mp":30,"dur":32},"沉睡之霧":{"type":"atk","mp":40,"dmgDice":[9,8]},"雷霆風暴":{"type":"atk","mp":48,"dmgDice":[12,8]},"火風暴":{"type":"atk","mp":48,"dmgDice":[11,8]},"流星雨":{"type":"atk","mp":60,"dmgDice":[14,8]},"堅固防護":{"type":"buff","mp":5,"dur":180,"d":{"er":15},"hpCost":30},"增幅防禦":{"type":"buff","mp":10,"dur":1200},"衝擊之暈":{"type":"atk","mp":12,"dmgDice":[6,8]},"尖刺盔甲":{"type":"buff","mp":10,"dur":1200,"d":{"meleeHit":5}},"魔法防禦":{"type":"buff","mp":10,"dur":1200,"d":{"mr":10}},"心靈轉換":{"type":"convert","mp":0,"hpCost":8,"mpGain":2},"世界樹的呼喚":{"type":"passive","mp":0},"三重矢":{"type":"atk","mp":15,"dmgDice":[3,8]},"淨化精神":{"type":"buff","mp":10,"dur":1200,"d":{"wis":3}},"屬性防禦":{"type":"buff","mp":10,"dur":1200,"d":{"resFire":10,"resWater":10,"resEarth":10,"resWind":10}},"釋放元素":{"type":"atk","mp":30,"dmgDice":[3,8]},"魂體轉換":{"type":"convert","mp":0,"hpCost":50,"mpGain":15},"單屬性防禦":{"type":"buff","mp":10,"dur":64},"火焰武器":{"type":"buff","mp":20,"dur":1200,"d":{"meleeDmg":3}},"風之神射":{"type":"buff","mp":15,"dur":1200,"d":{"rangedHit":5}},"風之疾走":{"type":"buff","mp":20,"dur":1200,"d":{"er":10}},"大地防護":{"type":"buff","mp":15,"dur":1200,"d":{"ac":4}},"地面障礙":{"type":"atk","mp":20,"dmgDice":[3,8]},"魔法消除":{"type":"atk","mp":30,"dmgDice":[4,8]},"召喚屬性精靈":{"type":"buff","mp":30,"dur":3600},"舞躍之火":{"type":"buff","mp":30,"dur":1200,"d":{"meleeDmg":5}},"暴風之眼":{"type":"buff","mp":40,"dur":1200,"d":{"rangedDmg":2,"rangedHit":2}},"大地屏障":{"type":"buff","mp":50,"dur":8},"生命之泉":{"type":"heal","mp":50,"valDice":[4,35],"healDice":[5,50],"healBase":250},"大地的祝福":{"type":"buff","mp":35,"dur":1200,"d":{"ac":5}},"召喚強力屬性精靈":{"type":"buff","mp":50,"dur":3600},"生命的祝福":{"type":"heal","mp":30,"valDice":[1,20],"healDice":[1,28],"healBase":28},"封印禁地":{"type":"atk","mp":40,"dmgDice":[5,8]},"烈炎武器":{"type":"buff","mp":30,"dur":1200,"d":{"meleeDmg":5,"meleeHit":5}},"暴風神射":{"type":"buff","mp":30,"dur":1200,"d":{"rangedDmg":4,"rangedHit":2}},"鋼鐵防護":{"type":"buff","mp":30,"dur":1200,"d":{"ac":7}},"灼熱靈氣":{"type":"buff","mp":30,"dur":1200,"d":{"meleeDmg":1,"meleeHit":1}},"勇敢靈氣":{"type":"buff","mp":40,"dur":1200,"d":{"meleeDmg":3,"meleeHit":3}}};
 const MOB_DROPS_PX={"妖魔":[["歐西斯匕首",1],["歐西斯之矛",1],["歐西斯短劍",5],["歐西斯頭盔",1],["歐西斯環甲",5],["皮革",50]],"妖魔弓箭手":[["歐西斯弓",1],["歐西斯頭盔",2],["歐西斯鏈甲",1],["歐西斯環甲",5],["歐西斯斗篷",3],["皮革",50]],"地靈":[["木棒",3],["短統靴",1],["皮革",50]],"侏儒":[["小侏儒短劍",1],["侏儒鐵盔",2],["侏儒斗篷",5],["侏儒圓盾",3],["純粹的米索莉塊",1],["變形卷軸",1],["金屬塊",100]],"牧羊犬":[["肉",10],["皮革",100]],"狼":[["箭",1],["精靈玉",1],["皮革",100]],"妖魔鬥士":[["抗魔法鏈甲",0.1],["歐西斯頭盔",2],["歐西斯鏈甲",2],["歐西斯環甲",3],["歐西斯斗篷",1],["阿克海盾牌",1],["鏈甲",1]],"狼人":[["抗魔法鏈甲",0.1],["長劍",0.1],["釘錘",1],["木棒",3],["弗萊爾",2],["銀釘皮甲",0.5],["小盾牌",1],["短統靴",0.5]],"骷髏":[["抗魔法頭盔",0.1],["彎刀",1],["頭盔",5],["抗魔法斗篷",0.1],["大盾牌",0.5],["魔法寶石",1],["骨頭碎片",50],["骷髏頭",1],["不死族的鑰匙",1]],"骷髏弓箭手":[["弓",2],["頭盔",5],["抗魔法斗篷",0.3],["自我加速藥水",3],["魔法寶石",1],["魔法書(通暢氣脈術)",0.2],["骨頭碎片",50],["強化自我加速藥水",0.5]],"骷髏斧手":[["斧",2],["頭盔",5],["抗魔法斗篷",0.3],["自我加速藥水",3],["松木魔杖",1],["魔法寶石",1],["骨頭碎片",50],["強化自我加速藥水",0.5]],"骷髏槍兵":[["矛",2],["頭盔",5],["抗魔法斗篷",0.3],["自我加速藥水",3],["魔法寶石",1],["魔法書(通暢氣脈術)",0.2],["骨頭碎片",50],["強化自我加速藥水",0.5]],"石頭高崙":[["亞連",3],["斧",5],["木棒",5],["弗萊爾",1],["魔法寶石",1],["高品質紅寶石",0.05],["粗糙的米索莉塊",1],["藍色藥水",1],["滅魔戒指",0.0001]],"夏洛柏":[["彎刀",2],["頭盔",5],["青銅盔甲",1],["大盾牌",1],["自我加速藥水",3],["楓木魔杖",1],["魔法寶石",1],["強化自我加速藥水",0.5]],"黑騎士":[["抗魔法頭盔",0.5],["雙手劍",0.1],["戟",1],["槍",1],["帕提森",2],["三叉戟",3],["頭盔",5],["青銅盔甲",1],["T恤",0.1],["保護者斗篷",1],["短統靴",2],["長靴",1],["鑽石",5],["綠寶石",5],["紅寶石",5],["藍寶石",5],["藍色藥水",1],["古老的交易文件",1],["黑騎士的誓約",1]],"史巴托":[["彎刀",2],["頭盔",5],["青銅盔甲",2],["大盾牌",2],["自我加速藥水",4],["楓木魔杖",1],["魔法寶石",2],["強化自我加速藥水",1]],"長老":[["保護者斗篷",0.5],["魔法寶石",1],["藍色藥水",1],["長者戒指",0.001],["長老項鍊",0.001]],"巴風特":[["武士刀",2],["雙手劍",2],["巴風特魔杖",1],["金屬盔甲",1.5],["隱身斗篷",0.3],["手套",3],["傳送控制戒指",0.2],["魅力項鍊",0.2],["老舊的身體皮帶",0.3],["老舊的靈魂皮帶",0.3],["身體腰帶",1],["靈魂腰帶",1],["自我加速藥水",8],["對武器施法的卷軸",3],["對盔甲施法的卷軸",3],["復活卷軸",0.5],["黃金鑰匙",0.3],["魔法寶石",5],["鑽石",2],["品質鑽石",1],["高品質鑽石",0.3],["綠寶石",2],["品質綠寶石",1],["高品質綠寶石",0.3],["品質藍寶石",1],["高品質藍寶石",0.3],["魔法書(迷魅術)",0.5],["魔法書(地裂術)",0.5],["魔法書(召喚術)",0.3],["勇敢藥水",1],["神秘慎重藥水",0.5],["強化自我加速藥水",3],["魔法書(岩牢)",0.5],["魔法書(震裂術)",0.3],["精靈玉",1],["精靈水晶(舞躍之火)",0.3],["魔法書(魔法屏障)",0.3],["魔法書(弱化術)",0.5],["魔法書(祝福魔法武器)",0.3]],"克特":[["貝卡合金",1],["武士刀",1],["長劍",10],["雙手劍",3],["青銅盔甲",5],["T恤",3],["保護者斗篷",10],["大盾牌",10],["反射之盾",0.5],["長靴",10],["手套",5],["銀騎士之盾",1],["克特手套",1],["克特盔甲",1],["克特長靴",1],["克特頭盔",1],["對武器施法的卷軸",10],["對盔甲施法的卷軸",20],["藍色藥水",1]]};
+/* 補上原本完全沒有掉落表的怪物(玩家反映打死沒東西掉)。內容依該怪的等級與屬性配置。*/
+MOB_DROPS_PX['史萊姆']=[['紅色藥水',8],['皮革',30],['精靈玉',1],['木棒',2],['魔法寶石',0.5]];
+MOB_DROPS_PX['野豬']=[['肉',40],['皮革',60],['短統靴',1],['木棒',2]];
+MOB_DROPS_PX['杜賓犬']=[['肉',25],['皮革',80],['短統靴',1],['小盾牌',1]];
+MOB_DROPS_PX['飄浮之眼']=[['漂浮之眼肉',20],['魔法寶石',3],['藍色藥水',3],['魔法書(通暢氣脈術)',0.3],['精靈玉',2]];
+MOB_DROPS_PX['人形殭屍']=[['骨頭碎片',40],['彎刀',1],['頭盔',3],['抗魔法斗篷',0.2],['魔法寶石',1],['不死族的鑰匙',1],['自我加速藥水',2]];
+
 /* 巴風特二段／克特二段沒有獨立的掉落表：擊敗牠們掉落的寶物，改在killMob()裡動態
    查詢phase1(巴風特／克特)的MOB_DROPS_PX，理由見下方PHASE2_LOOT_SOURCE的說明 */
 const ITEM_WT_FB={"弓":30,"精靈弓":30,"歐西斯弓":30,"尤米弓":40,"短弓":20,"十字弓":50,"獵人之弓":30,"赤焰之弓":30,"熾炎天使弓":25,"武士刀":40,"長劍":40,"闊劍":70,"精靈匕首":10,"歐西斯匕首":10,"匕首":10,"彎刀":40,"小侏儒短劍":40,"精靈短劍":20,"歐西斯短劍":30,"短劍":30,"瑟魯基之劍":120,"紅騎士之劍":40,"侵略者之劍":40,"骰子匕首":10,"大馬士革刀":45,"短劍的劍身":20,"長劍的劍身":30,"奧里哈魯根的劍身":35,"細劍":60,"鎖子甲破壞者":40,"銀長劍":50,"銀劍":40,"赤焰之劍":40,"橡木魔法杖":15,"美基魔法杖":20,"巫術魔法杖":15,"力量魔法杖":15,"瑪那魔杖":15,"水晶魔杖":15,"冰之女王魔杖":20,"巴風特魔杖":15,"巴列斯魔杖":15,"雙手劍":150,"矛":80,"巴迪須":120,"柴刀":120,"貝卡合金":100,"法丘":60,"闊矛":75,"吉薩":80,"戟":150,"槍":180,"露西錘":150,"帕提森":80,"精靈之矛":30,"歐西斯之矛":30,"三叉戟":25,"潘的角":9,"覆上米索莉的角":24,"覆上奧里哈魯根的角":55,"深紅長矛":100,"亞連":10,"斧":60,"釘錘":30,"戰斧":120,"木棒":30,"弗萊爾":15,"戰錘":50,"流星錘":120,"巨斧":250,"狂戰士斧":200,"銀斧":270,"精靈皮盔":3,"歐西斯頭盔":30,"侏儒鐵盔":40,"頭盔":30,"騎士面甲":40,"抗魔法頭盔":35,"艾爾穆的祝福":13,"治癒魔法頭盔":50,"敏捷魔法頭盔":50,"力量魔法頭盔":50,"皮帽子":10,"銀釘皮帽":20,"皮頭盔":30,"骷髏頭盔":30,"鋼鐵頭盔":50,"法師之帽":20,"死亡騎士頭盔":50,"精靈敏捷頭盔":13,"精靈體質頭盔":13,"騎士頭巾":0,"紅騎士頭巾":20,"巴土瑟之帽":20,"卡士柏之帽":20,"馬庫爾之帽":20,"西瑪之帽":20,"克特頭盔":50,"淨化頭飾":0,"金屬盔甲":450,"水晶盔甲":350,"青銅盔甲":450,"藤甲":400,"皮甲":350,"鏈甲":300,"歐西斯鏈甲":300,"鱗甲":250,"銀釘皮甲":150,"環甲":250,"歐西斯環甲":250,"小藤甲":70,"皮夾克":30,"抗魔法鏈甲":300,"綿質長袍":10,"木甲":80,"精靈護胸金屬板":100,"精靈金屬盔甲":250,"精靈鏈甲":150,"木製的夾克":40,"皮背心":30,"皮盔甲":50,"銀釘皮背心":130,"硬皮背心":150,"骷髏盔甲":150,"鋼鐵金屬盔甲":470,"法師長袍":60,"水龍鱗盔甲":300,"地龍鱗盔甲":300,"火龍鱗盔甲":300,"風龍鱗盔甲":300,"死亡騎士盔甲":250,"黑長者長袍":30,"克特盔甲":250,"T恤":5,"精靈T恤":5,"精靈斗篷":10,"歐西斯斗篷":10,"侏儒斗篷":10,"保護者斗篷":10,"隱身斗篷":10,"抗魔法斗篷":10,"瑪那斗篷":10,"短統靴":10,"長靴":15,"皮涼鞋":8,"銀釘皮涼鞋":10,"皮長靴":10,"鋼鐵長靴":50,"深水長靴":15,"死亡騎士長靴":15,"黑長者涼鞋":10,"克特長靴":15,"手套":10,"腕甲":10,"力量手套":18,"鋼鐵手套":40,"水晶手套":20,"死亡騎士手套":15,"保護者手套":10,"克特手套":15,"小盾牌":30,"精靈盾牌":50,"阿克海盾牌":50,"大盾牌":100,"侏儒圓盾":100,"反射之盾":50,"伊娃之盾":50,"塔盾":120,"木盾":25,"銀騎士之盾":100,"皮盾牌":25,"銀釘皮盾":35,"骷髏盾牌":30,"鋼鐵盾牌":140,"受詛咒的魔法書":0,"魔法能量之書":20,"紅騎士盾牌":50,"瑪那水晶球":50,"力量項鍊":5,"敏捷項鍊":5,"體質項鍊":5,"智力項鍊":5,"精神項鍊":5,"魅力項鍊":5,"妖魔戰士項鍊":5,"守護項鍊":3,"長老項鍊":3,"抗魔項鍊":3,"傳送控制戒指":3,"變形控制戒指":3,"抗魔戒指":3,"滅魔戒指":3,"火靈戒指":3,"水靈戒指":3,"地靈戒指":3,"風靈戒指":3,"守護戒指":3,"長者戒指":3,"老舊的精神腰帶":50,"身體腰帶":50,"精神腰帶":50,"靈魂腰帶":50,"多羅皮帶":50,"歐吉皮帶":50,"勇敢皮帶":50,"光明身體腰帶":50,"光明精神腰帶":50,"光明靈魂腰帶":50,"守護皮帶":50,"抗魔皮帶":50};
@@ -8130,6 +8155,16 @@ let adminCat='shop', magicSub='royal';
     const arr=MOB_DROPS_PX[mob]; const i=arr.findIndex(x=>x[0]===id);
     if(checked&&i<0) arr.push([id,1]); else if(!checked&&i>=0) arr.splice(i,1);
     _drop[mob]=arr.map(x=>x.slice()); saveDrop(); renderAdminMobs(); };
+  /* 修改單一掉落物的機率(%)。允許 0.0001~100，方便設定稀有掉落。*/
+  window.editorSetDropRate=function(mob,id,val){
+    if(!MOB_DROPS_PX[mob]) return;
+    const arr=MOB_DROPS_PX[mob]; const i=arr.findIndex(x=>x[0]===id);
+    if(i<0) return;
+    let v=parseFloat(val); if(!isFinite(v)) v=1;
+    v=Math.max(0.0001, Math.min(100, v));
+    arr[i][1]=v;
+    _drop[mob]=arr.map(x=>x.slice()); saveDrop();
+  };
   const PHASE2_LOOT_MAP={'克特二段':'克特','巴風特二段':'巴風特'};   // 二階段沒有獨立掉落表，統一導向phase1的掉落表(跟killMob()動態解析的規則一致)
   function renderMobDrops(mobId){
     const realId=PHASE2_LOOT_MAP[mobId]||mobId;
@@ -8138,15 +8173,25 @@ let adminCat='shop', magicSub='royal';
     const subs=cat==='weapon'?WPN_SUBS:cat==='armor'?ARM_SUBS:cat==='magic'?MAG_SUBS:ITEM_SUBS;
     let seg=_dropSeg; if(!subs.some(x=>x[0]===seg)) seg=subs[0][0]; _dropSeg=seg;
     const ids=itemIdsForSub(cat,seg);
-    const cur=(MOB_DROPS_PX[realId]||[]).map(x=>x[0]);
+    const curArr=(MOB_DROPS_PX[realId]||[]);
+    const cur=curArr.map(x=>x[0]);
+    const rateOf=function(id){ const e=curArr.filter(x=>x[0]===id)[0]; return e?e[1]:1; };
     const curCount=ids.filter(id=>cur.includes(id)).length;
     let h='<div class="aed-name" style="margin-top:16px">掉落物設定</div>';
     if(realId!==mobId) h+='<div class="aed-empty" style="padding:6px 4px 10px;text-align:left;">「'+mobId+'」是王座之間BOSS戰的二階段變身，本身沒有獨立掉落表，擊敗後掉落的寶物跟「'+realId+'」共用同一份清單——這裡編輯的就是「'+realId+'」的掉落設定，改了兩邊(一階段/二階段)看到的都會是同一份。</div>';
-    h+='<div class="aed-count">此類已勾選 '+curCount+' 項（'+realId+' 總掉落 '+cur.length+' 項；勾選＝加入掉落清單，立即生效）</div>';
+    h+='<div class="aed-count">此類已勾選 '+curCount+' 項（'+realId+' 總掉落 '+cur.length+' 項；勾選＝加入掉落清單，右側數字＝掉落機率%，可直接修改，立即生效）</div>';
+    { const _lv=(MOBS[realId]&&MOBS[realId].lv)||1; const _min=Math.max(1,Math.floor(_lv/10)+1);
+      h+='<div class="aed-empty" style="padding:4px 4px 8px;text-align:left;color:#8fd06a;">此怪等級 '+_lv+'，死亡時<b>至少掉落 '+_min+' 件</b>（機率沒抽中足夠件數時，會依機率加權從清單中隨機補足）。</div>'; }
+    h+='<div class="aed-empty" style="padding:2px 4px 8px;text-align:left;color:#c0a860;">※ 勾選後右側會出現<b style="color:#ffd94a">金色的機率輸入框</b>，可直接修改該物品的掉落機率（%）。</div>';
     h+=subbar(L1,cat,'setAdminDropCat')+subbar(subs,seg,'setAdminDropSeg','sub2');
     if(!ids.length){ h+='<div class="aed-empty">此書籤沒有可勾選的項目。</div>'; return h; }
-    h+='<div class="aed-shopgrid">'+ids.map(id=>{ const d=ITEM_DEF[id]; const ck=cur.includes(id)?'checked':'';
-      return '<label class="aed-shopitem"><input type="checkbox" '+ck+' onchange="editorToggleDrop(\''+esc(realId)+'\',\''+esc(id)+'\',this.checked)"><span>'+d.n+'</span></label>'; }).join('')+'</div>';
+    h+='<div class="aed-shopgrid">'+ids.map(id=>{ const d=ITEM_DEF[id]; const on=cur.includes(id); const ck=on?'checked':'';
+      return '<label class="aed-shopitem'+(on?' hasDrop':'')+'"><input type="checkbox" '+ck+' onchange="editorToggleDrop(\''+esc(realId)+'\',\''+esc(id)+'\',this.checked)">'
+        +'<span style="flex:1;min-width:0">'+d.n+'</span>'
+        +(on?('<input class="dropRate" type="number" step="0.01" min="0.0001" max="100" value="'+rateOf(id)
+             +'" onclick="event.preventDefault();event.stopPropagation();" onchange="editorSetDropRate(\''+esc(realId)+'\',\''+esc(id)+'\',this.value)" title="掉落機率(%)"><span class="rateUnit">%</span>')
+            :'')
+        +'</label>'; }).join('')+'</div>';
     return h; }
   function renderAdminMobs(){
     const body=document.getElementById('adminBody'); if(!body)return;
