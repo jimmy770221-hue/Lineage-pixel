@@ -1661,7 +1661,7 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
 <li>修正帶隊友打稻草人時隊友拿不到訓練經驗的問題：現在玩家與隊友各自判斷等級，5級以下都能獲得訓練經驗</li>
 <li><b>新增寵物系統</b>：吃下「漂浮之眼肉」後 60 秒內打倒野生動物（狼／牧羊犬／杜賓犬）即可收服，收服成功後會獲得一個「項圈」作為憑證（放生時收回）。寵物會跟隨、自動戰鬥、分經驗升級、也有自己的性向值；倒地不會離開，只有放生才會消失。可同時攜帶數量依魅力計算（魅力÷4，妖精保底3隻，上限8隻）</li>
 <li><b>寵物管理</b>：社交視窗新增「隊友／寵物」兩個書籤，點寵物名字可進入專屬分頁，能查看等級、血量、經驗、性向與能力數值，也可以改名或放生。每隻寵物在捕獲當下會隨機決定三圍（力量→傷害、體力→血量、敏捷→命中，各項8～18、總和40），所以同種類的每一隻資質都不一樣。寵物會像隊友一樣沿著你走過的路徑一隻接一隻排隊跟隨，並自成一列與隊友錯開，不會擠在一起。使用「哨子」可把散開的寵物召回身邊</li>
-<li><b>新增史萊姆競技場（賭場）</b>：可從傳送清單前往。場內有5條30格長的賽道，13隻史萊姆選手輪番上陣（含傳奇明星「流星」），每場隨機抽5隻出賽、每10分鐘一場。找<b>售票員咕嚕</b>買票下注（一張200金幣，可連買10張），找<b>競賽場管理員嘀咕</b>查看本場出賽名單、勝率、賠率與歷史戰績。押中依賠率兌換獎金。賽道四周完全圍起、玩家無法進入；場內還有10位不同職業的賭客會互相討論賭盤、慫恿你跟注。進入競技場時隊友不會跟進場</li>
+<li><b>新增史萊姆競技場（賭場）</b>：可從傳送清單前往。場內有5條30格長的賽道，13隻史萊姆選手輪番上陣（含傳奇明星「流星」），每場隨機抽5隻出賽，比賽全程約40秒可實際觀戰（開跑讀秒、即時名次、領先播報），跑完後隔10分鐘開下一場。找<b>售票員咕嚕</b>買票下注（一張200金幣，可連買10張），找<b>競賽場管理員嘀咕</b>查看本場出賽名單、勝率、賠率與歷史戰績。押中依賠率兌換獎金。賽道四周完全圍起、玩家無法進入；場內還有10位不同職業的賭客會互相討論賭盤、慫恿你跟注。進入競技場時隊友不會跟進場</li>
 <li><b>角色可以改名了</b>：角色資訊視窗（Ctrl+A）最上方新增改名欄，不會因為創角時忘記命名就永遠叫「勇者」。隊友資訊視窗也有同樣功能，而且改名會連動更新該角色自己的存檔，之後切換過去玩也是新名字</li>
 <li>隊友現在會跟著你移動到任何村莊：不再只固定在說話之島村，走到銀騎士村莊等其他安全區時，隊友也會一起過去並就地駐守成為NPC（位置由系統自動挑選可站立且互不重疊的空地，出村再回來也會在原位）</li>
 <li>修正部分 NPC 與怪物看起來浮在空中或陷入地面的問題：改為依每張圖實際的腳底位置校正，讓所有角色都確實踩在地上</li>
@@ -2925,10 +2925,10 @@ function arenaStartRace(){
   var lineup=arenaLineup(), odds=arenaOdds(lineup);
   arenaRunning={ pid:arenaPeriodId(), odds:odds,
     runners:lineup.map(function(s,i){ return {racer:s, lane:i, prog:0,
-      base:s.spd/100, burst:0, burstT:0}; }),
-    finished:[], t0:Date.now() };
+      base:s.spd/100, burst:1, burstT:0, bob:Math.random()*1000, rank:0}; }),
+    finished:[], t0:Date.now(), phase:'countdown', phaseT:3200 };   // 開跑前3秒讀秒
   arenaStandby=null; arenaStandbyPid=null;
-  sysMsg('★ 比賽開始！共 '+lineup.length+' 隻史萊姆出賽！');
+  sysMsg('★ 各就各位——比賽即將開始！');
   if(typeof refreshUI==='function') refreshUI();
 }
 /* 開賽前：讓本場出賽的5隻史萊姆先站在起跑閘門待命，玩家一進場就看得到誰要比賽。*/
@@ -2951,14 +2951,45 @@ function arenaUpdate(dt){
     }
     return;
   }
+  // ── 開跑前讀秒：3、2、1、開始！
+  if(R.phase==='countdown'){
+    var was=Math.ceil(R.phaseT/1000);
+    R.phaseT-=dt;
+    var now3=Math.ceil(R.phaseT/1000);
+    if(now3!==was && now3>0) sysMsg('　　'+now3+'…');
+    if(R.phaseT<=0){ R.phase='run'; sysMsg('🏁 開跑！！'); }
+    R.runners.forEach(function(r){ r.bob+=dt; });                 // 待命時原地彈跳
+    return;
+  }
+  // ── 比賽進行：全程約40秒跑完30格，看得到你追我趕
   R.runners.forEach(function(r){
+    r.bob+=dt;
     if(r.prog>=ARENA_LEN) return;
     r.burstT-=dt;
-    if(r.burstT<=0){ r.burstT=300+Math.random()*500; r.burst=0.55+Math.random()*0.9; }   // 隨機加速/減速，讓比賽有懸念
-    r.prog+=r.base*r.burst*(dt/1000)*7;
-    if(r.prog>=ARENA_LEN){ r.prog=ARENA_LEN; R.finished.push(r.racer.id); }
+    if(r.burstT<=0){                                              // 每0.6~1.4秒換一次狀態，形成領先/落後的拉鋸
+      r.burstT=600+Math.random()*800;
+      r.burst=0.5+Math.random()*1.05;
+    }
+    var prev=r.prog;
+    r.prog+=r.base*r.burst*(dt/1000)*1.15;                        // 速度調慢：30格約走40秒
+    if(prev<ARENA_LEN && r.prog>=ARENA_LEN){
+      r.prog=ARENA_LEN; R.finished.push(r.racer.id);
+      var pos=R.finished.length;
+      var nm=r.racer.name;
+      if(pos===1) sysMsg('🏆 第1名衝線！「'+nm+'」！');
+      else sysMsg('　第'+pos+'名：'+nm);
+    }
   });
-  if(R.finished.length>=R.runners.length || Date.now()-R.t0>60000) arenaSettle();
+  // 即時名次(供畫面顯示)
+  var sorted=R.runners.slice().sort(function(a,b){ return b.prog-a.prog; });
+  sorted.forEach(function(r,i){ r.rank=i+1; });
+  // 播報領先者變化
+  var lead=sorted[0];
+  if(lead && R.lead!==lead.racer.id && R.phase==='run' && lead.prog>1){
+    R.lead=lead.racer.id;
+    sysMsg('▶ 目前領先：'+lead.racer.name+'（'+Math.round(lead.prog)+'/'+ARENA_LEN+'格）');
+  }
+  if(R.finished.length>=R.runners.length || Date.now()-R.t0>120000) arenaSettle();
 }
 function arenaSettle(){
   var R=arenaRunning; if(!R) return;
@@ -2984,7 +3015,10 @@ function arenaSettle(){
   // 更新歷史戰績
   R.runners.forEach(function(r){ r.racer.races=(r.racer.races||0)+1; });
   if(win) win.wins=(win.wins||0)+1;
+  arenaRaceSeq++;                                                 // 場次+1，下一場會抽到不同的出賽名單
+  arenaNextAt=Date.now()+ARENA_PERIOD;                            // 從「這一場跑完」起算，隔10分鐘再開下一場
   arenaBets=[]; arenaBetPid=arenaPeriodId(); arenaRunning=null;
+  sysMsg('下一場將在 10 分鐘後開始，可以先去下注。');
   if(typeof persistSaves==='function') persistSaves();   // 結算後存檔，獎金與清空的注單都保存下來
   if(typeof refreshUI==='function') refreshUI();
   if(document.getElementById('arenaw') && document.getElementById('arenaw').classList.contains('on')) renderArena();
@@ -3009,11 +3043,13 @@ function drawArenaRunner(r){
   var sheet=(typeof mobSheetReady==='function')?mobSheetReady('史萊姆'):null;
   var gx=(ARENA_X0+r.prog)*TS, gy=(ARENA_Y0+r.lane*3)*TS;
   var gs=groundScreen(gx+16, gy+28);
-  actorShadow(ctx,gs.x,gs.y,12,4);
+  var hop=Math.abs(Math.sin((r.bob||0)/110))*7;                    // 史萊姆一蹦一蹦往前跳
+  actorShadow(ctx,gs.x,gs.y,12-hop*0.5,4-hop*0.15);                // 跳起來時影子縮小
   var topY;
-  if(sheet) topY=drawSheetFrame(ctx,sheet,gs.x,gs.y,1.4,0,'史萊姆');
-  else { ctx.fillStyle='#5ad0e0'; ctx.beginPath(); ctx.arc(gs.x,gs.y-10,11,0,7); ctx.fill(); topY=gs.y-24; }
-  nameTag(r.racer.name, gs.x, topY-2, r.racer.star?'#ffd94a':'#8fe0ff');
+  if(sheet) topY=drawSheetFrame(ctx,sheet,gs.x,gs.y-hop,1.4,0,'史萊姆');
+  else { ctx.fillStyle='#5ad0e0'; ctx.beginPath(); ctx.arc(gs.x,gs.y-10-hop,11,0,7); ctx.fill(); topY=gs.y-24-hop; }
+  var lbl=r.racer.name+(r.rank?('　'+r.rank+'位'):'');
+  nameTag(lbl, gs.x, topY-2, r.racer.star?'#ffd94a':'#8fe0ff');
 }
 /* ---- 競技場視窗 ---- */
 let _arenaTab='bet';
@@ -3080,8 +3116,14 @@ function renderArena(){
 }
 /* 每場比賽由「時段編號」決定，同一時段不管誰去看、看幾次，出賽名單都一樣（但每場都不同）。
    用固定亂數種子從時段編號推導，不需要存檔也能保證一致。*/
-function arenaPeriodId(){ return Math.floor(Date.now()/ARENA_PERIOD); }
-function arenaNextRaceAt(){ return (arenaPeriodId()+1)*ARENA_PERIOD; }
+/* 賽程改為「上一場跑完之後，再隔10分鐘開下一場」。
+   arenaNextAt 存下一場的開賽時刻；沒有紀錄時(第一次進場)給30秒暖身。*/
+let arenaNextAt=0, arenaRaceSeq=0;
+function arenaNextRaceAt(){
+  if(!arenaNextAt) arenaNextAt=Date.now()+30000;
+  return arenaNextAt;
+}
+function arenaPeriodId(){ return arenaRaceSeq; }                 // 場次編號：每跑完一場 +1，用來決定出賽名單
 function _seedRand(seed){ let x=Math.sin(seed)*10000; return x-Math.floor(x); }
 function arenaLineup(pid){
   pid=(pid==null)?arenaPeriodId():pid;
@@ -3152,8 +3194,14 @@ function arenaCountTick(){
   if(now<_arenaCountAt) return;
   _arenaCountAt=now+250;
   var el=document.getElementById('arenaCount'); if(!el) return;
-  el.textContent = arenaRunning ? '⚑ 比賽進行中！'
-                                : ('下一場開賽倒數　'+arenaFmtCountdown(arenaNextRaceAt()-now));
+  if(arenaRunning){
+    if(arenaRunning.phase==='countdown'){
+      el.textContent='⚑ 即將開跑　'+Math.max(1,Math.ceil(arenaRunning.phaseT/1000))+'…';
+    } else {
+      var ld=arenaRunning.runners.slice().sort(function(a,b){return b.prog-a.prog;})[0];
+      el.textContent='⚑ 比賽中！領先：'+(ld?ld.racer.name+'（'+Math.round(ld.prog)+'/'+ARENA_LEN+'）':'—');
+    }
+  } else el.textContent='下一場開賽倒數　'+arenaFmtCountdown(arenaNextRaceAt()-now);
 }
 function arenaChatTick(){
   if(curMapId!=='slime_arena') return;
