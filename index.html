@@ -1716,7 +1716,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 <li><b>後台掉落機率設定</b>：每個已勾選的掉落物旁邊可直接修改掉落機率（%），武器、防具、道具、藥水、卷軸、魔法書全部適用</li>
 <li><b>變形卷軸可手動使用</b>：在背包點擊變形卷軸會跳出變身選單，依怪物等級分組，達到等級即可點名字直接變身，持續20分鐘</li>
 <li><b>妖精屬性魔法</b>：妖精森林的艾利溫可締結屬性契約（地／水／火／風）。締約後只能學習一般精靈水晶與該屬性的水晶，也可選擇「忘記魔法」重新締約</li>
-<li><b>史萊姆競技場大擴充</b>：選手增為 20 隻並加上編號（「#18 獵鷹」）。三位妖魔執行者各司其職——阿門售票並在開賽前倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉公告賽事資訊。巴風特的傳送魔法陣改開在王房內</li>
+<li><b>史萊姆競技場大擴充</b>：選手增為 20 隻並加上編號（「#18 獵鷹」）。三位妖魔執行者各司其職——阿門售票並在開賽前倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉公告賽事資訊。巴風特的傳送魔法陣改開在王房內。每場開賽前每隻史萊姆會隨機決定「當日狀態」，所以最強的也不再穩贏——傳奇「流星」奪冠率約4成，最弱的也有機會爆冷；選手名字統一為白色</li>
 <li><b>新增聊天氣泡</b>：角色說話時頭上會冒出對話框。競技場有 30 位各種風格 ID 的虛擬玩家，會在場邊走動並成群聊天，同時約 10～15 人在講話</li>
 <li><b>NPC 名條改版</b>：改成兩行顯示，第一行名字、第二行職稱，例如「艾爾／【倉庫管理員】」</li>
 <li><b>柵欄改版</b>：圍欄會依相鄰狀況自動連接成直線，轉角形成完整直角</li>
@@ -3240,8 +3240,12 @@ function arenaStartRace(){
   if(arenaRunning) return;
   var lineup=arenaLineup(), odds=arenaOdds(lineup);
   arenaRunning={ pid:arenaPeriodId(), odds:odds,
-    runners:lineup.map(function(s,i){ return {racer:s, lane:i, prog:0,
-      base:s.spd/100, burst:1, burstT:0, bob:Math.random()*1000, rank:0}; }),
+    runners:lineup.map(function(s,i){
+      // 當日狀態：每一場開賽前隨機決定(±35%)，模擬真實賽馬「今天狀況如何」。
+      // 沒有這個的話，實力最高的那隻會穩贏(實測勝率78%)，賭盤就完全沒有懸念了。
+      var form=0.65+Math.random()*0.70;
+      return {racer:s, lane:i, prog:0, form:form,
+              base:s.spd/100*form, burst:1, burstT:0, bob:Math.random()*1000, rank:0}; }),
     finished:[], t0:Date.now(), phase:'countdown', phaseT:10200 };   // 阿門開賽前倒數10秒
   arenaStandby=null; arenaStandbyPid=null;
   sysMsg('阿門【執行者】：「各位參賽者，各就各位——！」');
@@ -3366,7 +3370,7 @@ function drawArenaRunner(r){
   if(sheet) topY=drawSheetFrame(ctx,sheet,gs.x,gs.y-hop,1.4,0,'史萊姆');
   else { ctx.fillStyle='#5ad0e0'; ctx.beginPath(); ctx.arc(gs.x,gs.y-10-hop,11,0,7); ctx.fill(); topY=gs.y-24-hop; }
   var lbl=slimeTag(r.racer)+(r.rank?('　'+r.rank+'位'):'');
-  nameTag(lbl, gs.x, topY-2, r.racer.star?'#ffd94a':'#8fe0ff');
+  nameTag(lbl, gs.x, topY-2, '#ffffff');   // 選手名字統一白色，不因傳奇/一般而變色
 }
 /* ---- 競技場視窗 ---- */
 let _arenaTab='bet';
@@ -3459,9 +3463,11 @@ function arenaLineup(pid){
 }
 /* 勝率：以該場5隻的速度做加權，速度越高勝率越高。賠率＝(1/勝率)×0.85（莊家抽水15%）。*/
 function arenaOdds(lineup){
-  const tot=lineup.reduce((a,s)=>a+Math.pow(s.spd,2.2),0);
+  // 權重指數壓低到1.4：因為比賽有「當日狀態」的大幅隨機，實力高的並不會壓倒性獲勝，
+  // 賠率若還按實力大幅拉開就會失真(押強的完全不划算、押弱的又賠太多)。
+  const tot=lineup.reduce((a,s)=>a+Math.pow(s.spd,1.4),0);
   return lineup.map(s=>{
-    const w=Math.pow(s.spd,2.2)/tot;
+    const w=Math.pow(s.spd,1.4)/tot;
     return {racer:s, winRate:w, odds:Math.max(1.2, Math.round((1/w)*0.85*10)/10)};
   });
 }
