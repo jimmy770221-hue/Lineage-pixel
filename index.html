@@ -5,161 +5,33 @@
 ※ 公告欄（noticeBody）採「只增不刪」原則：新版本一律加在最上方，舊紀錄永久保留，
    除非玩家明確要求才刪除舊紀錄。
 ========================================
-v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新增冒險洞穴內容、怪物出沒系統重構）：
-             ※ 8/19當天所有改動統一標示為v72（8/19最初的版本號），檔案
-               名稱內部仍用72.1／72.2…小數點區分每次交付的檔案，但遊戲
-               內顯示與這份紀錄一律維持v72，直到8/20才會變成v73。
-             ・改名為「天堂．像素版」；公告欄改版為徽章樣式版本紀錄
-             ・修正背包/魔法欄拖曳抖動、登入畫面左側細線等視覺瑕疵
-             ・移動速度整頓：玩家基礎速度改為1(一段加速1.5倍/二段2倍)、
-               統一所有怪物基礎速度、修正切換角色殘留加速、後台編輯器
-               「移動」欄位微調步進改為0.1
-             ・玩家名條依性向值(align)做藍/紅漸層變色
-             ・隊伍系統大幅強化：修正隊友無法升級的bug、改為隊伍平分經驗、
-               隊友有自己的性向與50級起的配點(存回自己的存檔)、新增隊友
-               資訊視窗(HP/MP/EXP/裝備/ATS設定)、怪物現在也會攻擊隊友
-               (HP歸零會被擊倒、20秒後自動起身)、隊友的自動喝水/加速/
-               主動技能/被動技能光環全部接上實際效果(含正確的法術特效
-               與範圍傷害)，並修正MP不回復、加速道具沒作用等多個潛藏bug
-             ・新增冒險洞穴5隻怪物(骷髏弓箭手/斧手/槍兵、史巴托、巴風特)，
-               含正確的8方位動畫與掉落表
-             ・怪物出沒系統重構為「勾選＋存檔」：所有地圖預設清空怪物，
-               後台「怪物擺放」分頁勾選怪物種類、按存檔才生效(面板內顯示
-               存檔成功提示，不佔用遊戲聊天頻道)；解除5隻怪物的地圖鎖定、
-               巴風特比照克特做成世界王全區僅一隻
-             ・冒險洞穴新增2樓，1樓南側樓梯可通往，怪物擺放可分層設定
-             ・冒險洞穴改造成真正的地牢迷宮：新增薄石牆(T_STONEWALL)與
-               魔法陣(T_MAGICCIRCLE)兩種地磚，新增carveMaze()迷宮生成器
-               (隨機化深度優先搜尋生成一棵涵蓋全部格子的生成樹，保證從
-               入口能走到任何一格，不會有孤立死區)，牆厚1格、通道寬2格；
-               2樓右下角額外開出3×3格區塊合併成「王房」，中央鋪魔法陣，
-               巴風特只會生成在王房裡，並新增m.confine禁足限制不會走出去，
-               一般怪物則反過來不會出現在王房裡；新增hasLineOfSight()視線
-               判定，怪物隔著牆看不到目標就無法攻擊。以上皆已用從實際檔案
-               抽出的函式做過連通性/王房可達性/視線遮蔽/禁足邊界的模擬測試
-             ・版本紀錄整理：同一天累積的多次改版統一標示為同一個版號
-             ・修正兩個回報問題：
-               1)【怪物穿牆】根因是怪物移動判定的X/Y兩軸碰撞檢查「同時」用
-                 移動前的舊座標各自獨立計算，斜角移動時兩軸各自檢查都可能
-                 通過，但實際的斜角終點卻落在牆角裡(這是軸分離碰撞系統的
-                 經典bug，牆越薄、通道越窄就越容易被利用，之前的厚牆村莊
-                 不明顯，換成迷宮的薄石牆後就很容易被撞見)。改成跟玩家
-                 movePlayer()一樣「循序」判定：X軸先算好、真的移動之後，
-                 Y軸才用「剛剛更新過的」新x去檢查，徹底消除切角穿牆；並
-                 加上移動子步進(每步最多16px)，避免以後怪物被設定超高速時
-                 一步跳過整片薄牆。
-               2)【迷宮幾乎直通】根因是buildTerminal()原本處理出入口的
-                 內建邏輯，會從地圖邊界直接拉一條到地圖正中央的直線通道
-                 (vLane)，我先前生成迷宮時保留了既有通道，這條「捷徑」就
-                 完整留在迷宮正中央，等於是直接從入口打通到出口。改成
-                 cave/cave2不再用buildTerminal自動處理出入口，改在生成
-                 迷宮前只鑿邊界的小缺口(不拉直線)，並讓迷宮入口對齊在
-                 邊界那一列，逼玩家從頭到尾都要走迷宮本身；另外生成完成後
-                 加了低機率(5%)的隨機打通(braid)增加迴路，讓路徑不只一條、
-                 更有探索感，但沒有高到讓最短路徑又變回直線捷徑。
-                 修正前：入口到南側出口最短路徑只有約39格(直線距離約32格)
-                 修正後：同樣起訖點最短路徑變成105格，路徑感明顯複雜許多
-             ・以上修正皆已用從實際檔案抽出的函式重新模擬測試：連通性
-               100%不變、對角切角穿牆情境不再發生、王房禁足仍正常運作
-             ・依玩家提供的韓文冒險洞穴參考地圖，重新設計迷宮風格與機制：
-               1)【迷宮改為稀疏蜿蜒風格】原本carveMaze()是填滿整個網格的
-                 密集迷宮(recursive backtracker走遍所有格子)，改寫成「帶
-                 轉向慣性的隨機漫步」：偏好持續同方向、強制避免長直線、
-                 只走出目標格數(約6成網格)的單一主通道並帶少量短分支，
-                 大部分區域維持實心岩塊，風格更接近參考圖那種手繪感的
-                 蜿蜒長廊，而不是規則網格迷宮。
-               2)【新增暗道機制】新增全域 MAP_WARPS[地圖id] 暗道/樓梯清單
-                 與 checkWarps()（掛入主更新迴圈，跟checkEdge()並列），
-                 每格記錄「踩到這裡要傳到哪裡」，分兩種：kind:'same'兩點
-                 互通(暗道)、kind:'map'傳到指定地圖的指定座標(樓梯)。
-                 loadMap()新增第三參數explicitSpawn，讓樓梯可以傳到任何
-                 一張地圖的任意座標，不再局限於地圖邊界。冒險洞穴1樓的
-                 迷宮路徑上安插了2組暗道(可瞬間互通的捷徑)跟1個通往2樓
-                 的內部樓梯(放在路徑最深處，不是地圖邊界)。新增T_STAIRS
-                 地磚樣式(向下凹陷的階梯剪影+淡紫光暈)標示這些位置。
-               3)【入口祭壇】1樓入口附近新增T_ALTAR地磚(偏暗紫色石板+
-                 符文光暈)，標示「這是從地面進來的入口」，比照參考圖左側
-                 的入口區域。
-               4)【2樓新增4間主題房間】新增 carveRoomBFS()：在既有通道旁
-                 直接鑿出長方形房間，用BFS自動找最近的通道並打通牆壁連過
-                 去(不受迷宮格子網格限制，可以放在地圖任意位置，保證一定
-                 連通)。冒險洞穴2樓依參考圖安插了水池房、骷髏房、夏洛柏房、
-                 巴風特房(原本的王房，維持魔法陣裝飾跟禁足機制不變)。
-             ・已用從實際檔案抽出的函式重新模擬測試：兩層樓連通性皆100%、
-               5個暗道/樓梯座標與磚塊類型正確、2樓4間房間全部確認連通。
-             ・修正傳送術在地監內的規則：地監(冒險洞穴1-2樓)是封閉迷宮，
-               施放傳送術應該只在「同一層」隨機換位置，不該把玩家傳到
-               野外去；反過來野外施放傳送術也不該誤把玩家傳進地監裡。
-               做法：buildTerminal()產生的冒險洞穴1-2樓地圖物件都標記
-               dungeon:true；WILD_MAP_IDS(野外隨機傳送候選池)拿掉cave／
-               cave2；castSpell()施放傳送術時，先判斷curMap.dungeon，
-               是的話改成在同一張地圖裡隨機找一個可站立的位置移動過去，
-               不是的話才維持原本「隨機切換到野外另一張地圖」的行為。
-             ・稻草人訓練場的稻草人不再顯示名字標籤(一堆同名稻草人掛名牌
-               看起來很怪，drawMobIso()新增判斷：m.type==='稻草人'時傳空
-               字串給nameTag()，其餘怪物名字顯示不受影響)。
-             ・稻草人不再顯示血條：訓練假人固定9999血量，顯示血條沒有實質
-               意義，drawMobIso()新增判斷提早return，跳過血條繪製那一段，
-               其餘怪物血條顯示不受影響。
-             ・修正稻草人看起來比玩家角色大的問題：用Pillow分析兩者的
-               sprite sheet發現，稻草人的圖案本身在64x64畫布內幾乎佔滿
-               (寬60px/高64px，佔比94%~100%)，而玩家角色的圖案只佔約
-               一半(寬30px/高31px，佔比47%~48%)；即使稻草人的MOB_SCALE
-               (1.0)比玩家固定使用的1.5小，實際換算後的顯示尺寸反而比
-               玩家還大。算出讓兩者實際顯示尺寸一致所需的縮放值後，把
-               MOB_SCALE['稻草人']從1.0調整為0.75(換算後約45x48px，玩家
-               是45x46px，兩者幾乎相同)。
-             ・修正冒險洞穴每次進圖都是不同迷宮格局的問題：carveMaze()
-               用Math.random()生成迷宮，但cave/cave2的MAP_BUILDERS每次
-               被呼叫(=每次進圖)都會整個重新執行一遍，等於每次進去都是
-               全新的隨機格局，暗道／樓梯／房間位置全部跟著變，玩家完全
-               沒辦法熟悉地圖。修法：新增DUNGEON_LAYOUTS版面快取，存進
-               localStorage('lineage_pixel_dungeon_layout_v1')。cave/
-               cave2的建圖函式改成先檢查是否已經生成過版面，有的話直接
-               沿用存好的資料(grid/exits/暗道清單/王房位置)重建地圖物件，
-               不再重新亂數生成；只有「從來沒生成過」時才會真的跑一次
-               carveMaze()產生新迷宮，並把結果存起來供之後重複使用。
-               另外在後台「怪物擺放」分頁，選到冒險洞穴1樓/2樓時新增
-               「🔀重新生成迷宮版面」按鈕，讓玩家可以自行選擇捨棄目前
-               版面、下次進圖時重新產生新的格局。已用模擬測試確認：
-               同一張地圖重複進圖3次版面完全一致，按下重新生成後才會
-               變成不同版面。
-             ・修正2樓回1樓時沒有從樓梯口出來的問題：根因是1樓的下樓
-               梯子已經改成「迷宮內部任意一點」的暗道式傳送(不再是地圖
-               邊界的實體出口)，但2樓回1樓那時候還沿用舊的「走到地圖
-               邊界」機制(gapN+ex.n)，而1樓早就沒有對應的南側邊界出口了，
-               於是回程時退回地圖預設的正中央座標(甚至可能剛好落在牆
-               裡)，不會準確回到原本下樓的那個位置。
-               修法：2樓不再鑿邊界出口(整張地圖邊界維持密封，入口跟出口
-               都改用內部傳送點處理)。1樓生成下樓梯時，把梯子的實際座標
-               記錄成stairsDown存進DUNGEON_LAYOUTS.cave；2樓生成時讀取
-               這個座標，在玩家傳送進來的那個落地點(跟1樓warp目的地一致)
-               安插一個回程樓梯，目的地精準設為1樓下樓梯的座標，這樣兩邊
-               樓梯的位置就完全對應，回1樓時會準確站在原本下樓的那個
-               樓梯口上。另外後台「重新生成迷宮」按鈕，重置1樓時會一併
-               連動重置2樓(因為2樓的回程座標是根據1樓位置算出來的，1樓
-               版面換了2樓也要跟著換，不然回程座標會對不上新版面)。
-               已用從實際檔案抽出的函式模擬測試驗證：2樓回程樓梯的目的
-               地座標，跟1樓下樓梯的實際座標完全一致，兩邊落點都確認是
-               可站立的樓梯磚，不是牆。
-             ・修正「2樓入口卡住、回不了1樓」的問題：根因是上一版修正
-               (2樓回程改用內部樓梯傳送)推出時，玩家瀏覽器裡已經存了
-               「更早之前」那版(2樓用邊界出口機制)生成的地城版面快取。
-               這份舊快取資料裡：新版程式讀取快取時會把回程用的warps
-               欄位當成undefined(舊快取本來就沒存這個欄位)，而快取還原
-               邏輯又寫死回傳空的exits(邊界出口資訊)，等於兩種回程機制
-               都失效了，玩家卡在2樓入口，哪個方向都出不去。
-               修法：把地城版面快取的localStorage key從
-               'lineage_pixel_dungeon_layout_v1'升級為'_v2'，讓舊版格式
-               的快取直接失效讀不到，強制以目前這版正確的程式碼重新生成
-               1樓、2樓的迷宮(讀到新檔案的玩家不需要自己手動清資料，
-               版本一升級舊快取自然就不會再被讀取)。
-             ・移除暗道／內部樓梯觸發時跳出的文字訊息：checkWarps()原本
-               每次觸動暗道或樓梯都會sysMsg()丟一則「觸動了暗道…」或
-               「踏上樓梯…」到聊天頻道，單純走迷宮就會一直洗版。改成
-               只保留playTeleportFx()的視覺特效，不再額外跳文字訊息。
-               （傳送術主動施法時的提示訊息維持不變，那是玩家主動下
-               指令觸發的，跟被動走路踩到暗道不同）
+v75 2026-08-22 掉落系統改版、變形卷軸手動使用、競技場擴充、NPC名條改版：
+             ・掉落系統：玩家反映很多怪打死不掉東西。查證後確認問題屬實
+               (長老只有2.5%會掉、狼人7.9%、妖魔鬥士9.7%，且史萊姆/人形
+               殭屍/杜賓犬/飄浮之眼/野豬完全沒有掉落表)。改為依怪物等級
+               保底掉落：Math.floor(lv/10)+1 件，1-9等1件、10-19等2件、
+               20-29等3件，以此類推。機率沒抽中足夠件數時，依各項機率
+               加權從該怪的清單中隨機補足(所以補出來的多是常見物，稀有物
+               仍維持稀有)。另補上前述5隻怪的掉落表。
+             ・後台掉落機率：新增editorSetDropRate()，每個已勾選的掉落物
+               旁邊都有機率輸入框(0.0001~100%)，武器/防具/道具/藥水/卷軸/
+               魔法書全部適用。面板上會顯示該怪等級與保底件數供參考。
+             ・變形卷軸改為可手動使用：原本只能透過ATS自動變身。新增
+               #morphw變身選單，點擊背包中的變形卷軸即開啟，依怪物等級
+               分組(MORPH_TIERS=[1,10,15,20,25,30,35,40,45,50])，玩家等級
+               達到門檻才能選該組怪物。排除世界王(boss:true)與稻草人。
+             ・史萊姆競技場擴充：選手13→20隻並加編號(slimeTag()輸出
+               「#18 獵鷹」格式)。NPC改為三位妖魔執行者：阿門(售票+開賽
+               倒數10秒喊GO)、梅格(終點宣布優勝者)、葛拉(北方公告賽事
+               資訊)，原售票員咕嚕移除。賽道由2格寬縮為1格
+               (ARENA_LANE_H=2，1格跑道+1格柵欄)。
+             ・NPC名條改版：新增nameTagJob()兩行顯示，第一行名字(白色)、
+               第二行職稱(淡青色#cdfcff，取樣自原版畫面)，皆為黑邊描邊。
+               為27位NPC加上職稱，部分NPC(瑞奇/傑瑞德)依原版
+               設定不給職稱。
+             ・柵欄改版：drawFenceIso()原本每格都畫同一角度的斜桿，看起來
+               像散落的木板。改為依四方鄰居決定往哪幾邊接出橫桿，相鄰格
+               首尾相接成直線、轉角形成直角，立柱最後畫蓋住接縫。
 ========================================
 v74 2026-08-21 製作視窗改版：
              ・把製作視窗從「單一長列表」改成兩層式(比照商店的呈現方式)：
@@ -701,6 +573,163 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
                取消時物品完整退回玩家背包；嘗試放入30種物品時正確停在
                24格上限。
 ========================================
+v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新增冒險洞穴內容、怪物出沒系統重構）：
+             ※ 8/19當天所有改動統一標示為v72（8/19最初的版本號），檔案
+               名稱內部仍用72.1／72.2…小數點區分每次交付的檔案，但遊戲
+               內顯示與這份紀錄一律維持v72，直到8/20才會變成v73。
+             ・改名為「天堂．像素版」；公告欄改版為徽章樣式版本紀錄
+             ・修正背包/魔法欄拖曳抖動、登入畫面左側細線等視覺瑕疵
+             ・移動速度整頓：玩家基礎速度改為1(一段加速1.5倍/二段2倍)、
+               統一所有怪物基礎速度、修正切換角色殘留加速、後台編輯器
+               「移動」欄位微調步進改為0.1
+             ・玩家名條依性向值(align)做藍/紅漸層變色
+             ・隊伍系統大幅強化：修正隊友無法升級的bug、改為隊伍平分經驗、
+               隊友有自己的性向與50級起的配點(存回自己的存檔)、新增隊友
+               資訊視窗(HP/MP/EXP/裝備/ATS設定)、怪物現在也會攻擊隊友
+               (HP歸零會被擊倒、20秒後自動起身)、隊友的自動喝水/加速/
+               主動技能/被動技能光環全部接上實際效果(含正確的法術特效
+               與範圍傷害)，並修正MP不回復、加速道具沒作用等多個潛藏bug
+             ・新增冒險洞穴5隻怪物(骷髏弓箭手/斧手/槍兵、史巴托、巴風特)，
+               含正確的8方位動畫與掉落表
+             ・怪物出沒系統重構為「勾選＋存檔」：所有地圖預設清空怪物，
+               後台「怪物擺放」分頁勾選怪物種類、按存檔才生效(面板內顯示
+               存檔成功提示，不佔用遊戲聊天頻道)；解除5隻怪物的地圖鎖定、
+               巴風特比照克特做成世界王全區僅一隻
+             ・冒險洞穴新增2樓，1樓南側樓梯可通往，怪物擺放可分層設定
+             ・冒險洞穴改造成真正的地牢迷宮：新增薄石牆(T_STONEWALL)與
+               魔法陣(T_MAGICCIRCLE)兩種地磚，新增carveMaze()迷宮生成器
+               (隨機化深度優先搜尋生成一棵涵蓋全部格子的生成樹，保證從
+               入口能走到任何一格，不會有孤立死區)，牆厚1格、通道寬2格；
+               2樓右下角額外開出3×3格區塊合併成「王房」，中央鋪魔法陣，
+               巴風特只會生成在王房裡，並新增m.confine禁足限制不會走出去，
+               一般怪物則反過來不會出現在王房裡；新增hasLineOfSight()視線
+               判定，怪物隔著牆看不到目標就無法攻擊。以上皆已用從實際檔案
+               抽出的函式做過連通性/王房可達性/視線遮蔽/禁足邊界的模擬測試
+             ・版本紀錄整理：同一天累積的多次改版統一標示為同一個版號
+             ・修正兩個回報問題：
+               1)【怪物穿牆】根因是怪物移動判定的X/Y兩軸碰撞檢查「同時」用
+                 移動前的舊座標各自獨立計算，斜角移動時兩軸各自檢查都可能
+                 通過，但實際的斜角終點卻落在牆角裡(這是軸分離碰撞系統的
+                 經典bug，牆越薄、通道越窄就越容易被利用，之前的厚牆村莊
+                 不明顯，換成迷宮的薄石牆後就很容易被撞見)。改成跟玩家
+                 movePlayer()一樣「循序」判定：X軸先算好、真的移動之後，
+                 Y軸才用「剛剛更新過的」新x去檢查，徹底消除切角穿牆；並
+                 加上移動子步進(每步最多16px)，避免以後怪物被設定超高速時
+                 一步跳過整片薄牆。
+               2)【迷宮幾乎直通】根因是buildTerminal()原本處理出入口的
+                 內建邏輯，會從地圖邊界直接拉一條到地圖正中央的直線通道
+                 (vLane)，我先前生成迷宮時保留了既有通道，這條「捷徑」就
+                 完整留在迷宮正中央，等於是直接從入口打通到出口。改成
+                 cave/cave2不再用buildTerminal自動處理出入口，改在生成
+                 迷宮前只鑿邊界的小缺口(不拉直線)，並讓迷宮入口對齊在
+                 邊界那一列，逼玩家從頭到尾都要走迷宮本身；另外生成完成後
+                 加了低機率(5%)的隨機打通(braid)增加迴路，讓路徑不只一條、
+                 更有探索感，但沒有高到讓最短路徑又變回直線捷徑。
+                 修正前：入口到南側出口最短路徑只有約39格(直線距離約32格)
+                 修正後：同樣起訖點最短路徑變成105格，路徑感明顯複雜許多
+             ・以上修正皆已用從實際檔案抽出的函式重新模擬測試：連通性
+               100%不變、對角切角穿牆情境不再發生、王房禁足仍正常運作
+             ・依玩家提供的韓文冒險洞穴參考地圖，重新設計迷宮風格與機制：
+               1)【迷宮改為稀疏蜿蜒風格】原本carveMaze()是填滿整個網格的
+                 密集迷宮(recursive backtracker走遍所有格子)，改寫成「帶
+                 轉向慣性的隨機漫步」：偏好持續同方向、強制避免長直線、
+                 只走出目標格數(約6成網格)的單一主通道並帶少量短分支，
+                 大部分區域維持實心岩塊，風格更接近參考圖那種手繪感的
+                 蜿蜒長廊，而不是規則網格迷宮。
+               2)【新增暗道機制】新增全域 MAP_WARPS[地圖id] 暗道/樓梯清單
+                 與 checkWarps()（掛入主更新迴圈，跟checkEdge()並列），
+                 每格記錄「踩到這裡要傳到哪裡」，分兩種：kind:'same'兩點
+                 互通(暗道)、kind:'map'傳到指定地圖的指定座標(樓梯)。
+                 loadMap()新增第三參數explicitSpawn，讓樓梯可以傳到任何
+                 一張地圖的任意座標，不再局限於地圖邊界。冒險洞穴1樓的
+                 迷宮路徑上安插了2組暗道(可瞬間互通的捷徑)跟1個通往2樓
+                 的內部樓梯(放在路徑最深處，不是地圖邊界)。新增T_STAIRS
+                 地磚樣式(向下凹陷的階梯剪影+淡紫光暈)標示這些位置。
+               3)【入口祭壇】1樓入口附近新增T_ALTAR地磚(偏暗紫色石板+
+                 符文光暈)，標示「這是從地面進來的入口」，比照參考圖左側
+                 的入口區域。
+               4)【2樓新增4間主題房間】新增 carveRoomBFS()：在既有通道旁
+                 直接鑿出長方形房間，用BFS自動找最近的通道並打通牆壁連過
+                 去(不受迷宮格子網格限制，可以放在地圖任意位置，保證一定
+                 連通)。冒險洞穴2樓依參考圖安插了水池房、骷髏房、夏洛柏房、
+                 巴風特房(原本的王房，維持魔法陣裝飾跟禁足機制不變)。
+             ・已用從實際檔案抽出的函式重新模擬測試：兩層樓連通性皆100%、
+               5個暗道/樓梯座標與磚塊類型正確、2樓4間房間全部確認連通。
+             ・修正傳送術在地監內的規則：地監(冒險洞穴1-2樓)是封閉迷宮，
+               施放傳送術應該只在「同一層」隨機換位置，不該把玩家傳到
+               野外去；反過來野外施放傳送術也不該誤把玩家傳進地監裡。
+               做法：buildTerminal()產生的冒險洞穴1-2樓地圖物件都標記
+               dungeon:true；WILD_MAP_IDS(野外隨機傳送候選池)拿掉cave／
+               cave2；castSpell()施放傳送術時，先判斷curMap.dungeon，
+               是的話改成在同一張地圖裡隨機找一個可站立的位置移動過去，
+               不是的話才維持原本「隨機切換到野外另一張地圖」的行為。
+             ・稻草人訓練場的稻草人不再顯示名字標籤(一堆同名稻草人掛名牌
+               看起來很怪，drawMobIso()新增判斷：m.type==='稻草人'時傳空
+               字串給nameTag()，其餘怪物名字顯示不受影響)。
+             ・稻草人不再顯示血條：訓練假人固定9999血量，顯示血條沒有實質
+               意義，drawMobIso()新增判斷提早return，跳過血條繪製那一段，
+               其餘怪物血條顯示不受影響。
+             ・修正稻草人看起來比玩家角色大的問題：用Pillow分析兩者的
+               sprite sheet發現，稻草人的圖案本身在64x64畫布內幾乎佔滿
+               (寬60px/高64px，佔比94%~100%)，而玩家角色的圖案只佔約
+               一半(寬30px/高31px，佔比47%~48%)；即使稻草人的MOB_SCALE
+               (1.0)比玩家固定使用的1.5小，實際換算後的顯示尺寸反而比
+               玩家還大。算出讓兩者實際顯示尺寸一致所需的縮放值後，把
+               MOB_SCALE['稻草人']從1.0調整為0.75(換算後約45x48px，玩家
+               是45x46px，兩者幾乎相同)。
+             ・修正冒險洞穴每次進圖都是不同迷宮格局的問題：carveMaze()
+               用Math.random()生成迷宮，但cave/cave2的MAP_BUILDERS每次
+               被呼叫(=每次進圖)都會整個重新執行一遍，等於每次進去都是
+               全新的隨機格局，暗道／樓梯／房間位置全部跟著變，玩家完全
+               沒辦法熟悉地圖。修法：新增DUNGEON_LAYOUTS版面快取，存進
+               localStorage('lineage_pixel_dungeon_layout_v1')。cave/
+               cave2的建圖函式改成先檢查是否已經生成過版面，有的話直接
+               沿用存好的資料(grid/exits/暗道清單/王房位置)重建地圖物件，
+               不再重新亂數生成；只有「從來沒生成過」時才會真的跑一次
+               carveMaze()產生新迷宮，並把結果存起來供之後重複使用。
+               另外在後台「怪物擺放」分頁，選到冒險洞穴1樓/2樓時新增
+               「🔀重新生成迷宮版面」按鈕，讓玩家可以自行選擇捨棄目前
+               版面、下次進圖時重新產生新的格局。已用模擬測試確認：
+               同一張地圖重複進圖3次版面完全一致，按下重新生成後才會
+               變成不同版面。
+             ・修正2樓回1樓時沒有從樓梯口出來的問題：根因是1樓的下樓
+               梯子已經改成「迷宮內部任意一點」的暗道式傳送(不再是地圖
+               邊界的實體出口)，但2樓回1樓那時候還沿用舊的「走到地圖
+               邊界」機制(gapN+ex.n)，而1樓早就沒有對應的南側邊界出口了，
+               於是回程時退回地圖預設的正中央座標(甚至可能剛好落在牆
+               裡)，不會準確回到原本下樓的那個位置。
+               修法：2樓不再鑿邊界出口(整張地圖邊界維持密封，入口跟出口
+               都改用內部傳送點處理)。1樓生成下樓梯時，把梯子的實際座標
+               記錄成stairsDown存進DUNGEON_LAYOUTS.cave；2樓生成時讀取
+               這個座標，在玩家傳送進來的那個落地點(跟1樓warp目的地一致)
+               安插一個回程樓梯，目的地精準設為1樓下樓梯的座標，這樣兩邊
+               樓梯的位置就完全對應，回1樓時會準確站在原本下樓的那個
+               樓梯口上。另外後台「重新生成迷宮」按鈕，重置1樓時會一併
+               連動重置2樓(因為2樓的回程座標是根據1樓位置算出來的，1樓
+               版面換了2樓也要跟著換，不然回程座標會對不上新版面)。
+               已用從實際檔案抽出的函式模擬測試驗證：2樓回程樓梯的目的
+               地座標，跟1樓下樓梯的實際座標完全一致，兩邊落點都確認是
+               可站立的樓梯磚，不是牆。
+             ・修正「2樓入口卡住、回不了1樓」的問題：根因是上一版修正
+               (2樓回程改用內部樓梯傳送)推出時，玩家瀏覽器裡已經存了
+               「更早之前」那版(2樓用邊界出口機制)生成的地城版面快取。
+               這份舊快取資料裡：新版程式讀取快取時會把回程用的warps
+               欄位當成undefined(舊快取本來就沒存這個欄位)，而快取還原
+               邏輯又寫死回傳空的exits(邊界出口資訊)，等於兩種回程機制
+               都失效了，玩家卡在2樓入口，哪個方向都出不去。
+               修法：把地城版面快取的localStorage key從
+               'lineage_pixel_dungeon_layout_v1'升級為'_v2'，讓舊版格式
+               的快取直接失效讀不到，強制以目前這版正確的程式碼重新生成
+               1樓、2樓的迷宮(讀到新檔案的玩家不需要自己手動清資料，
+               版本一升級舊快取自然就不會再被讀取)。
+             ・移除暗道／內部樓梯觸發時跳出的文字訊息：checkWarps()原本
+               每次觸動暗道或樓梯都會sysMsg()丟一則「觸動了暗道…」或
+               「踏上樓梯…」到聊天頻道，單純走迷宮就會一直洗版。改成
+               只保留playTeleportFx()的視覺特效，不再額外跳文字訊息。
+               （傳送術主動施法時的提示訊息維持不變，那是玩家主動下
+               指令觸發的，跟被動走路踩到暗道不同）
+========================================
+
 -->
 <html lang="zh-TW">
 <head>
@@ -945,6 +974,20 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
   /* 商店 */
   #shopw{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:95;}
   #shopw.on{display:block;}
+  /* 變身選單：位置/大小比照商店視窗 */
+  #morphw{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:97;}
+  #morphw.on{display:block;}
+  #morphw .win{background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 6px 24px rgba(0,0,0,.6);border-radius:5px;width:100%;height:500px;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#e8dcc0;padding:10px;}
+  #morphw h2{margin:0 0 8px;font-size:17px;color:#f2d489;display:flex;justify-content:space-between;align-items:center;}
+  #morphw .mbody{flex:1;min-height:0;overflow-y:auto;}
+  #morphw .mgrp{font-size:15px;font-weight:bold;color:#ffd94a;margin:10px 0 5px;padding-bottom:3px;border-bottom:1px solid #6b4d22;}
+  #morphw .mgrp:first-child{margin-top:0;}
+  #morphw .mitem{display:block;width:100%;text-align:left;padding:8px 11px;margin-bottom:4px;font-size:16px;cursor:pointer;
+    color:#e8dcc0;background:linear-gradient(#2e2618,#1e1810);border:2px solid #5a4a2a;border-radius:5px;}
+  #morphw .mitem:hover{border-color:#e8c060;background:linear-gradient(#3e3420,#2a2214);color:#fff;}
+  #morphw .mitem .mlv{float:right;color:#a89878;font-size:13px;}
+  #morphw .mlock{opacity:.4;cursor:not-allowed;}
+  #morphw .mnote{font-size:12px;color:#a89878;line-height:1.6;margin-bottom:6px;}
   /* 競技場視窗：位置/大小比照商店視窗 */
   #arenaw{position:absolute;top:6px;left:6px;width:320px;display:none;z-index:96;}
   #arenaw.on{display:block;}
@@ -1584,6 +1627,12 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
   <div id="atsw"><h2>⚡ SUPER ATS <button class="sx" onclick="toggleWin('atsw')">關閉</button></h2>
     <div class="atsTabs"><button class="atTab on" id="atTab_ats" onclick="setAtTab('ats')">ATS</button><button class="atTab" id="atTab_enh" onclick="setAtTab('enh')">AT強化</button></div>
     <div id="atsBody"></div><div id="atEnhBody" style="display:none"></div></div>
+  <!-- 變身選單：使用變形卷軸後跳出，依等級分類列出可變身的怪物 -->
+  <div id="morphw"><div class="win">
+    <h2>變形卷軸 <button class="sx" onclick="closeMorph()">關閉</button></h2>
+    <div class="mbody" id="morphBody"></div>
+  </div></div>
+
   <!-- 史萊姆競技場：售票／兌獎 與 賽事情報 -->
   <div id="arenaw"><div class="win">
     <h2 id="arenaTitle">史萊姆競技場 <button class="sx" onclick="closeArena()">關閉</button></h2>
@@ -1660,13 +1709,25 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
     <div id="titleLogo">天堂 · 像素版</div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
-      <div id="noticeBody"><div class="noticeVer">◆ v74（2026-08-21）</div>
+      <div id="noticeBody"><div class="noticeVer">◆ v75（2026-08-22）</div>
 <ul>
-<li><b>掉落系統大改版</b>：怪物死亡時會依等級保底掉落（1-9等至少1件、10-19等2件、20-29等3件，每10等再+1），高等怪更有價值。同時補上史萊姆、人形殭屍、杜賓犬、飄浮之眼、野豬原本完全沒有的掉落表</li>
-<li><b>後台掉落設定強化</b>：每個已勾選的掉落物旁邊都能直接修改掉落機率（%），武器、防具、道具、藥水、卷軸、魔法書全部適用</li>
+<li><b>冒險洞穴大幅擴建</b>：1樓與2樓從 40×34 放大為 <b>91×91</b>（面積 6 倍），通道長度約 8 倍。兩層都新增主題房間（礦坑、地底湖、石柱廳、水池房、骷髏房等）。<b>迷宮版面已固定</b>，每次登入都是同一張地圖，可以記住路線。傳送過去會直接抵達該層入口</li>
+<li><b>掉落系統大改版</b>：怪物依等級保底掉落（1-9等至少1件、10-19等2件，每10等再+1），高等怪更有價值。同時補上史萊姆、人形殭屍、杜賓犬、飄浮之眼、野豬原本完全沒有的掉落表</li>
+<li><b>後台掉落機率設定</b>：每個已勾選的掉落物旁邊可直接修改掉落機率（%），武器、防具、道具、藥水、卷軸、魔法書全部適用</li>
+<li><b>變形卷軸可手動使用</b>：在背包點擊變形卷軸會跳出變身選單，依怪物等級分組，達到等級即可點名字直接變身，持續20分鐘</li>
+<li><b>妖精屬性魔法</b>：妖精森林的艾利溫可締結屬性契約（地／水／火／風）。締約後只能學習一般精靈水晶與該屬性的水晶，也可選擇「忘記魔法」重新締約</li>
+<li><b>史萊姆競技場大擴充</b>：選手增為 20 隻並加上編號（「#18 獵鷹」）。三位妖魔執行者各司其職——阿門售票並在開賽前倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉公告賽事資訊。巴風特的傳送魔法陣改開在王房內</li>
+<li><b>新增聊天氣泡</b>：角色說話時頭上會冒出對話框。競技場有 30 位各種風格 ID 的虛擬玩家，會在場邊走動並成群聊天，同時約 10～15 人在講話</li>
+<li><b>NPC 名條改版</b>：改成兩行顯示，第一行名字、第二行職稱，例如「艾爾／【倉庫管理員】」</li>
+<li><b>柵欄改版</b>：圍欄會依相鄰狀況自動連接成直線，轉角形成完整直角</li>
+<li>其他：里迪可製作精靈餅乾；修正傳送進洞穴會卡在牆裡的問題</li>
+</ul>
+<div class="noticeVer">◆ v74（2026-08-21）</div>
+<ul>
 <li><b>新增寵物系統</b>：吃下「漂浮之眼肉」後 5 分鐘內打倒狼／牧羊犬／杜賓犬即可收服，成功會獲得「項圈」。寵物會跟隨、自動戰鬥、分經驗升級，每隻的力量／體力／敏捷都是捕獲當下隨機決定，同種類資質也不同。可帶數量依魅力計算</li>
 <li><b>寵物管理</b>：社交視窗新增「隊友／寵物」書籤，可查看寵物數值、改名、放生</li>
-<li><b>新增史萊姆競技場（賭場）</b>：可從傳送清單前往。13 隻選手輪番上陣（含傳奇明星「流星」），每場隨機抽 5 隻，全程約 40 秒可實際觀戰。找售票員買票下注（一張 200 金幣），找管理員查看勝率、賠率與歷史戰績</li>
+<li><b>新增史萊姆競技場（賭場）</b>：可從傳送清單前往。20 隻編號選手輪番上陣（顯示為「#18 獵鷹」，含傳奇明星「#1 流星」），每場隨機抽 5 隻，全程約 40 秒可實際觀戰。三位妖魔執行者各司其職：阿門在起點倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉在北方公告賽事資訊。阿門同時負責售票（一張 200 金幣）</li>
+<li><b>新增聊天氣泡</b>：角色說話時頭上會冒出白框透明對話框。競技場有 <b>30 位</b>各種風格 ID 的虛擬玩家（中二煞氣、台客文青、古風、食物、諧音搞笑等），會在場邊走動並成群聊天，同時約有 10～15 人在講話。虛擬玩家的名字平常隱藏，滑鼠移過去才顯示。玩家自己在聊天欄說話也會冒氣泡</li>
 <li><b>世界王強化</b>：出招節奏大幅加快（一階段 1 秒、二階段 0.5 秒、狂暴 0.25 秒一招）；王座之間的傳送陣換成全新的惡魔召喚魔法陣，並放大為 2×2 共 4 格</li>
 <li><b>製作視窗改版</b>：改成兩層式，先看配方清單、點進去才顯示完整材料，畫面不再被擠壓。數量欄兩側有大顆 ▼▲ 按鈕，在 1 時按 ▼ 可直接跳到可製作的最大數量</li>
 <li><b>角色可以改名了</b>：角色資訊與隊友資訊視窗都能改名，隊友改名會連動更新該角色的存檔</li>
@@ -2007,6 +2068,15 @@ function hLane(g,r,x0,x1){ for(let x=x0;x<=x1;x++){ g[r][x]=T_PATH; g[r+1][x]=T_
    回傳值含 mainPath(主路徑格子座標序列)，方便後續在特定路徑點上安插暗道/樓梯。*/
 function carveMaze(g,W,H,entryX,entryY,opts){
   opts=opts||{};
+  /* 固定版面：用「可指定種子」的偽亂數取代 Math.random()，同一個種子永遠生成同一張迷宮。
+     這樣玩家每次登入看到的都是同一張地圖，可以真正記住路線；不給種子時才退回真隨機。*/
+  var _seed=(opts.seed!=null)?(opts.seed>>>0):(Math.random()*4294967296)>>>0;
+  function _rnd(){                                              // xorshift32：輕量、穩定、跨瀏覽器結果一致
+    _seed^=_seed<<13; _seed>>>=0;
+    _seed^=_seed>>>17;
+    _seed^=_seed<<5;  _seed>>>=0;
+    return _seed/4294967296;
+  }
   const PITCH=3, ix0=1, iy0=1;                                  // 每格3格距(2格通道+1格薄牆)，從邊界內縮1格開始
   const cols=Math.floor((W-2-2)/PITCH)+1, rows=Math.floor((H-2-2)/PITCH)+1;
   const targetCells=opts.targetCells || Math.floor(cols*rows*0.6);
@@ -2028,17 +2098,17 @@ function carveMaze(g,W,H,entryX,entryY,opts){
   const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
   const mainPath=[[entryCol,entryRow]];
   visited[entryRow][entryCol]=true; carveCell(entryCol,entryRow);
-  let cxi=entryCol, cyi=entryRow, curDir=Math.floor(Math.random()*4), straightRun=0;
+  let cxi=entryCol, cyi=entryRow, curDir=Math.floor(_rnd()*4), straightRun=0;
   let carved=1, tries=0;
   const branches=[];
   while(carved<targetCells && tries<targetCells*30){
     tries++;
     let dirOrder;
     const forceTurn = straightRun>=maxStraight;
-    const r=Math.random();
+    const r=_rnd();
     if(!forceTurn && r<0.40) dirOrder=[curDir, (curDir+1)%4, (curDir+3)%4, (curDir+2)%4];    // 62%延續原方向(強制轉彎除外)
     else if(r<0.85) dirOrder=[(curDir+1)%4,(curDir+3)%4,curDir,(curDir+2)%4];                 // 偏好輕轉彎
-    else dirOrder=[0,1,2,3].sort(()=>Math.random()-0.5);                                       // 少量完全隨機
+    else dirOrder=[0,1,2,3].sort(()=>_rnd()-0.5);                                       // 少量完全隨機
     let moved=false;
     for(const d of dirOrder){
       const [dx,dy]=DIRS[d]; const nxi=cxi+dx, nyi=cyi+dy;
@@ -2047,10 +2117,10 @@ function carveMaze(g,W,H,entryX,entryY,opts){
       mainPath.push([nxi,nyi]);
       straightRun = (d===curDir) ? straightRun+1 : 0;
       cxi=nxi; cyi=nyi; curDir=d; carved++; moved=true;
-      if(Math.random()<branchChance){                          // 額外分岔：從目前這格往其他方向開一條短支線(1~3格)
-        let bxi=cxi, byi=cyi, blen=1+Math.floor(Math.random()*3), branch=[[bxi,byi]];
+      if(_rnd()<branchChance){                          // 額外分岔：從目前這格往其他方向開一條短支線(1~3格)
+        let bxi=cxi, byi=cyi, blen=1+Math.floor(_rnd()*3), branch=[[bxi,byi]];
         for(let b=0;b<blen;b++){
-          const bd=Math.floor(Math.random()*4); const [bdx,bdy]=DIRS[bd];
+          const bd=Math.floor(_rnd()*4); const [bdx,bdy]=DIRS[bd];
           const bnxi=bxi+bdx, bnyi=byi+bdy;
           if(bnxi<1||bnxi>=cols-1||bnyi<1||bnyi>=rows-1||visited[bnyi][bnxi]) break;
           visited[bnyi][bnxi]=true; carveCell(bnxi,bnyi); linkCells(bxi,byi,bnxi,bnyi);
@@ -2066,8 +2136,8 @@ function carveMaze(g,W,H,entryX,entryY,opts){
         const [pxi,pyi]=mainPath[k];
         if(DIRS.some(([dx,dy])=>{const nx=pxi+dx,ny=pyi+dy; return nx>=1&&nx<cols-1&&ny>=1&&ny<rows-1&&!visited[ny][nx];})){ pick=mainPath[k]; break; }
       }
-      if(!pick) pick=mainPath[Math.floor(Math.random()*mainPath.length)];
-      cxi=pick[0]; cyi=pick[1]; curDir=Math.floor(Math.random()*4); straightRun=0;
+      if(!pick) pick=mainPath[Math.floor(_rnd()*mainPath.length)];
+      cxi=pick[0]; cyi=pick[1]; curDir=Math.floor(_rnd()*4); straightRun=0;
     }
   }
   return {cols,rows,cellAt,mainPath,branches,carved};
@@ -2075,6 +2145,43 @@ function carveMaze(g,W,H,entryX,entryY,opts){
 /* 在既有通道旁直接鑿出一間長方形房間(不受限於迷宮格子網格的邊界)，用BFS從房間邊緣往外找最近的
    既有通道，沿路把薄石牆打通接過去(順便加寬到2格)，保證房間一定連通到主迷宮，可以放在地圖任意位置。
    gx0,gy0,gx1,gy1：房間的格子座標範圍(含頭尾)。回傳房間的像素座標範圍(供怪物生成/王房禁足使用)。*/
+/* carveMaze 的隨機行走不會走訪到「最外圈」的迷宮格，導致地圖四周固定留下約4格厚的未鑿死區，
+   看起來像超厚的外牆。這裡在鑿完迷宮後補鑿外圈，並各自連回內側鄰居，讓通道一路鋪到邊界，
+   外牆就只剩1格厚，多出來的空間也變成可以探索的迷宮。*/
+function carveMazeOuterRing(g,W,H){
+  const PITCH=3, ix0=1, iy0=1;
+  const cols=Math.floor((W-2-2)/PITCH)+1, rows=Math.floor((H-2-2)/PITCH)+1;
+  const cellAt=(cxi,cyi)=>({x:ix0+cxi*PITCH, y:iy0+cyi*PITCH});
+  const carveCell=function(p){                                   // 鑿出2x2的通道格
+    for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++){
+      const x=p.x+dx, y=p.y+dy;
+      if(x>0&&y>0&&x<W-1&&y<H-1) g[y][x]=T_DIRT;
+    }
+  };
+  const link=function(a,b){                                      // 打通兩個相鄰格之間的薄牆
+    const x0=Math.min(a.x,b.x), x1=Math.max(a.x,b.x);
+    const y0=Math.min(a.y,b.y), y1=Math.max(a.y,b.y);
+    for(let y=y0;y<=y1+1;y++)for(let x=x0;x<=x1+1;x++){
+      if(x>0&&y>0&&x<W-1&&y<H-1) g[y][x]=T_DIRT;
+    }
+  };
+  for(let cx=0;cx<cols;cx++){
+    for(const cy of [0,rows-1]){
+      const p=cellAt(cx,cy); carveCell(p);
+      const inner=cellAt(cx, cy===0?1:rows-2);
+      if(rows>1) link(p,inner);
+      if(cx>0) link(cellAt(cx-1,cy),p);                          // 沿著外圈也互相打通
+    }
+  }
+  for(let cy=0;cy<rows;cy++){
+    for(const cx of [0,cols-1]){
+      const p=cellAt(cx,cy); carveCell(p);
+      const inner=cellAt(cx===0?1:cols-2, cy);
+      if(cols>1) link(p,inner);
+      if(cy>0) link(cellAt(cx,cy-1),p);
+    }
+  }
+}
 function carveRoomBFS(g,gx0,gy0,gx1,gy1){
   const H=g.length, W=g[0].length;
   for(let y=Math.max(1,gy0);y<=Math.min(H-2,gy1);y++)for(let x=Math.max(1,gx0);x<=Math.min(W-2,gx1);x++) g[y][x]=T_DIRT;
@@ -2168,25 +2275,22 @@ function buildSlimeArena(){
   for(let y=0;y<H;y++){ g[y][0]=T_TOWNWALL; g[y][W-1]=T_TOWNWALL; }
   // 觀眾區(左側)鋪石板，跟賽道區分開
   for(let y=1;y<H-1;y++)for(let x=1;x<ARENA_X0-1;x++) g[y][x]=T_PATH;
-  // 5條賽道：每條佔2格高，之間用柵欄分隔。整個賽道區四周完全圍起來，玩家無法進出(比照真實賽馬場)
-  const trackTop=ARENA_Y0-1, trackBot=ARENA_Y0+(ARENA_LANES-1)*3+2;
+  // 5條賽道：每條只有1格寬(剛好容納一隻史萊姆)，之間用柵欄分隔。整區四周完全圍起，玩家無法進出
+  const trackTop=ARENA_Y0-1, trackBot=ARENA_Y0+(ARENA_LANES-1)*ARENA_LANE_H+1;
   for(let ln=0;ln<ARENA_LANES;ln++){
-    const y0=ARENA_Y0+ln*3;
+    const y0=ARENA_Y0+ln*ARENA_LANE_H;
     for(let x=ARENA_X0;x<ARENA_X0+ARENA_LEN;x++){
-      g[y0][x]=T_GRASS; g[y0+1][x]=T_GRASS;                                      // 跑道
-      if(ln<ARENA_LANES-1) g[y0+2][x]=T_FENCE;                                   // 賽道之間的分隔柵欄
+      g[y0][x]=T_GRASS;                                                          // 跑道(1格寬)
+      if(ln<ARENA_LANES-1) g[y0+1][x]=T_FENCE;                                   // 賽道之間的分隔柵欄
     }
+    g[y0][ARENA_X0]=T_PATH;                                                      // 起跑線(石板)
+    g[y0][ARENA_X0+ARENA_LEN-1]=T_FLOWER;                                        // 終點線(花)
   }
   for(let x=ARENA_X0-1;x<=ARENA_X0+ARENA_LEN;x++){                               // 上下兩側圍欄
     g[trackTop][x]=T_FENCE; g[trackBot][x]=T_FENCE;
   }
   for(let y=trackTop;y<=trackBot;y++){                                           // 左右兩側圍欄(起跑閘門/終點牆)
     g[y][ARENA_X0-1]=T_FENCE; g[y][ARENA_X0+ARENA_LEN]=T_FENCE;
-  }
-  for(let ln=0;ln<ARENA_LANES;ln++){                                             // 起點與終點的地面標示
-    const y0=ARENA_Y0+ln*3;
-    g[y0][ARENA_X0]=T_PATH;   g[y0+1][ARENA_X0]=T_PATH;                          // 起跑線(石板)
-    g[y0][ARENA_X0+ARENA_LEN-1]=T_FLOWER; g[y0+1][ARENA_X0+ARENA_LEN-1]=T_FLOWER;// 終點線(花)
   }
   g[H-2][2]=T_SIGN;                                                              // 場館告示牌
   gapS(g, 5, ex, 'village');                                                     // 南側出口回村莊
@@ -2222,7 +2326,9 @@ function buildCross(name,id,sides){ const W=40,H=34,g=NG(W,H),ex={},houses=[], c
   scatterTrees(g,60,7);
   return {name,id,wild:true,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
 }
-function buildTerminal(name,id,wild,back,extra){ const W=40,H=34,g=NG(W,H),ex={},houses=[], cx=19,cy=16;
+function buildTerminal(name,id,wild,back,extra,size){   // size 可選：{W,H}，不給就用預設 40x34
+  const W=(size&&size.W)||40, H=(size&&size.H)||34, g=NG(W,H),ex={},houses=[],
+        cx=Math.floor(W/2), cy=Math.floor(H/2);
   border(g);
   for(const side in back){ const to=back[side];
     if(side==='n'){ gapN(g,cx,ex,to); vLane(g,cx,1,cy); }
@@ -2231,7 +2337,20 @@ function buildTerminal(name,id,wild,back,extra){ const W=40,H=34,g=NG(W,H),ex={}
     if(side==='e'){ gapE(g,cy,ex,to); hLane(g,cy,cx,W-2); }
   }
   if(extra) extra(g,{W,H,cx,cy,ex});
-  return {name,id,wild,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
+  // 出生點預設是地圖正中央，但迷宮類地圖(冒險洞穴)可能把中央填成牆，
+  // 導致用傳送卷軸過來時卡在牆裡動不了。這裡統一往外找最近的可站立格。
+  let sx=cx, sy=cy;
+  if(T_SOLID.has(g[sy][sx])){
+    let found=false;
+    for(let r=1;r<Math.max(W,H)&&!found;r++){
+      for(let dy=-r;dy<=r&&!found;dy++)for(let dx=-r;dx<=r&&!found;dx++){
+        if(Math.max(Math.abs(dx),Math.abs(dy))!==r) continue;
+        const nx=cx+dx, ny=cy+dy;
+        if(nx>0&&ny>0&&nx<W-1&&ny<H-1&&!T_SOLID.has(g[ny][nx])){ sx=nx; sy=ny; found=true; }
+      }
+    }
+  }
+  return {name,id,wild,grid:g,houses,exits:ex,px:sx*TS,py:sy*TS,W,H};
 }
 function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},houses=[];
   const VX0=3,VX1=W-4,VY0=3,VY1=H-4, cx=W>>1, cy=H>>1;
@@ -2255,7 +2374,7 @@ function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},
 /* 地城(冒險洞穴)版面持久化：迷宮用亂數生成，若每次進圖都重新生成會導致玩家每次進去都是完全不同的
    格局(暗門/樓梯位置也會跟著變)，無法熟悉地圖。改成只在「第一次」生成迷宮，之後存進localStorage，
    下次進圖直接讀取存好的版面，格局、暗道、王房位置都會維持一致，直到玩家自己在後台清除重置。*/
-const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v3';   // v2→v3：樓梯/暗道的落地點座標改成偏移1格(不再疊在觸發格上)，升版讓舊快取失效、強制重新生成正確版本
+const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v11';   // v10→v11：迷宮改為固定種子生成(版面永遠相同)、移除舊的裝飾魔法陣   // v9→v10：1樓新增5間主題房、巴風特魔法陣改開在王房內   // v8→v9：傳送落點改為各層入口(不再落在地圖中央)   // v7→v8：修正傳送進洞穴會卡在牆裡的問題(出生點自動避開牆壁)   // v6→v7：修正1樓尺寸參數沒生效的bug，1F/2F都是91x91   // v5→v6：迷宮91x91、密度提高、補鑿外圈讓外牆只剩1格   // v3→v4：迷宮尺寸由40x34放大為90x90，舊快取失效重新生成   
 function loadDungeonLayouts(){ try{ var r=localStorage.getItem(DUNGEON_LAYOUT_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
 function saveDungeonLayouts(){ try{ localStorage.setItem(DUNGEON_LAYOUT_KEY, JSON.stringify(DUNGEON_LAYOUTS)); }catch(e){} }
 let DUNGEON_LAYOUTS=loadDungeonLayouts();
@@ -2280,7 +2399,20 @@ const MAP_BUILDERS = {
     let stairsDown=null;
     const m=buildTerminal('冒險洞穴1樓','cave',true,null,(g,o)=>{
     gapN(g,o.cx,o.ex,'cross_w');                                  // 只鑿邊界小缺口，不拉直線到地圖中心(避免出現直通捷徑)
-    const info=carveMaze(g,o.W,o.H,o.cx,1,{targetCells:110, branchChance:0.14});   // 稀疏蜿蜒主通道，覆蓋約6成地圖(不是填滿全部的密集迷宮)
+    const info=carveMaze(g,o.W,o.H,o.cx,1,{targetCells:820, branchChance:0.16, seed:0x5AFE1F00});   // 固定種子：每次生成的迷宮完全相同
+    carveMazeOuterRing(g,o.W,o.H);   // 補鑿外圈，讓迷宮鋪到邊界、外牆只剩1格   // 91x91：通道量等比放大，分支略增讓岔路更多(91=3k+4，迷宮格剛好鋪滿到邊界，外牆只有1格厚)   // 稀疏蜿蜒主通道，覆蓋約6成地圖(不是填滿全部的密集迷宮)
+    // 1樓也安插主題房間，讓迷宮不只是通道，探索時有明確的地標與目標
+    { const r1=carveRoomBFS(g, 12,10, 22,19);                     // 廢棄礦坑：左上
+      for(let y=r1.mcy-1;y<=r1.mcy+1;y++)for(let x=r1.mcx-2;x<=r1.mcx+2;x++) g[y][x]=T_ALTAR;
+      const r2=carveRoomBFS(g, 64,14, 76,24);                     // 地底湖：右上
+      for(let y=r2.gy0+2;y<=r2.gy1-2;y++)for(let x=r2.gx0+2;x<=r2.gx1-2;x++) g[y][x]=T_WATER;
+      const r3=carveRoomBFS(g, 16,58, 28,68);                     // 石柱廳：左下
+      for(let y=r3.gy0+2;y<=r3.gy1-2;y+=3)for(let x=r3.gx0+2;x<=r3.gx1-2;x+=3) g[y][x]=T_STONEWALL;
+      const r4=carveRoomBFS(g, 62,62, 74,73);                     // 祭祀廳：右下，中央擺祭壇
+      for(let y=r4.mcy-1;y<=r4.mcy+1;y++)for(let x=r4.mcx-1;x<=r4.mcx+1;x++) g[y][x]=T_ALTAR;
+      const r5=carveRoomBFS(g, 40,40, 52,50);                     // 中央大廳
+      for(let y=r5.mcy-1;y<=r5.mcy+1;y++)for(let x=r5.mcx-3;x<=r5.mcx+3;x++) g[y][x]=T_PATH;
+    }
     const path=info.mainPath;
     // 入口祭壇：路徑第2格附近鋪一小塊紫色祭壇地磚，標示「這是從地面進來的入口」
     { const p=info.cellAt(path[Math.min(2,path.length-1)][0], path[Math.min(2,path.length-1)][1]);
@@ -2302,8 +2434,10 @@ const MAP_BUILDERS = {
     stairsDown={x:sp.x,y:sp.y};                                    // 記錄下樓梯的座標，供2樓回程樓梯精準傳送回這裡(而不是傳到地圖正中央)
     warps.push({x:sp.x,y:sp.y,kind:'map',toMap:'cave2',toX:o.cx,toY:1});   // 落地點刻意離2樓自己的回程樓梯(o.cx,2)差1格，不會一到就站在回程觸發格上
     MAP_WARPS['cave']=warps;
-    });
+    }, {W:91,H:91});
     m.dungeon=true;
+    { const _e=findNearestWalkable(m.grid, Math.floor(m.W/2), 2);   // 傳送到1樓＝出現在地面入口(北側缺口)，不再落到地圖正中央
+      m.px=_e.x*TS; m.py=_e.y*TS; }
     DUNGEON_LAYOUTS.cave={grid:m.grid, exits:m.exits, px:m.px, py:m.py, W:m.W, H:m.H, warps:MAP_WARPS['cave'], stairsDown:stairsDown};
     saveDungeonLayouts();
     return m; },
@@ -2317,12 +2451,13 @@ const MAP_BUILDERS = {
       const m=buildTerminal('冒險洞穴2樓','cave2',true,null,(g,o)=>{
         // 不鑿邊界出口：2樓入口不是用走的走進來，是從1樓的樓梯暗道直接傳送過來的，
         // 所以邊界維持完全密封，入口點就是迷宮的第一個格子(跟1樓warp目的地toX:o.cx,toY:2一致)
-        carveMaze(g,o.W,o.H,o.cx,1,{targetCells:110, branchChance:0.14});
-        carveRoomBFS(g, 17,4, 22,9);                                 // 水池房：上方中央
-        carveRoomBFS(g, 27,12,32,17);                                // 骷髏房：中偏右
-        carveRoomBFS(g, 14,16,19,21);                                // 夏洛柏房：中央偏左
-        const br=carveRoomBFS(g, 26,23,32,29);                       // 舊王房(裝飾用，巴風特已改成獨立BOSS房，這裡維持空房+魔法陣裝飾)
-        for(let y=br.mcy-1;y<=br.mcy+1;y++)for(let x=br.mcx-1;x<=br.mcx+1;x++) g[y][x]=T_MAGICCIRCLE;
+        carveMaze(g,o.W,o.H,o.cx,1,{targetCells:820, branchChance:0.16, seed:0x5AFE2F00});   // 固定種子：每次生成的迷宮完全相同
+        carveMazeOuterRing(g,o.W,o.H);
+        // 91x91：四間主題房分散到地圖四個象限，房間本身也放大，讓探索更有目標感
+        carveRoomBFS(g, 36,10, 45,18);                               // 水池房：上方中央
+        carveRoomBFS(g, 62,30, 72,39);                               // 骷髏房：右側
+        carveRoomBFS(g, 14,44, 24,53);                               // 夏洛柏房：左側
+        const br=carveRoomBFS(g, 58,64, 70,75);                      // 巴風特王房：殺敵滿100時，傳送魔法陣會開在這裡面
         bossRoom=br;
         // 回1樓的樓梯：放在玩家從1樓傳送過來的落地點，精準傳回1樓的下樓梯位置(不是地圖邊界/正中央)
         // 若1樓還沒生成過(例如玩家用瞬間移動卷軸/傳送視窗直接跳到2樓，跳過1樓)，先強制生成1樓一次，確保拿得到stairsDown座標
@@ -2330,14 +2465,20 @@ const MAP_BUILDERS = {
         const stairsUp=(DUNGEON_LAYOUTS.cave&&DUNGEON_LAYOUTS.cave.stairsDown)||{x:o.cx,y:o.cy};
         g[2][o.cx]=T_STAIRS;
         MAP_WARPS['cave2']=[{x:o.cx,y:2,kind:'map',toMap:'cave',toX:stairsUp.x+1,toY:stairsUp.y}];   // 落地點跟1樓下樓梯本身差1格，不會一到就站在下樓觸發格上
-      });
+      }, {W:91,H:91});
+      { const _e=findNearestWalkable(m.grid, Math.floor(m.W/2), 1);  // 傳送到2樓＝出現在1樓樓梯通往的入口(回程樓梯旁)
+        m.px=_e.x*TS; m.py=_e.y*TS; }
       gridBase=m.grid; pxBase=m.px; pyBase=m.py; wBase=m.W; hBase=m.H; bossRoomBase=bossRoom; warpsBase=MAP_WARPS['cave2']||[];
       DUNGEON_LAYOUTS.cave2={grid:gridBase, px:pxBase, py:pyBase, W:wBase, H:hBase, bossRoom:bossRoomBase, warps:warpsBase};
       saveDungeonLayouts();
     }
     const grid=cloneGrid(gridBase);
     MAP_WARPS['cave2']=warpsBase.slice();
-    if((S.baphoBossKills||0)>=100) placeBossCircle(grid,'cave2',19,16,'bapho_room',19,26);   // 殺敵數滿100：地圖中央附近鋪巴風特BOSS房的魔法陣
+    if((S.baphoBossKills||0)>=100){                                 // 魔法陣開在巴風特的王房內，符合「王的獨立空間」
+      const _br=bossRoomBase;
+      const _bx=_br?_br.mcx:Math.floor(wBase/2), _by=_br?_br.mcy:Math.floor(hBase/2);
+      placeBossCircle(grid,'cave2',_bx,_by,'bapho_room',19,26);
+    }
     return {name:'冒險洞穴2樓', id:'cave2', wild:true, grid, houses:[], exits:{}, px:pxBase, py:pyBase, W:wBase, H:hBase, dungeon:true, bossRoom:bossRoomBase}; },
   keta_room: ()=>{ const m=buildTerminal('克特的王座之間','keta_room',true,{s:'port_n'},(g,o)=>{
     for(let y=1;y<o.H-1;y++)for(let x=1;x<o.W-1;x++) g[y][x]=T_DIRT;                    // 開闊的石室，不用迷宮
@@ -2433,6 +2574,12 @@ function loadMap(id, entrySide, explicitSpawn){
   else if(entrySide==='s'&&ex.s){ px=ex.s.col*TS; py=(MAPH-3)*TS; }
   else if(entrySide==='w'&&ex.w){ px=2*TS; py=ex.w.row*TS; }
   else if(entrySide==='e'&&ex.e){ px=(MAPW-3)*TS; py=ex.e.row*TS; }
+  // 保險：不論是走地圖出口、走樓梯、或用傳送卷軸過來，只要落點卡在牆裡就挪到最近的可站立格
+  { const gx=Math.floor((px+16)/TS), gy=Math.floor((py+28)/TS);
+    if(gy>=0&&gy<MAPH&&gx>=0&&gx<MAPW&&T_SOLID.has(MAP[gy][gx])){
+      const w=findNearestWalkable(MAP,gx,gy);
+      px=w.x*TS; py=w.y*TS;
+    } }
   player.x=px; player.y=py; moveTarget=null; attackTarget=null;
   if(S) S.mapId=id;
   spawnMobs();
@@ -2726,7 +2873,7 @@ function drawHouse(h){
 }
 
 /* 立體物件：牆、屋頂、樹、柵欄、水井、招牌 */
-function drawIsoObject(t,cx,cy,treeScale){
+function drawIsoObject(t,cx,cy,treeScale,fenceNb){
   if(t===T_STONEWALL){
     drawBlock(cx,cy,20,'#8a8a92','#6a6a72','#4e4e56');    // 頂亮灰/左中灰/右暗灰（比磚牆矮、無窗＝薄石牆）
     faceLines(cx,cy,20,'#5a5a62',5);                       // 石縫（橫向較密）
@@ -2755,7 +2902,7 @@ function drawIsoObject(t,cx,cy,treeScale){
     faceLines(cx,cy,30,'#6f1f12',7);                      // 側面瓦線
     ctx.fillStyle='rgba(0,0,0,.28)'; ctx.fillRect(cx-HW,cy-1,HW*2,3); // 屋簷陰影
   } else if(t===T_TREE){ drawTreeIso(cx,cy);
-  } else if(t===T_FENCE){ drawFenceIso(cx,cy);
+  } else if(t===T_FENCE){ drawFenceIso(cx,cy,fenceNb);
   } else if(t===T_WELL){ drawWellIso(cx,cy);
   } else if(t===T_SIGN){ drawSignIso(cx,cy);
   } else if(t===T_TOWNWALL){ drawTownWallIso(cx,cy);
@@ -2830,9 +2977,30 @@ function drawMotherTreeIso(cx,cy){ shadow(cx,cy,60,22);
   blob(cx-8,cy-214,34,'#3f9a3f'); blob(cx+34,cy-118,22,'#153e15');
   blob(cx-2,cy-238,20,'#57b657');                                      // 頂端高光
 }
-function drawFenceIso(cx,cy){ ctx.fillStyle='#9a6a34';
-  sp(cx-14,cy-14,4,16); sp(cx+10,cy-14,4,16);
-  ctx.fillStyle='#b98a4a'; ctx.beginPath(); ctx.moveTo(cx-14,cy-10); ctx.lineTo(cx+12,cy-2); ctx.lineTo(cx+12,cy+2); ctx.lineTo(cx-14,cy-6); ctx.closePath(); ctx.fill();
+/* 柵欄：依相鄰的柵欄決定要往哪幾個方向接出橫桿，讓整排柵欄緊密相連、轉角形成完整直角，
+   而不是每格都畫同一個角度的斜桿(那樣看起來像散落的木板)。
+   等角投影下：世界座標 +X → 螢幕右下、+Y → 螢幕左下。*/
+function drawFenceIso(cx,cy,nb){
+  nb=nb||{};
+  const POST='#9a6a34', RAIL='#b98a4a', RAIL2='#8f6636';
+  // 往 +X(右下) 接的橫桿
+  const railX=function(){
+    ctx.fillStyle=RAIL;
+    ctx.beginPath(); ctx.moveTo(cx,cy-13); ctx.lineTo(cx+HW,cy-13+HH); ctx.lineTo(cx+HW,cy-9+HH); ctx.lineTo(cx,cy-9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=RAIL2;
+    ctx.beginPath(); ctx.moveTo(cx,cy-6); ctx.lineTo(cx+HW,cy-6+HH); ctx.lineTo(cx+HW,cy-2+HH); ctx.lineTo(cx,cy-2); ctx.closePath(); ctx.fill();
+  };
+  // 往 +Y(左下) 接的橫桿
+  const railY=function(){
+    ctx.fillStyle=RAIL;
+    ctx.beginPath(); ctx.moveTo(cx,cy-13); ctx.lineTo(cx-HW,cy-13+HH); ctx.lineTo(cx-HW,cy-9+HH); ctx.lineTo(cx,cy-9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=RAIL2;
+    ctx.beginPath(); ctx.moveTo(cx,cy-6); ctx.lineTo(cx-HW,cy-6+HH); ctx.lineTo(cx-HW,cy-2+HH); ctx.lineTo(cx,cy-2); ctx.closePath(); ctx.fill();
+  };
+  if(nb.e) railX();
+  if(nb.s) railY();
+  if(!nb.e && !nb.s && !nb.w && !nb.n){ railX(); }        // 孤立的一格：仍畫一段，不會變成只剩柱子
+  ctx.fillStyle=POST; sp(cx-2,cy-16,4,18);                // 立柱畫在最後，蓋住橫桿接縫＝轉角是完整直角
 }
 function drawWellIso(cx,cy){ shadow(cx,cy,18,8);
   drawBlock(cx,cy,10,'#8a8a8a','#5a5a5a','#707070');       // 石圈
@@ -2866,34 +3034,172 @@ function applyHaste(tier, ms){ const now=Date.now();
   player.hasteTier=tier; player.hasteUntil=now+ms;
   sysMsg(tier>=2?'★ 強力加速！移動大幅提升。':'★ 身法加速！移動提升。'); }
 function clearHasteIfExpired(){ if(player.hasteTier>0 && Date.now()>player.hasteUntil){ player.hasteTier=0; sysMsg('加速效果結束。'); } }
+/* ===== 變形卷軸：變身選單 =====
+   依「玩家等級」開放可變身的怪物，並按怪物等級分組(10級以上/15級以上/20級以上…)。
+   規則：玩家等級 >= 該組門檻，就能變身成該組的怪物。*/
+const MORPH_TIERS=[1,10,15,20,25,30,35,40,45,50];
+function morphTierOf(lv){                                        // 怪物屬於哪一組
+  var t=MORPH_TIERS[0];
+  for(var i=0;i<MORPH_TIERS.length;i++) if(lv>=MORPH_TIERS[i]) t=MORPH_TIERS[i];
+  return t;
+}
+function morphGroups(){
+  var g={};
+  for(var k in MOBS){
+    var m=MOBS[k];
+    if(k==='稻草人') continue;                                   // 訓練假人不開放
+    if(m.boss) continue;                                         // 世界王不開放變身
+    var t=morphTierOf(m.lv||1);
+    (g[t]=g[t]||[]).push({key:k, name:m.name||k, lv:m.lv||1});
+  }
+  for(var t2 in g) g[t2].sort(function(a,b){ return a.lv-b.lv; });
+  return g;
+}
+function openMorph(){
+  if((S.inv['變形卷軸']||0)<=0){ sysMsg('你沒有變形卷軸。'); return; }
+  renderMorph();
+  var w=document.getElementById('morphw'); if(w) w.classList.add('on');
+  if(typeof navBuildPanel==='function') navBuildPanel('morphw');
+}
+function closeMorph(){ var w=document.getElementById('morphw'); if(w) w.classList.remove('on'); if(typeof navClear==='function') navClear(); }
+function renderMorph(){
+  var body=document.getElementById('morphBody'); if(!body) return;
+  var g=morphGroups(), lv=S.lv||1, h='';
+  h+='<div class="mnote">選擇要變身的怪物。變身持續 20 分鐘，使用後消耗一張變形卷軸。<br>目前等級 <b style="color:#ffd94a">Lv.'+lv+'</b>，持有卷軸 '+(S.inv['變形卷軸']||0)+' 張。</div>';
+  var tiers=Object.keys(g).map(Number).sort(function(a,b){return a-b;});
+  tiers.forEach(function(t){
+    var okTier=(lv>=t);
+    h+='<div class="mgrp">'+(t<=1?'無等級限制':('等級 '+t+' 以上'))+(okTier?'':' <span style="color:#d98080;font-size:12px">（未達等級）</span>')+'</div>';
+    g[t].forEach(function(o){
+      h+='<button class="mitem'+(okTier?'':' mlock')+'"'+(okTier?(' onclick="doMorph(\''+o.key.replace(/'/g,"\\'")+'\')"'):' disabled')+'>'
+        +o.name+'<span class="mlv">Lv.'+o.lv+'</span></button>';
+    });
+  });
+  body.innerHTML=h;
+  var w=document.getElementById('morphw');
+  if(w && w.classList.contains('on') && typeof navBuildPanel==='function') navBuildPanel('morphw');
+}
+function doMorph(key){
+  var m=MOBS[key]; if(!m){ sysMsg('找不到這個怪物。'); return; }
+  if((S.lv||1) < morphTierOf(m.lv||1)){ sysMsg('等級不足，無法變身成「'+(m.name||key)+'」。'); return; }
+  if((S.inv['變形卷軸']||0)<=0){ sysMsg('你沒有變形卷軸。'); closeMorph(); return; }
+  removeItem('變形卷軸',1);
+  S.transformInto=key; S.transformUntil=Date.now()+1200000;        // 持續20分鐘
+  sysMsg('你使用了變形卷軸，變身為「'+(m.name||key)+'」！（20 分鐘）');
+  if(typeof playTeleportFx==='function') playTeleportFx();
+  if(typeof refreshInv==='function') refreshInv();
+  if(typeof refreshUI==='function') refreshUI();
+  if(typeof persistSaves==='function') persistSaves();
+  closeMorph();
+}
+/* ===== 妖精屬性魔法：向艾利溫選定一種屬性 =====
+   選定後只能學習「一般精靈水晶」＋「該屬性的精靈水晶」，其他屬性的水晶無法學習。
+   可以找他「忘記魔法」重新選擇(會清空已學的屬性法術)。*/
+const ELF_ATTRS=[
+  {key:'earth', name:'地', color:'#c8a05a'},
+  {key:'water', name:'水', color:'#6ab8e0'},
+  {key:'fire',  name:'火', color:'#e06a4a'},
+  {key:'wind',  name:'風', color:'#7ad0a0'},
+];
+/* 各屬性專屬的精靈水晶法術；沒列在這裡的妖精法術＝一般精靈水晶，任何屬性都能學。*/
+const ELF_ATTR_SPELLS={
+  earth:['封印禁地','大地防護','地面障礙','大地的祝福','大地屏障'],
+  water:['鋼鐵防護','酷寒之矛'],
+  fire: ['火焰武器','舞躍之火','烈炎武器'],
+  wind: ['三重矢','風之神射','風之疾走','暴風之眼','暴風神射'],
+};
+function elfAttrOfSpell(name){                                   // 這個法術屬於哪個屬性(一般法術回傳null)
+  for(var k in ELF_ATTR_SPELLS) if(ELF_ATTR_SPELLS[k].indexOf(name)>=0) return k;
+  return null;
+}
+function canLearnElfSpell(name){                                 // 妖精能不能學這個法術
+  if(S.cls!=='妖精') return true;                                // 非妖精不受屬性限制
+  var a=elfAttrOfSpell(name);
+  if(!a) return true;                                            // 一般精靈水晶：都能學
+  return S.elfAttr===a;                                          // 屬性水晶：只能學自己選的屬性
+}
+function elfAttrName(k){ var o=ELF_ATTRS.filter(function(x){return x.key===k;})[0]; return o?o.name:''; }
+function openElfAttr(){
+  var body=document.getElementById('morphBody');                 // 沿用變身選單那個視窗容器
+  if(!body) return;
+  var cur=S.elfAttr||null, h='';
+  var t=document.querySelector('#morphw h2');
+  if(t) t.innerHTML='精靈魔法傳授者 · 艾利溫 <button class="sx" onclick="closeMorph()">關閉</button>';
+  if(S.cls!=='妖精'){
+    h+='<div class="mnote">艾利溫：「屬性契約是妖精一族的秘法，你並非妖精，無法締結。」</div>';
+    body.innerHTML=h;
+    var w0=document.getElementById('morphw'); if(w0) w0.classList.add('on');
+    if(typeof navBuildPanel==='function') navBuildPanel('morphw');
+    return;
+  }
+  h+='<div class="mnote">選定屬性後，只能學習<b style="color:#ffd94a">一般精靈水晶</b>與<b style="color:#ffd94a">該屬性的精靈水晶</b>。<br>'
+   +(cur?('目前屬性：<b style="color:#ffd94a">'+elfAttrName(cur)+'</b>'):'尚未選定屬性')+'</div>';
+  h+='<div class="mgrp">選擇屬性</div>';
+  ELF_ATTRS.forEach(function(a){
+    var on=(cur===a.key);
+    h+='<button class="mitem" onclick="chooseElfAttr(\''+a.key+'\')">'
+      +'<span style="color:'+a.color+'">■</span> '+a.name+' 屬性'
+      +(on?'<span class="mlv" style="color:#ffd94a">目前選定</span>':'<span class="mlv">'+ELF_ATTR_SPELLS[a.key].length+' 種專屬法術</span>')
+      +'</button>';
+  });
+  h+='<div class="mgrp">其他</div>';
+  h+='<button class="mitem" onclick="forgetElfAttr()" style="border-color:#a96034;color:#ffc0b0">忘記魔法'
+    +'<span class="mlv">重新選擇屬性（會忘掉已學的屬性法術）</span></button>';
+  body.innerHTML=h;
+  var w=document.getElementById('morphw'); if(w) w.classList.add('on');
+  if(typeof navBuildPanel==='function') navBuildPanel('morphw');
+}
+function chooseElfAttr(k){
+  if(S.elfAttr===k){ sysMsg('艾利溫：「你已經與'+elfAttrName(k)+'屬性締結契約了。」'); return; }
+  if(S.elfAttr){ sysMsg('艾利溫：「你已締結'+elfAttrName(S.elfAttr)+'屬性契約，要改變請先選擇『忘記魔法』。」'); return; }
+  S.elfAttr=k;
+  sysMsg('★ 艾利溫：「契約成立——你已與『'+elfAttrName(k)+'』屬性的精靈締結。」');
+  if(typeof playTeleportFx==='function') playTeleportFx();
+  if(typeof persistSaves==='function') persistSaves();
+  openElfAttr();
+}
+function forgetElfAttr(){
+  if(!S.elfAttr){ sysMsg('艾利溫：「你尚未締結任何契約。」'); return; }
+  var old=elfAttrName(S.elfAttr), lost=[];
+  var pool=ELF_ATTR_SPELLS[S.elfAttr]||[];
+  if(S.spells) S.spells=S.spells.filter(function(sp){
+    if(pool.indexOf(sp.name)>=0){ lost.push(sp.name); return false; }
+    return true; });
+  S.elfAttr=null;
+  sysMsg('艾利溫：「契約已解除。」'+(lost.length?('（忘記了：'+lost.join('、')+'）'):''));
+  if(typeof persistSaves==='function') persistSaves();
+  if(typeof refreshUI==='function') refreshUI();
+  openElfAttr();
+}
 function clearTransformIfExpired(){ if(S && S.transformInto && Date.now()>(S.transformUntil||0)){ var _n=S.transformInto; var _label=(typeof MOBS!=='undefined'&&MOBS[_n]&&MOBS[_n].name)||_n; S.transformInto=null; sysMsg('『'+_label+'』的變身效果結束，恢復原本模樣。'); } }
 const npcs=[
-  {name:'朵琳', mob:'侏儒', art:'dwarf', x:26*TS, y:25*TS, warehouse:true, lines:['朵琳：「要寄放東西嗎？我幫你看管倉庫。」']},
-  {name:'潘朵拉', mob:'潘朵拉', art:'mage', x:22*TS, y:20*TS, shop:'雜貨店', lines:['潘朵拉：「歡迎光臨雜貨舖，需要點什麼嗎？」']},
-  {name:'巴辛', mob:'巴辛', art:'knight', x:34*TS, y:25*TS, shop:'巴辛', lines:['巴辛：「武器、防具，我這兒都有，看看吧。」']},
-  {name:'吉倫', mob:'吉倫', art:'mage', shop:'吉倫', x:22*TS, y:30*TS, lines:['吉倫：「想學魔法嗎？來看看我的魔法書吧。」']}
+  {name:'朵琳', job:'倉庫管理員', mob:'侏儒', art:'dwarf', x:26*TS, y:25*TS, warehouse:true, lines:['朵琳：「要寄放東西嗎？我幫你看管倉庫。」']},
+  {name:'潘朵拉', job:'雜貨商', mob:'潘朵拉', art:'mage', x:22*TS, y:20*TS, shop:'雜貨店', lines:['潘朵拉：「歡迎光臨雜貨舖，需要點什麼嗎？」']},
+  {name:'巴辛', job:'妖魔族商人', mob:'巴辛', art:'knight', x:34*TS, y:25*TS, shop:'巴辛', lines:['巴辛：「武器、防具，我這兒都有，看看吧。」']},
+  {name:'吉倫', job:'魔法商', mob:'吉倫', art:'mage', shop:'吉倫', x:22*TS, y:30*TS, lines:['吉倫：「想學魔法嗎？來看看我的魔法書吧。」']}
 ];
 const SILVER_NPCS=[
-  {name:'亞南', mob:'亞南', art:'knight', x:18*TS, y:22*TS, lines:['亞南：「我是銀騎士村莊的鐵匠，修復武器的手藝還在準備中，晚點再來找我吧。」']},
+  {name:'亞南', job:'鐵匠', mob:'亞南', art:'knight', x:18*TS, y:22*TS, lines:['亞南：「我是銀騎士村莊的鐵匠，修復武器的手藝還在準備中，晚點再來找我吧。」']},
   {name:'傑瑞德', mob:'傑瑞德', art:'knight', x:27*TS, y:14*TS, quest50:true, lines:['傑瑞德：「我是騎士公會的會長，想接受試煉嗎？」']},
-  {name:'梅林', mob:'梅林', art:'mage', x:12*TS, y:13*TS, shop:'梅林', lines:['梅林：「歡迎光臨雜貨舖，需要點什麼嗎？」']},
-  {name:'格林', mob:'格林', art:'dwarf', x:30*TS, y:24*TS, shop:'格林', lines:['格林：「武器、防具，我這兒都有，看看吧。」']},
-  {name:'高特', mob:'高特', art:'knight', x:22*TS, y:18*TS, warehouse:true, lines:['高特：「要寄放東西嗎？我幫你看管倉庫。」']},
+  {name:'梅林', job:'雜貨商', mob:'梅林', art:'mage', x:12*TS, y:13*TS, shop:'梅林', lines:['梅林：「歡迎光臨雜貨舖，需要點什麼嗎？」']},
+  {name:'格林', job:'武防具商人', mob:'格林', art:'dwarf', x:30*TS, y:24*TS, shop:'格林', lines:['格林：「武器、防具，我這兒都有，看看吧。」']},
+  {name:'高特', job:'倉庫管理員', mob:'高特', art:'knight', x:22*TS, y:18*TS, warehouse:true, lines:['高特：「要寄放東西嗎？我幫你看管倉庫。」']},
   {name:'瑞奇', mob:'瑞奇', art:'knight', x:15*TS, y:20*TS, lines:['瑞奇：「……」']},
 ];
 const ELF_NPCS=[
-  {name:'那翰', mob:'那翰', art:'mage', x:12*TS, y:10*TS, craft:'npc_nalien', lines:['那翰：「我能協助你製作魔法笛子。」']},
-  {name:'娜魯帕', mob:'娜魯帕', art:'mage', x:30*TS, y:10*TS, craft:'npc_narupa', lines:['娜魯帕：「妖精專用的裝備，我都能打造。」']},
-  {name:'精靈', mob:'精靈', art:'mage', x:16*TS, y:9*TS, craft:'npc_elf', lines:['精靈：「需要純粹的米索莉塊或精靈羽翼嗎？」']},
-  {name:'精靈女皇', mob:'精靈女皇', art:'mage', x:28*TS, y:12*TS, craft:'npc_elfqueen', lines:['精靈女皇：「奧里哈魯根，唯有我能煉製。」']},
-  {name:'安特', mob:'安特', art:'mage', x:32*TS, y:26*TS, craft:'npc_ent', lines:['安特：「森林的素材，我來為你加工。」']},
-  {name:'潘', mob:'潘', art:'mage', x:32*TS, y:14*TS, craft:'npc_pan', lines:['潘：「想製作點什麼呢？」']},
-  {name:'芮克妮', mob:'芮克妮', art:'mage', x:10*TS, y:15*TS, craft:'npc_rekne', lines:['芮克妮：「蛛網與絲線，交給我吧。」']},
-  {name:'布拉伯', mob:'布拉伯', art:'mage', x:13*TS, y:24*TS, craft:'npc_brabo', lines:['布拉伯：「精靈武器與部件的製作找我。」']},
-  {name:'艾爾', mob:'艾爾', art:'mage', x:24*TS, y:19*TS, warehouse:true, lines:['艾爾：「要寄放東西嗎？倉庫四個角色共用。」']},
-  {name:'琳達', mob:'琳達', art:'mage', x:30*TS, y:23*TS, shop:'琳達', lines:['琳達：「各種基本精靈水晶，歡迎選購。」']},
-  {name:'艾利溫', mob:'艾利溫', art:'mage', x:17*TS, y:26*TS, lines:['艾利溫：「妖精屬性的學習……時機未到，敬請期待。」']},
-  {name:'里迪', mob:'里迪', art:'mage', x:11*TS, y:27*TS, lines:['里迪：「這片森林，願精靈守護你。」']},
+  {name:'那翰', job:'道具製作', mob:'那翰', art:'mage', x:12*TS, y:10*TS, craft:'npc_nalien', lines:['那翰：「我能協助你製作魔法笛子。」']},
+  {name:'娜魯帕', job:'妖精製作匠人', mob:'娜魯帕', art:'mage', x:30*TS, y:10*TS, craft:'npc_narupa', lines:['娜魯帕：「妖精專用的裝備，我都能打造。」']},
+  {name:'精靈', job:'森林守護者', mob:'精靈', art:'mage', x:16*TS, y:9*TS, craft:'npc_elf', lines:['精靈：「需要純粹的米索莉塊或精靈羽翼嗎？」']},
+  {name:'精靈女皇', job:'森林守護者', mob:'精靈女皇', art:'mage', x:28*TS, y:12*TS, craft:'npc_elfqueen', lines:['精靈女皇：「奧里哈魯根，唯有我能煉製。」']},
+  {name:'安特', job:'森林守護者', mob:'安特', art:'mage', x:32*TS, y:26*TS, craft:'npc_ent', lines:['安特：「森林的素材，我來為你加工。」']},
+  {name:'潘', job:'森林守護者', mob:'潘', art:'mage', x:32*TS, y:14*TS, craft:'npc_pan', lines:['潘：「想製作點什麼呢？」']},
+  {name:'芮克妮', job:'森林守護者', mob:'芮克妮', art:'mage', x:10*TS, y:15*TS, craft:'npc_rekne', lines:['芮克妮：「蛛網與絲線，交給我吧。」']},
+  {name:'布拉伯', job:'道具製作', mob:'布拉伯', art:'mage', x:13*TS, y:24*TS, craft:'npc_brabo', lines:['布拉伯：「精靈武器與部件的製作找我。」']},
+  {name:'艾爾', job:'倉庫管理員', mob:'艾爾', art:'mage', x:24*TS, y:19*TS, warehouse:true, lines:['艾爾：「要寄放東西嗎？倉庫四個角色共用。」']},
+  {name:'琳達', job:'精靈魔法商', mob:'琳達', art:'mage', x:30*TS, y:23*TS, shop:'琳達', lines:['琳達：「各種基本精靈水晶，歡迎選購。」']},
+  {name:'艾利溫', job:'精靈魔法傳授者', mob:'艾利溫', art:'mage', x:17*TS, y:26*TS, elfAttr:true,
+   lines:['艾利溫：「妖精必須選定一種屬性，才能與精靈締結契約。你想學習哪一種？」']},
+  {name:'里迪', job:'道具製作', mob:'里迪', art:'mage', x:11*TS, y:27*TS, craft:'npc_ridi', lines:['里迪：「精靈餅乾的製作找我。願精靈守護你。」']},
   {name:'迷幻森林之母', mob:'', art:'mage', x:22*TS, y:17*TS, nodraw:true, motherTrial:true, reach:46, lines:['迷幻森林之母：「年輕的妖精啊，帶來受詛咒的精靈書，我將為你淨化它。」']}
 ];
 function curNpcs(){ return curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:(curMapId==='slime_arena'?ARENA_NPCS:[]))); }
@@ -2901,24 +3207,33 @@ function curNpcs(){ return curMapId==='village'?npcs:(curMapId==='elf_forest'?EL
    5 條賽道、賽道長 30 格。常駐 12 隻史萊姆選手，每場隨機抽 5 隻出賽，每 30 分鐘一場。
    一張票 200 金幣，可一次買多張；賠率由勝率換算（勝率越低賠率越高）。*/
 const ARENA_LANES=5, ARENA_LEN=30, ARENA_TICKET=200, ARENA_PERIOD=10*60*1000;   // 每10分鐘一場
-const ARENA_X0=14, ARENA_Y0=4;                                 // 賽道起點格與第一條賽道的y
+const ARENA_LANE_H=2;                                          // 每條賽道佔的格高(1格跑道+1格分隔柵欄)
+const ARENA_X0=14, ARENA_Y0=7;                                 // 賽道起點格與第一條賽道的y(上方留空間給北方的執行者葛拉)
 /* 選手名單：spd＝實力(影響勝率)，races/wins＝歷史戰績(供管理員報出歷史勝率)。
    「流星」是當家傳奇明星，實力最強、人氣最高。*/
 const SLIME_RACERS=[
-  {id:0, name:'流星',       spd:88, races:142, wins:61, star:true},
-  {id:1, name:'閃電果凍',   spd:82, races:118, wins:38},
-  {id:2, name:'糖漿飛彈',   spd:80, races:96,  wins:29},
-  {id:3, name:'藍寶石',     spd:78, races:104, wins:28},
-  {id:4, name:'翡翠彈跳',   spd:76, races:87,  wins:21},
-  {id:5, name:'綠風',       spd:75, races:73,  wins:17},
-  {id:6, name:'滾滾麻糬',   spd:74, races:110, wins:23},
-  {id:7, name:'水晶之淚',   spd:72, races:65,  wins:13},
-  {id:8, name:'泡泡王子',   spd:71, races:58,  wins:11},
-  {id:9, name:'黏黏小霸王', spd:70, races:91,  wins:16},
-  {id:10,name:'夜露',       spd:68, races:44,  wins:7},
-  {id:11,name:'跳跳虎',     spd:66, races:52,  wins:8},
-  {id:12,name:'胖胖圓',     spd:62, races:38,  wins:4},
+  {id:1, name:'流星',       spd:88, races:142, wins:61, star:true},
+  {id:2, name:'閃電果凍',   spd:82, races:118, wins:38},
+  {id:3, name:'糖漿飛彈',   spd:80, races:96,  wins:29},
+  {id:4, name:'藍寶石',     spd:78, races:104, wins:28},
+  {id:5, name:'翡翠彈跳',   spd:76, races:87,  wins:21},
+  {id:6, name:'綠風',       spd:75, races:73,  wins:17},
+  {id:7, name:'滾滾麻糬',   spd:74, races:110, wins:23},
+  {id:8, name:'水晶之淚',   spd:72, races:65,  wins:13},
+  {id:9, name:'泡泡王子',   spd:71, races:58,  wins:11},
+  {id:10,name:'黏黏小霸王', spd:70, races:91,  wins:16},
+  {id:11,name:'夜露',       spd:68, races:44,  wins:7},
+  {id:12,name:'跳跳虎',     spd:66, races:52,  wins:8},
+  {id:13,name:'胖胖圓',     spd:62, races:38,  wins:4},
+  {id:14,name:'雷霆',       spd:84, races:77,  wins:26},
+  {id:15,name:'月影',       spd:79, races:63,  wins:18},
+  {id:16,name:'棉花糖',     spd:69, races:49,  wins:9},
+  {id:17,name:'碧波',       spd:73, races:55,  wins:12},
+  {id:18,name:'獵鷹',       spd:81, races:88,  wins:27},
+  {id:19,name:'小火苗',     spd:67, races:41,  wins:6},
+  {id:20,name:'鐵壁',       spd:64, races:35,  wins:5},
 ];
+function slimeTag(s){ return '#'+s.id+' '+s.name; }        // 顯示格式：#18 獵鷹
 function slimeWinPct(s){ return s.races? Math.round(s.wins/s.races*1000)/10 : 0; }   // 歷史勝率(%)
 /* ---- 比賽進行與結算 ---- */
 function arenaStartRace(){
@@ -2927,9 +3242,9 @@ function arenaStartRace(){
   arenaRunning={ pid:arenaPeriodId(), odds:odds,
     runners:lineup.map(function(s,i){ return {racer:s, lane:i, prog:0,
       base:s.spd/100, burst:1, burstT:0, bob:Math.random()*1000, rank:0}; }),
-    finished:[], t0:Date.now(), phase:'countdown', phaseT:3200 };   // 開跑前3秒讀秒
+    finished:[], t0:Date.now(), phase:'countdown', phaseT:10200 };   // 阿門開賽前倒數10秒
   arenaStandby=null; arenaStandbyPid=null;
-  sysMsg('★ 各就各位——比賽即將開始！');
+  sysMsg('阿門【執行者】：「各位參賽者，各就各位——！」');
   if(typeof refreshUI==='function') refreshUI();
 }
 /* 開賽前：讓本場出賽的5隻史萊姆先站在起跑閘門待命，玩家一進場就看得到誰要比賽。*/
@@ -2957,8 +3272,8 @@ function arenaUpdate(dt){
     var was=Math.ceil(R.phaseT/1000);
     R.phaseT-=dt;
     var now3=Math.ceil(R.phaseT/1000);
-    if(now3!==was && now3>0) sysMsg('　　'+now3+'…');
-    if(R.phaseT<=0){ R.phase='run'; sysMsg('🏁 開跑！！'); }
+    if(now3!==was && now3>0) sysMsg('阿門【執行者】：「'+now3+'…」');
+    if(R.phaseT<=0){ R.phase='run'; sysMsg('阿門【執行者】：「ＧＯ！！」'); }
     R.runners.forEach(function(r){ r.bob+=dt; });                 // 待命時原地彈跳
     return;
   }
@@ -2976,9 +3291,9 @@ function arenaUpdate(dt){
     if(prev<ARENA_LEN && r.prog>=ARENA_LEN){
       r.prog=ARENA_LEN; R.finished.push(r.racer.id);
       var pos=R.finished.length;
-      var nm=r.racer.name;
-      if(pos===1) sysMsg('🏆 第1名衝線！「'+nm+'」！');
-      else sysMsg('　第'+pos+'名：'+nm);
+      var nm=slimeTag(r.racer);
+      if(pos===1) sysMsg('梅格【執行者】：「第 '+(arenaRaceSeq+1)+' 場比賽的優勝者是「'+nm+'」！」');
+      else sysMsg('梅格【執行者】：「第'+pos+'名：'+nm+'」');
     }
   });
   // 即時名次(供畫面顯示)
@@ -2988,7 +3303,7 @@ function arenaUpdate(dt){
   var lead=sorted[0];
   if(lead && R.lead!==lead.racer.id && R.phase==='run' && lead.prog>1){
     R.lead=lead.racer.id;
-    sysMsg('▶ 目前領先：'+lead.racer.name+'（'+Math.round(lead.prog)+'/'+ARENA_LEN+'格）');
+    sysMsg('▶ 目前領先：'+slimeTag(lead.racer)+'（'+Math.round(lead.prog)+'/'+ARENA_LEN+'格）');
   }
   if(R.finished.length>=R.runners.length || Date.now()-R.t0>120000) arenaSettle();
 }
@@ -3009,13 +3324,14 @@ function arenaSettle(){
     var o=R.odds.filter(function(x){ return x.racer.id===winId; })[0];
     var pay=Math.round(ARENA_TICKET*(o?o.odds:2)*bet.tickets);
     S.gold+=pay;
-    goldMsg('★ 中獎！押中「'+win.name+'」×'+bet.tickets+' 張，獲得 '+pay+' 金幣！');
+    goldMsg('★ 中獎！押中「'+slimeTag(win)+'」×'+bet.tickets+' 張，獲得 '+pay+' 金幣！');
   } else if(arenaBets.length){
     sysMsg('可惜沒押中，下一場再來吧。');
   }
   // 更新歷史戰績
   R.runners.forEach(function(r){ r.racer.races=(r.racer.races||0)+1; });
   if(win) win.wins=(win.wins||0)+1;
+  arenaLastWinner=win?slimeTag(win):null; arenaLastSeq=arenaRaceSeq+1;   // 記下優勝者供梅格日後查詢
   arenaRaceSeq++;                                                 // 場次+1，下一場會抽到不同的出賽名單
   arenaNextAt=Date.now()+ARENA_PERIOD;                            // 從「這一場跑完」起算，隔10分鐘再開下一場
   arenaBets=[]; arenaBetPid=arenaPeriodId(); arenaRunning=null;
@@ -3030,7 +3346,7 @@ function drawArenaMarks(){
   if(curMapId!=='slime_arena') return;
   ctx.save(); ctx.textAlign='center'; ctx.font='bold 13px sans-serif';
   for(let ln=0;ln<ARENA_LANES;ln++){
-    const y=ARENA_Y0+ln*3;
+    const y=ARENA_Y0+ln*ARENA_LANE_H;
     const a=groundScreen(ARENA_X0*TS+16,(y)*TS+16);
     const b=groundScreen((ARENA_X0+ARENA_LEN-1)*TS+16,(y)*TS+16);
     ctx.fillStyle='rgba(255,255,255,.85)'; ctx.strokeStyle='rgba(0,0,0,.85)'; ctx.lineWidth=3;
@@ -3042,14 +3358,14 @@ function drawArenaMarks(){
 }
 function drawArenaRunner(r){
   var sheet=(typeof mobSheetReady==='function')?mobSheetReady('史萊姆'):null;
-  var gx=(ARENA_X0+r.prog)*TS, gy=(ARENA_Y0+r.lane*3)*TS;
+  var gx=(ARENA_X0+r.prog)*TS, gy=(ARENA_Y0+r.lane*ARENA_LANE_H)*TS;
   var gs=groundScreen(gx+16, gy+28);
   var hop=Math.abs(Math.sin((r.bob||0)/110))*7;                    // 史萊姆一蹦一蹦往前跳
   actorShadow(ctx,gs.x,gs.y,12-hop*0.5,4-hop*0.15);                // 跳起來時影子縮小
   var topY;
   if(sheet) topY=drawSheetFrame(ctx,sheet,gs.x,gs.y-hop,1.4,0,'史萊姆');
   else { ctx.fillStyle='#5ad0e0'; ctx.beginPath(); ctx.arc(gs.x,gs.y-10-hop,11,0,7); ctx.fill(); topY=gs.y-24-hop; }
-  var lbl=r.racer.name+(r.rank?('　'+r.rank+'位'):'');
+  var lbl=slimeTag(r.racer)+(r.rank?('　'+r.rank+'位'):'');
   nameTag(lbl, gs.x, topY-2, r.racer.star?'#ffd94a':'#8fe0ff');
 }
 /* ---- 競技場視窗 ---- */
@@ -3073,7 +3389,7 @@ function arenaBetOn(id){
   var b=arenaBets.filter(function(x){return x.racerId===id;})[0];
   if(b) b.tickets++; else arenaBets.push({racerId:id, tickets:1});
   var r=SLIME_RACERS.filter(function(s){return s.id===id;})[0];
-  goldMsg('買了 1 張「'+r.name+'」的票（-'+ARENA_TICKET+' 金幣）');
+  goldMsg('買了 1 張「'+slimeTag(r)+'」的票（-'+ARENA_TICKET+' 金幣）');
   if(typeof persistSaves==='function') persistSaves();   // 買完立刻存檔，關掉遊戲再回來票還在
   if(typeof refreshUI==='function') refreshUI();
   renderArena();
@@ -3085,7 +3401,7 @@ function renderArena(){
   var t=document.getElementById('arenaTitle');
   var lineup=arenaLineup(), odds=arenaOdds(lineup);
   var left=arenaNextRaceAt()-Date.now();
-  if(t) t.innerHTML=(_arenaTab==='bet'?'售票處 · 咕嚕':'賽事情報 · 嘀咕')+' <button class="sx" onclick="closeArena()">關閉</button>';
+  if(t) t.innerHTML=(_arenaTab==='bet'?'售票處 · 阿門':'賽事情報 · 葛拉')+' <button class="sx" onclick="closeArena()">關閉</button>';
   var h='';
   h+='<div class="acount" id="arenaCount">'+(arenaRunning?'⚑ 比賽進行中！':('下一場開賽倒數　'+arenaFmtCountdown(left)))+'</div>';
   if(_arenaTab==='bet'){
@@ -3095,7 +3411,7 @@ function renderArena(){
       var mine=(arenaBets.filter(function(x){return x.racerId===o.racer.id;})[0]||{tickets:0}).tickets;
       h+='<div class="arow'+(o.racer.star?' star':'')+'">'
         +'<div class="alane">'+(i+1)+'</div>'
-        +'<div style="flex:1;min-width:0"><div class="aname">'+o.racer.name+(o.racer.star?' ★':'')+'</div>'
+        +'<div style="flex:1;min-width:0"><div class="aname">'+slimeTag(o.racer)+(o.racer.star?' ★':'')+'</div>'
         +'<div class="asub">賠率 '+o.odds.toFixed(1)+' 倍'+(mine?('　<span style="color:#ffd94a">持票 '+mine+' 張</span>'):'')+'</div></div>'
         +'<button class="abtn" onclick="arenaBetOn('+o.racer.id+')">買1張</button>'
         +'<button class="abtn" onclick="arenaBetOn10('+o.racer.id+')">×10</button>'
@@ -3108,7 +3424,7 @@ function renderArena(){
       var s=o.racer;
       h+='<div class="arow'+(s.star?' star':'')+'">'
         +'<div class="alane">'+(i+1)+'</div>'
-        +'<div style="flex:1;min-width:0"><div class="aname">'+s.name+(s.star?' ★ 傳奇':'')+'</div>'
+        +'<div style="flex:1;min-width:0"><div class="aname">'+slimeTag(s)+(s.star?' ★ 傳奇':'')+'</div>'
         +'<div class="asub">本場勝率 '+(o.winRate*100).toFixed(1)+'%　賠率 '+o.odds.toFixed(1)+' 倍</div>'
         +'<div class="asub">歷史 '+s.wins+'勝 / '+s.races+'場（'+slimeWinPct(s)+'%）</div></div>'
       +'</div>';
@@ -3124,6 +3440,7 @@ function renderArena(){
 /* 賽程改為「上一場跑完之後，再隔10分鐘開下一場」。
    arenaNextAt 存下一場的開賽時刻；沒有紀錄時(第一次進場)給30秒暖身。*/
 let arenaNextAt=0, arenaRaceSeq=0;
+let arenaLastWinner=null, arenaLastSeq=0;                      // 上一場的優勝者(供終點執行者梅格報告)
 function arenaNextRaceAt(){
   if(!arenaNextAt) arenaNextAt=Date.now()+30000;
   return arenaNextAt;
@@ -3161,29 +3478,92 @@ let arenaStandbyPid=null;
 /* 賭場裡的虛擬玩家：10位不同職業的賭客，會互相閒聊、討論賭盤。
    type: ask=問人買誰、guess=猜誰會贏、push=慫恿別人跟注、brag=炫耀戰績、lose=輸錢哀嚎 */
 const ARENA_GAMBLERS=[
-  {name:'阿凱',   cls:'knight', x:4,  y:6,  type:'ask'},
-  {name:'小雨',   cls:'mage',   x:10, y:5,  type:'guess'},
-  {name:'鐵牛',   cls:'knight', x:3,  y:11, type:'push'},
-  {name:'夜語',   cls:'elf',    x:11, y:9,  type:'guess'},
-  {name:'胖虎',   cls:'knight', x:5,  y:16, type:'lose'},
-  {name:'莉莉',   cls:'mage',   x:9,  y:17, type:'ask'},
-  {name:'老王',   cls:'royal',  x:4,  y:20, type:'brag'},
-  {name:'風間',   cls:'elf',    x:11, y:20, type:'push'},
-  {name:'阿呆',   cls:'knight', x:8,  y:22, type:'lose'},
-  {name:'神算子', cls:'mage',   x:6,  y:3,  type:'push'},
+  {name:'煞氣ａ雷神', cls:'knight', x:3, y:3, type:'brag'},
+  {name:'乂龍傲天乂', cls:'knight', x:10, y:3, type:'push'},
+  {name:'卍黑暗騎士卐', cls:'knight', x:3, y:7, type:'brag'},
+  {name:'Oo孤傲oO', cls:'elf', x:11, y:6, type:'guess'},
+  {name:'冰之傲雪', cls:'mage', x:3, y:12, type:'guess'},
+  {name:'風中殘燭', cls:'mage', x:10, y:12, type:'lose'},
+  {name:'星之殞落', cls:'elf', x:3, y:17, type:'guess'},
+  {name:'夜雨聞鈴', cls:'elf', x:10, y:17, type:'ask'},
+  {name:'清風明月', cls:'mage', x:6, y:21, type:'guess'},
+  {name:'瀟灑走一回', cls:'knight', x:11, y:22, type:'brag'},
+  {name:'醉臥沙場', cls:'knight', x:18, y:23, type:'push'},
+  {name:'拾光', cls:'elf', x:24, y:23, type:'ask'},
+  {name:'蛋堡不加蛋', cls:'knight', x:30, y:23, type:'ask'},
+  {name:'鐵板麵加蛋', cls:'mage', x:36, y:23, type:'lose'},
+  {name:'大冰奶半糖', cls:'elf', x:42, y:23, type:'ask'},
+  {name:'鹹酥雞不要辣', cls:'knight', x:45, y:16, type:'brag'},
+  {name:'土城金城武', cls:'royal', x:43, y:19, type:'brag'},
+  {name:'中和彭于晏', cls:'royal', x:38, y:20, type:'push'},
+  {name:'三重周杰倫', cls:'knight', x:26, y:20, type:'guess'},
+  {name:'諸葛亮晶晶', cls:'mage', x:20, y:20, type:'ask'},
+  {name:'關我啥事', cls:'knight', x:6, y:5, type:'lose'},
+  {name:'孫尚香菜', cls:'elf', x:7, y:15, type:'push'},
+  {name:'曹操我褲子', cls:'knight', x:6, y:18, type:'guess'},
+  {name:'懶得取名字', cls:'mage', x:15, y:20, type:'lose'},
+  {name:'又菜又愛玩', cls:'knight', x:23, y:18, type:'ask'},
+  {name:'我家貓跑了', cls:'elf', x:33, y:20, type:'guess'},
+  {name:'騎蝸牛追火箭', cls:'mage', x:45, y:22, type:'brag'},
+  {name:'老闆我要離職', cls:'knight', x:39, y:23, type:'lose'},
+  {name:'昨天沒睡飽', cls:'royal', x:33, y:23, type:'lose'},
+  {name:'穩輸不穩贏', cls:'mage', x:13, y:17, type:'push'},
 ];
+/* 賭客對話庫：分成「單獨自言自語」與「兩人對話」兩種。
+   對話是一問一答的成組台詞，讓賭場聽起來真的有人在互動。*/
 const ARENA_CHAT={
-  ask:  ['這場你買誰啊？','欸欸，你押哪一隻？','有內線消息嗎？分我一點','幫我看看買哪隻比較穩'],
-  guess:['這場不知道誰會贏耶…','看起來勝負難料啊','我猜這場會爆冷門','賠率低的不一定會贏喔'],
-  push: ['快！跟我一起買！這隻穩的！','相信我，這隻絕對第一！','再不買就來不及了，快下注！','我內線消息，這場買牠就對了！'],
-  brag: ['我上一場賺了三千金幣！','小賭怡情，我從來沒輸過','看我的眼光，準得很','昨天連中五場，手氣正旺'],
-  lose: ['唉…又輸了…','我的金幣啊……','最後一把，我要翻本！','明明就快贏了…可惡'],
+  ask:  ['這場你買誰啊？','欸欸，你押哪一隻？','有內線消息嗎？分我一點','幫我看看買哪隻比較穩',
+         '我猶豫好久了…到底要買哪隻','聽說有人連中三把，是真的假的？','你都怎麼挑的？看賠率還是看勝率？'],
+  guess:['這場不知道誰會贏耶…','看起來勝負難料啊','我猜這場會爆冷門','賠率低的不一定會贏喔',
+         '剛剛那隻起跑超慢的，等等應該沒戲','我看好賠率高的那隻，搏一把','上一場我就是太保守才沒賺到',
+         '今天的賽道好像特別滑？','那隻昨天狀態就不好了'],
+  push: ['快！跟我一起買！這隻穩的！','相信我，這隻絕對第一！','再不買就來不及了，快下注！',
+         '我內線消息，這場買牠就對了！','別猶豫了，錯過這把會後悔！','這賠率不買可惜啊！'],
+  brag: ['我上一場賺了三千金幣！','小賭怡情，我從來沒輸過','看我的眼光，準得很','昨天連中五場，手氣正旺',
+         '我這身裝備都馬賭來的','跟著我買，包你賺'],
+  lose: ['唉…又輸了…','我的金幣啊……','最後一把，我要翻本！','明明就快贏了…可惡',
+         '早知道就買另一隻了','這隻史萊姆是不是被下藥了','我不玩了…好啦再一把就好'],
 };
+/* 兩人對話：[發起者台詞, 回應者台詞]，由兩位賭客一來一往講出來 */
+const ARENA_DIALOGS=[
+  ['欸，你上一場中了沒？','別提了，差一步就中，氣死我'],
+  ['你覺得傳奇那隻真的比較強嗎？','實力是強，但賠率太低啦，賺不了多少'],
+  ['我押了五張在同一隻','這麼有信心？輸了別哭喔'],
+  ['聽說賭場有作弊…','噓——小聲點，被執行者聽到就完了'],
+  ['我今天帶了三萬金幣來','三萬？等等剩三千我就笑了'],
+  ['那隻編號幾號來著？','我看看…好像是十八號吧'],
+  ['起跑的時候要看牠彈跳的節奏','有這種訣竅喔？教教我'],
+  ['我老婆不知道我在這裡','我也是啊，兄弟，噓'],
+  ['最近手氣有夠背','我也是，連輸七場了'],
+  ['你要不要跟我合買？','好啊，賺了對半分'],
+  ['我剛剛看到有人一次買二十張','有錢人的世界我不懂'],
+  ['這場結束我就回家了','每次都這樣說，然後又留下來'],
+  ['你看那隻，肚子好圓','搞不好比較重跑比較慢'],
+  ['賭場的酒有夠貴','來這裡誰是為了喝酒啊'],
+  ['我夢到七號會贏','夢？那我押八號好了'],
+  ['你今天穿這樣很好看欸','謝啦，贏錢再請你喝一杯'],
+  ['那個執行者是不是在瞪我','別看他，快轉頭'],
+  ['我把房子的錢都帶來了','兄弟…你冷靜點'],
+  ['聽說冠軍史萊姆會被加菜','難怪牠跑那麼拼'],
+  ['你買了幾張？','兩張，小賭而已'],
+  ['等等結束要不要去喝一杯','好啊，贏的人請客'],
+  ['我覺得賠率是騙人的','當然啊，莊家哪會做賠本生意'],
+  ['剛剛那隻起跑衝超快','衝太快後半段會沒力啦'],
+  ['我媽叫我不要賭博','那你怎麼還在這'],
+  ['這裡的位置好難站','你去右邊啦，那邊比較空'],
+  ['上個月我在這贏了一套裝備','真的假的？那是運氣好吧'],
+  ['我要買二十張！','二十張？！你瘋了嗎'],
+  ['牠們是不是有分品種？','應該吧，顏色好像不太一樣'],
+  ['今天人特別多欸','聽說有大賽，獎金很高'],
+];
 const ARENA_NPCS=[
-  {name:'售票員 咕嚕', mob:'侏儒', art:'dwarf', x:7*TS, y:8*TS, arenaBet:true,
-   lines:['咕嚕：「買票押注找我，中獎的票券也是拿來我這裡兌換金幣！一張 '+ARENA_TICKET+' 金幣。」']},
-  {name:'競賽場管理員 嘀咕', mob:'侏儒', art:'dwarf', x:7*TS, y:13*TS, arenaInfo:true,
-   lines:['嘀咕：「本場出賽名單、選手狀態與歷史勝率都在這兒，看清楚再下注。」']},
+  // 三位執行者(妖魔造型)：阿門在起點喊開賽、梅格在終點報優勝、葛拉在北方公告賽事資訊
+  {name:'阿門', job:'售票執行者', mob:'妖魔', art:'goblin', x:(ARENA_X0-3)*TS, y:(ARENA_Y0+2)*TS, arenaBet:true,
+   lines:['阿門【售票執行者】：「買票押注找我，中獎票券也是我兌換。開賽前我會倒數十秒。」']},
+  {name:'梅格', job:'終點執行者', mob:'妖魔', art:'goblin', x:(ARENA_X0+ARENA_LEN+2)*TS, y:(ARENA_Y0+2)*TS, arenaFinish:true,
+   lines:['梅格【執行者】：「衝過終點線的瞬間，由我來宣布優勝者。」']},
+  {name:'葛拉', job:'賽事執行者', mob:'妖魔', art:'goblin', x:(ARENA_X0+Math.floor(ARENA_LEN/2))*TS, y:(ARENA_Y0-4)*TS, arenaInfo:true,
+   lines:['葛拉【執行者】：「本場出賽名單、勝率與賠率，都在我這裡。」']},
 ].concat(ARENA_GAMBLERS.map(function(g){
   return {name:g.name, psheet:{cls:g.cls, gender:'male'}, art:'hero', x:g.x*TS, y:g.y*TS,
           gambler:g.type, lines:['『'+g.name+'』：「'+ARENA_CHAT[g.type][0]+'」']};
@@ -3204,26 +3584,84 @@ function arenaCountTick(){
       el.textContent='⚑ 即將開跑　'+Math.max(1,Math.ceil(arenaRunning.phaseT/1000))+'…';
     } else {
       var ld=arenaRunning.runners.slice().sort(function(a,b){return b.prog-a.prog;})[0];
-      el.textContent='⚑ 比賽中！領先：'+(ld?ld.racer.name+'（'+Math.round(ld.prog)+'/'+ARENA_LEN+'）':'—');
+      el.textContent='⚑ 比賽中！領先：'+(ld?slimeTag(ld.racer)+'（'+Math.round(ld.prog)+'/'+ARENA_LEN+'）':'—');
     }
   } else el.textContent='下一場開賽倒數　'+arenaFmtCountdown(arenaNextRaceAt()-now);
 }
 function arenaChatTick(){
   if(curMapId!=='slime_arena') return;
   var now=Date.now();
-  if(now<_arenaChatAt) return;
-  _arenaChatAt=now+6000+Math.random()*7000;
-  var g=ARENA_GAMBLERS[Math.floor(Math.random()*ARENA_GAMBLERS.length)];
-  var pool=ARENA_CHAT[g.type]||ARENA_CHAT.guess;
-  var line=pool[Math.floor(Math.random()*pool.length)];
-  if(g.type==='push'){                                             // 慫恿型：直接點名本場某一隻
-    var lu=arenaLineup();
-    var pick=lu[Math.floor(Math.random()*lu.length)];
-    line=['快跟我買「'+pick.name+'」！穩的！','我內線消息，這場「'+pick.name+'」絕對第一！',
-          '「'+pick.name+'」！相信我準沒錯，快下注！'][Math.floor(Math.random()*3)];
+  // 處理所有進行中的對話(可同時多組)：時間到就講下一句
+  for(var k=_arenaDlgs.length-1;k>=0;k--){
+    var d2=_arenaDlgs[k];
+    if(now<d2.at) continue;
+    if(d2.step===0){ sayBubble(d2.a, d2.lines[0], 10000); d2.step=1; d2.at=now+1800; }
+    else { sayBubble(d2.b, d2.lines[1], 10000); _arenaDlgs.splice(k,1); }
   }
-  sysMsg('『'+g.name+'』：「'+line+'」');
+  if(now<_arenaChatAt) return;
+  _arenaChatAt=now+380+Math.random()*420;                          // 每0.38~0.8秒補一次發言
+  var npcs=(typeof ARENA_NPCS!=='undefined')?ARENA_NPCS.filter(function(n){return n.gambler;}):[];
+  if(!npcs.length) return;
+  if(bubbles.length>=ARENA_TALK_TARGET) return;                    // 場上氣泡夠多就先不加
+  var busy={};                                                     // 已在講話的人不重複挑
+  bubbles.forEach(function(b){ if(b.who&&b.who.name) busy[b.who.name]=1; });
+  _arenaDlgs.forEach(function(x){ busy[x.a.name]=1; busy[x.b.name]=1; });
+  var free=npcs.filter(function(n){ return !busy[n.name]; });
+  if(!free.length) return;
+  // 一半機率開一組雙人對話
+  if(Math.random()<0.5 && free.length>=2){
+    var pairs=[];
+    for(var i2=0;i2<free.length;i2++)for(var j2=i2+1;j2<free.length;j2++){
+      if(Math.hypot(free[i2].x-free[j2].x, free[i2].y-free[j2].y)<200) pairs.push([free[i2],free[j2]]);
+    }
+    if(pairs.length){
+      var pr=pairs[Math.floor(Math.random()*pairs.length)];
+      var dl=ARENA_DIALOGS[Math.floor(Math.random()*ARENA_DIALOGS.length)];
+      _arenaDlgs.push({a:pr[0], b:pr[1], lines:dl, step:0, at:now});
+      return;
+    }
+  }
+  // 否則單人自言自語
+  var g=free[Math.floor(Math.random()*free.length)];
+  var pool=ARENA_CHAT[g.gambler]||ARENA_CHAT.guess;
+  var line=pool[Math.floor(Math.random()*pool.length)];
+  if(g.gambler==='push'){                                          // 慫恿型：直接點名本場某一隻
+    var lu=arenaLineup();
+    var pick=lu[Math.floor(Math.random()*lu.length)], pickN=slimeTag(pick);
+    line=['快跟我買「'+pickN+'」！穩的！','我內線消息，這場「'+pickN+'」絕對第一！',
+          '「'+pickN+'」！相信我準沒錯，快下注！'][Math.floor(Math.random()*3)];
+  }
+  sayBubble(g, line, 10000);
 }
+/* 賭客走動：在觀眾區隨機晃來晃去，偶爾停下來。講話中的會暫停移動並面向對方。*/
+function arenaWanderTick(dt){
+  if(curMapId!=='slime_arena') return;
+  if(typeof ARENA_NPCS==='undefined') return;
+  ARENA_NPCS.forEach(function(n){
+    if(!n.gambler) return;                                         // 只有賭客會走動，執行者/售票員站原地
+    if(n.home==null){ n.home={x:n.x,y:n.y}; n.wc=0; }
+    if(_arenaDlgs.some(function(x){return x.a===n||x.b===n;})) return;   // 對話中：站著講話
+    n.wc-=dt;
+    if(n.wc<=0){                                                   // 換一個目標點或原地休息
+      n.wc=1800+Math.random()*3200;
+      if(Math.random()<0.35){ n.tx=null; }                          // 休息
+      else {
+        var ang=Math.random()*Math.PI*2, r=20+Math.random()*70;
+        n.tx=n.home.x+Math.cos(ang)*r; n.ty=n.home.y+Math.sin(ang)*r;
+      }
+    }
+    if(n.tx==null) return;
+    var dx=n.tx-n.x, dy=n.ty-n.y, d=Math.hypot(dx,dy);
+    if(d<4){ n.tx=null; return; }
+    var sp=0.55*(dt/16.67);
+    var nx=n.x+dx/d*sp, ny=n.y+dy/d*sp;
+    if(typeof solidAt==='function' && (solidAt(nx+16,ny+24)||solidAt(nx+16,ny+8))){ n.tx=null; return; }
+    n.x=nx; n.y=ny;
+    if(typeof dir8of==='function'){ var d8=dir8of(dx,dy); if(d8) n.dir8=d8; }
+  });
+}
+let _arenaDlgs=[];                 // 同時進行中的多組對話
+const ARENA_TALK_TARGET=13;        // 場上同時維持的氣泡數(約10~15人在講話)
 // 怪物模板
 const MOBS={
   '史萊姆':{name:'史萊姆', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:40, dmg:4, dmgMin:1, dmgMax:8, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2, spd:1, aggro:260, exp:15, gold:7, goldMin:3, goldMax:7, align:1.0},
@@ -4135,6 +4573,7 @@ function update(dt){
   updatePets(dt);
   if(typeof arenaUpdate==='function') arenaUpdate(dt);   // 史萊姆競技場：開賽判定與比賽進行
   if(typeof arenaChatTick==='function') arenaChatTick();  // 賭客閒聊
+  if(typeof arenaWanderTick==='function') arenaWanderTick(dt);  // 賭客走動
   if(typeof arenaCountTick==='function') arenaCountTick(); // 倒數計時器即時跳動
   if(typeof updatePartyAts==='function') updatePartyAts();
   atsAcc+=dt; if(atsAcc>=700){ atsAcc=0; try{ atsRun(); }catch(_e){} }
@@ -4582,7 +5021,8 @@ function killMob(m){ const t=MOBS[m.type];
   if(curMapId==='cave2' && !t.boss){
     S.baphoBossKills=(S.baphoBossKills||0)+1;
     if(S.baphoBossKills===100){
-      placeBossCircle(MAP,'cave2',19,16,'bapho_room',19,26);
+      const _br=(curMap&&curMap.bossRoom)||null;                 // 即時鋪設也開在王房內
+      placeBossCircle(MAP,'cave2', _br?_br.mcx:Math.floor(MAPW/2), _br?_br.mcy:Math.floor(MAPH/2), 'bapho_room',19,26);
       sysMsg('殺敵數已達100人，地上出現了一個散發著詭異光芒的魔法陣…');
     }
   }
@@ -4670,8 +5110,13 @@ function checkQuest(){ if(S.quest && S.kills>=S.questGoal && !S.questDone){ S.qu
 function talkNpc(n){
   if(n.shop){ openShop(n.shop, (n.lines&&n.lines[0])||'要購買，還是要販售呢？'); return; }
   if(n.warehouse){ openWarehouse(); return; }
+  if(n.elfAttr){ openElfAttr(); return; }                    // 艾利溫：選擇妖精屬性魔法
   if(n.arenaBet){ openArenaBet(); return; }
   if(n.arenaInfo){ openArenaInfo(); return; }
+  if(n.arenaFinish){                                         // 梅格(終點)：報告上一場優勝者
+    if(arenaLastWinner) sysMsg('梅格【執行者】：「第 '+arenaLastSeq+' 場比賽的優勝者是「'+arenaLastWinner+'」！」');
+    else sysMsg('梅格【執行者】：「還沒有比賽紀錄，等第一場跑完再來問我。」');
+    return; }
   if(n.craft){ openCraft(n.craft); return; }
   if(n.motherTrial){ if(S.cls!=='妖精'){ openDialog(n.name,['迷幻森林之母：「我的孩子，只有精靈的血脈才能聆聽我的呼喚。」']); } else { openCraft('npc_mother'); } return; }
   if(n.quest50){ openTrial50(); return; }
@@ -4706,7 +5151,9 @@ function hitMsg(t){ pushChat(t,'hit'); }
 function goldMsg(t){ pushChat(t,'gold'); }
 function sendChat(){ const inp=document.getElementById('chatInput'); const v=inp.value.trim(); if(!v)return;
   if(/^\/WAKE\s*UP\s+/i.test(v)){ const _wname=v.replace(/^\/WAKE\s*UP\s+/i,'').trim(); wakeUpBoss(_wname); inp.value=''; return; }
-  pushChat('你：'+v,'say'); inp.value=''; }
+  pushChat('你：'+v,'say');
+  if(typeof sayBubble==='function') sayBubble(player, v, 10000);   // 玩家說話也冒氣泡
+  inp.value=''; }
 document.getElementById('chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter')sendChat(); });
 
 // dialog uses chat log directly
@@ -4787,7 +5234,10 @@ function render(){
     if(s.x<-HW-40||s.x>VW+HW+40||s.y<-120||s.y>VH+HH+40) continue;
     const _fade=_wallOccludes(tx,ty);                          // 會擋到角色 → 用40%不透明度畫，看得到後面的人
     const _ts=(t===T_BIGTREE)?bigTreeScaleAt(tx,ty):1;              // 只有村莊正中央那棵大樹會放大
-    talls.push({d:tx+ty, f:()=>{ if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts); }});
+    const _fn=(t===T_FENCE)?{                                      // 柵欄：查四方鄰居，決定要往哪幾邊接出橫桿
+      e:(MAP[ty]&&MAP[ty][tx+1]===T_FENCE), w:(MAP[ty]&&MAP[ty][tx-1]===T_FENCE),
+      s:(MAP[ty+1]&&MAP[ty+1][tx]===T_FENCE), n:(MAP[ty-1]&&MAP[ty-1][tx]===T_FENCE)}:null;
+    talls.push({d:tx+ty, f:()=>{ if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts,_fn); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts,_fn); }});
   } } }
   curNpcs().forEach(n=>{ const gx=(n.x+16)/TS, gy=(n.y+16)/TS;
     talls.push({d:gx+gy+0.1, f:()=>drawNpcIso(n)}); });
@@ -4802,11 +5252,13 @@ function render(){
   if(curMapId==='slime_arena'){                                                        // 競技場：待命中或比賽中的史萊姆選手
     const _rs=(typeof arenaRunning!=='undefined'&&arenaRunning)?arenaRunning.runners
              :((typeof arenaStandby!=='undefined'&&arenaStandby)?arenaStandby:null);
-    if(_rs) _rs.forEach(r=>{ const gx=ARENA_X0+r.prog, gy=ARENA_Y0+r.lane*3;
+    if(_rs) _rs.forEach(r=>{ const gx=ARENA_X0+r.prog, gy=ARENA_Y0+r.lane*ARENA_LANE_H;
       talls.push({d:gx+gy+0.08, f:()=>drawArenaRunner(r)}); });
   }
   houses.forEach(h=>{ talls.push({d:(h.x+h.w/2)+(h.y+h.d/2), f:()=>drawHouse(h)}); });
   talls.sort((a,b)=>a.d-b.d).forEach(o=>{ try{ o.f(); }catch(e){ if(!window.__de){ window.__de=1; console.error('draw error:',e); } } });
+
+  if(typeof drawBubbles==='function') drawBubbles();   // 聊天氣泡：畫在所有角色之上
 
   // 4) 箭矢
   arrows=arrows.filter(a=>{ a.x+=a.dx;a.y+=a.dy;a.trav+=Math.hypot(a.dx,a.dy);
@@ -5460,21 +5912,22 @@ function drawNpcIso(n){
     const dt=Math.round(gs.y-ph+padY);
     ctx.drawImage(portrait, Math.round(gs.x-pw/2), dt, Math.round(pw), Math.round(ph));
     const topY=dt;
-    nameTag(n.name, gs.x, topY-2, '#ffe0a0');
+    nameTagJob(n.name, n.job, gs.x, topY-2, '#ffe0a0');
     if(n.quest && !S.questRewarded){ ctx.fillStyle='#ffd54a'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center'; ctx.fillText('!', gs.x+20, topY-2); }
     return; }
   const sheet = n.mob && mobSheetReady(n.mob);
   if(sheet){ const gs=groundScreen(n.x+16,n.y+28); actorShadow(ctx,gs.x,gs.y,14,5);
     const sc=MOB_SCALE[n.mob]||1.4;
     const topY=drawSheetFrame(ctx,sheet,gs.x,gs.y,sc,(DIR8_FRAME['down']??0),(n.mob||n.name));
-    nameTag(n.name, gs.x, topY-2, '#ffe0a0');
+    if(!n.gambler||npcHovered(n)) nameTagJob(n.name, n.job, gs.x, topY-2, '#ffe0a0');
     if(n.quest && !S.questRewarded){ ctx.fillStyle='#ffd54a'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center'; ctx.fillText('!', gs.x+20, topY-2); }
   } else if(n.psheet){ const img=sheetReady(n.psheet.cls, n.psheet.gender);
     if(img){ const gs=groundScreen(n.x+16,n.y+28); actorShadow(ctx,gs.x,gs.y,15,5);
-      const topY=drawSheetFrame(ctx,img,gs.x,gs.y,1.5,(DIR8_FRAME['down']??0));
-      nameTag(n.name, gs.x, topY-2, '#ffe0a0');
+      const topY=drawSheetFrame(ctx,img,gs.x,gs.y,1.5,(DIR8_FRAME[n.dir8||'down']??0));
+      if(!n.gambler||npcHovered(n)) nameTagJob(n.name, n.job, gs.x, topY-2, '#ffe0a0');   // 虛擬玩家：只有滑鼠移上去才顯示名字
     } else drawEntityIso(n.art, n.x, n.y, n.name, '#ffe0a0', false, false);
-  } else { drawEntityIso(n.art, n.x, n.y, n.name, '#ffe0a0', !!n.quest && !S.questRewarded, false); }
+  } else { const _g=drawEntityIso(n.art, n.x, n.y, '', '#ffe0a0', !!n.quest && !S.questRewarded, false);
+    nameTagJob(n.name, n.job, _g.x, _g.topY-2, '#ffe0a0'); }
 }
 function drawEntityIso(art, wx, wy, label, col, mark, moving){
   const g=groundScreen(wx+16, wy+28);
@@ -5636,6 +6089,86 @@ function drawPlayerIso(){ const g=groundScreen(player.x+player.w/2, player.y+pla
 function nameTag(t,cx,cy,col){ ctx.font='bold 20px "Microsoft JhengHei",monospace'; ctx.textAlign='center';
   ctx.lineWidth=3; ctx.lineJoin='round'; ctx.strokeStyle='#000'; ctx.strokeText(t,cx,cy-1);
   ctx.fillStyle=col; ctx.fillText(t,cx,cy-1); }
+/* NPC名條：兩行顯示，第一行名字、第二行職稱(較小、金色)，例如
+   　潘朵拉
+   　【雜貨商】  */
+/* ===== 聊天氣泡 =====
+   角色頭上冒出白底黑框的對話框(比照原版天堂的喊話樣式)，數秒後自動消失。
+   bubbles: [{who, text, until, color}]  who 可以是玩家/NPC物件，畫的時候即時取它的座標。*/
+let bubbles=[];
+function sayBubble(who,text,ms,color){
+  if(!who||!text) return;
+  bubbles=bubbles.filter(function(b){ return b.who!==who; });      // 同一個人只留最新一句
+  bubbles.push({who:who, text:String(text), until:Date.now()+(ms||10000), color:color||'#ffffff'});
+  if(bubbles.length>34) bubbles.shift();   // 30位賭客同時講話也放得下
+}
+function drawBubbles(){
+  const now=Date.now();
+  bubbles=bubbles.filter(function(b){ return b.until>now; });
+  if(!bubbles.length) return;
+  const PER=14;                                                    // 每行最多14個字
+  ctx.save();
+  ctx.textAlign='left'; ctx.textBaseline='middle';               // 內文置左，多行對齊比較整齊
+  bubbles.forEach(function(b){
+    const w=b.who;
+    if(w.x==null||w.y==null) return;
+    const gs=groundScreen(w.x+16, w.y+28);
+    // 第一行是「名字：」，之後是內容，每10字換一行
+    const lines=[];
+    const nm=(b.who&&b.who.name)?String(b.who.name):'';
+    let head=(nm?nm+'：':'')+b.text;
+    for(let k=0;k<head.length;k+=PER) lines.push(head.slice(k,k+PER));
+    ctx.font='bold 15px "Microsoft JhengHei",sans-serif';
+    let tw=0; lines.forEach(function(L){ tw=Math.max(tw, ctx.measureText(L).width); });
+    const pad=9, lh=20;
+    const bw=tw+pad*2, bh=lines.length*lh+pad*2-4;
+    const bx=gs.x, by=gs.y-58-bh/2;                                 // 貼近頭頂：氣泡底距離角色約58px
+    if(bx<-240||bx>VW+240||by<-120||by>VH+120) return;
+    const left=Math.round(bx-bw/2), top=Math.round(by-bh/2);
+    const fade=Math.min(1,(b.until-now)/500);                      // 消失前0.5秒淡出
+    ctx.globalAlpha=fade;
+    // 比照原版：氣泡底透明(看得到後面的地面)、白色細框線、白字黑邊
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.lineJoin='round';
+    const r=Math.min(14, bh/2);                                    // 大圓角(漫畫對話框感)
+    // 尖角：從氣泡底部延伸到說話者頭頂，像漫畫對話框指向講話的人
+    const tipX=Math.max(left+r+8, Math.min(left+bw-r-8, gs.x));    // 尖角根部貼齊角色，但不超出圓角範圍
+    const tipY=top+bh+10;                                          // 尖端只往下伸一小截，剛好指到頭頂
+    const tw2=5;                                                   // 尖角寬度(小一點才不突兀)
+    ctx.beginPath();
+    ctx.moveTo(left+r,top); ctx.lineTo(left+bw-r,top); ctx.quadraticCurveTo(left+bw,top,left+bw,top+r);
+    ctx.lineTo(left+bw,top+bh-r); ctx.quadraticCurveTo(left+bw,top+bh,left+bw-r,top+bh);
+    ctx.lineTo(tipX+tw2,top+bh);                                   // 走到尖角右側
+    ctx.lineTo(tipX, tipY);                                        // 收成一個小三角
+    ctx.lineTo(tipX-tw2,top+bh);
+    ctx.lineTo(left+r,top+bh); ctx.quadraticCurveTo(left,top+bh,left,top+bh-r);
+    ctx.lineTo(left,top+r); ctx.quadraticCurveTo(left,top,left+r,top);
+    ctx.closePath(); ctx.stroke();                                 // 只描邊、不填底＝透明氣泡
+    const lx=left+pad;                                             // 每行都從框內左緣開始
+    lines.forEach(function(L,k){
+      const ly=top+pad+lh*k+lh/2-2;
+      ctx.lineWidth=3; ctx.lineJoin='round'; ctx.strokeStyle='#000';  // 黑色描邊讓白字在任何背景都看得清楚
+      ctx.strokeText(L, lx, ly);
+      ctx.fillStyle='#ffffff';
+      ctx.fillText(L, lx, ly);
+    });
+    ctx.globalAlpha=1;
+  });
+  ctx.restore();
+}
+/* 虛擬玩家(賭客)的名字平常不顯示，滑鼠移到身上才浮現，比照原版天堂 */
+function npcHovered(n){
+  if(typeof _hoverWX==='undefined'||_hoverWX==null) return false;
+  return Math.hypot((n.x+16)-_hoverWX,(n.y+16)-_hoverWY)<30;
+}
+function nameTagJob(name,job,cx,cy,col){
+  // 比照原版天堂：名字＝白色、職稱＝淡青色，皆為黑邊描邊
+  if(!job){ nameTag(name,cx,cy,'#ffffff'); return; }
+  ctx.textAlign='center'; ctx.lineWidth=3; ctx.lineJoin='round'; ctx.strokeStyle='#000';
+  ctx.font='bold 20px "Microsoft JhengHei",monospace';
+  ctx.strokeText(name,cx,cy-19); ctx.fillStyle='#ffffff'; ctx.fillText(name,cx,cy-19);
+  ctx.font='bold 17px "Microsoft JhengHei",monospace';
+  ctx.strokeText('【'+job+'】',cx,cy-1); ctx.fillStyle='#cdfcff'; ctx.fillText('【'+job+'】',cx,cy-1);   // 職稱＝淡青色(取樣自原版畫面)
+}
 
 /* ============ HUD 更新 ============ */
 function refreshUI(){
@@ -5845,6 +6378,9 @@ function onInvDrop(ev,targetIdx){ let data; try{ data=JSON.parse(ev.dataTransfer
 function useItem(id){ invMove=null;
   if(!S || S.hp<=0){ if(typeof warnMsg==='function') warnMsg('你已經被擊倒了，無法使用道具。'); return; }   // 死亡狀態：一律不能使用任何道具
   if(id==='金幣'){ return; } const d=ITEM_DEF[id]; if(!d||(S.inv[id]||0)<=0){ return; }
+  if(id==='變形卷軸'){                                            // 開啟變身選單，讓玩家自己挑要變成哪隻怪物
+    openMorph(); return;
+  }
   if(id==='漂浮之眼肉'){                                          // 吃下後進入獵捕狀態，期間打倒野生動物即可收服
     removeItem(id,1); S.tameUntil=Date.now()+TAME_DURATION;
     sysMsg('你吃下了漂浮之眼肉，感官變得敏銳——接下來 '+(TAME_DURATION/1000)+' 秒內打倒野生動物就能收服牠！');
@@ -5864,6 +6400,11 @@ function useItem(id){ invMove=null;
   if(d.learn&&d.spell){ var _sp=(typeof MAGE_SPELLS!=='undefined')?MAGE_SPELLS.find(function(x){return x.name===d.spell;}):null;
     var _cl=String(d.spellCls||(_sp&&_sp.cls)||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
     if(_cl.length&&_cl.indexOf(S.cls)<0){ sysMsg('職業不符，無法學習「'+d.spell+'」（可賣回商店）'); return; }
+    if(typeof canLearnElfSpell==='function' && !canLearnElfSpell(d.spell)){   // 妖精：屬性水晶只能學自己締結的那一系
+      var _a=elfAttrOfSpell(d.spell);
+      if(!S.elfAttr) sysMsg('這是「'+elfAttrName(_a)+'」屬性的精靈水晶。請先找妖精森林的艾利溫締結屬性契約。');
+      else sysMsg('你締結的是「'+elfAttrName(S.elfAttr)+'」屬性，無法學習「'+elfAttrName(_a)+'」屬性的精靈水晶。');
+      return; }
     if(S.spells&&S.spells.some(function(x){return x.name===d.spell;})){ sysMsg('已經學會「'+d.spell+'」了（多餘的書可賣回商店）'); return; }
     removeItem(id,1); learnSpell(d.spell); sysMsg('✦ 學會了「'+d.spell+'」！');
     var _mw=document.getElementById('magicw'); if(_mw&&_mw.classList.contains('on')&&typeof refreshMagic==='function')refreshMagic();
@@ -6147,9 +6688,13 @@ function castSpell(sp){ if(!sp) return;
   if(name==='傳送術'){ S.mp-=mp;
     if(curMap && curMap.dungeon){                                 // 地監內：只在同一層隨機找位置移動，不會傳送到野外去
       let gx,gy,tries=0;
+      // 落點要「整個角色站得下」才算數：用跟移動判定相同的取樣點檢查(腳底與上緣)，
+      // 只檢查格子中心的話，仍可能傳到剛好卡在牆邊、動不了的位置。
+      const _fits=function(x,y){ const px2=x*TS, py2=y*TS;
+        return !solidAt(px2+16,py2+24) && !solidAt(px2+16,py2+8) && !solidAt(px2+16,py2+28); };
       do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tries++; }
-      while(tries<300 && T_SOLID.has(MAP[gy][gx]));
-      if(T_SOLID.has(MAP[gy][gx])){ sysMsg('這裡無法使用傳送術。'); refreshUI(); return; }
+      while(tries<300 && !_fits(gx,gy));
+      if(!_fits(gx,gy)){ sysMsg('這裡無法使用傳送術。'); refreshUI(); return; }
       player.x=gx*TS; player.y=gy*TS; moveTarget=null; attackTarget=null; regroupParty();
       playTeleportFx(); sysMsg('施放「傳送術」，在這一層隨機移動了位置。'); refreshUI(); return;
     }
@@ -6961,7 +7506,7 @@ function startGame(){ if(!cc.cls) return;
   // （背包排序、已學魔法、快捷欄、ATS設定、試煉進度…等），確保每個存檔完全獨立
   Object.assign(S,{ acDexBase:undefined, align:0,
     equip:{weapon:null,body:null,helmet:null,tshirt:null,cloak:null,gloves:null,boots:null,shield:null,necklace:null,ring:null,ring2:null,belt:null,ammo:null},
-    inv:{}, invOrder:[], food:80, kills:0, ketaKilledAt:0, baphoKilledAt:0, ketaBossKills:0, baphoBossKills:0, tameUntil:0 });
+    inv:{}, invOrder:[], food:80, kills:0, ketaKilledAt:0, baphoKilledAt:0, ketaBossKills:0, baphoBossKills:0, tameUntil:0, elfAttr:null });
   pets=[]; arenaBets=[]; arenaBetPid=null;
   S.spells=[]; S.ats=null; S.atsProf=null; S.trial50=null; S.redKnight=false; S.st={}; S.transformInto=null; S.transformUntil=0; S.statPoints=0; party=[]; partyMode='focus'; playerTrail=[]; _pendingPartySlots=null; _pendingPartyMode=null;
   for(let p=0;p<4;p++)for(let i=0;i<8;i++) hotbar[p][i]=null;
@@ -7591,7 +8136,7 @@ function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; 
   el.innerHTML=h; }
 function snapshot(){ return { name:S.name,cls:S.cls,gender:S.gender,acDexBase:S.acDexBase,align:S.align,lv:S.lv,exp:S.exp,
   str:S.str,dex:S.dex,con:S.con,int:S.int,wis:S.wis,cha:S.cha,
-  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,ketaBossKills:S.ketaBossKills||0,baphoBossKills:S.baphoBossKills||0,pets:(typeof pets!=='undefined'?pets.map(function(p){return {type:p.type,name:p.name,lv:p.lv,exp:p.exp,hp:p.hp,maxhp:p.maxhp,str:p.str,con:p.con,dex:p.dex,align:p.align};}):[]),arenaBets:(typeof arenaBets!=='undefined'?arenaBets.slice():[]),arenaBetPid:(typeof arenaBetPid!=='undefined'?arenaBetPid:null),
+  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,elfAttr:S.elfAttr||null,ketaBossKills:S.ketaBossKills||0,baphoBossKills:S.baphoBossKills||0,pets:(typeof pets!=='undefined'?pets.map(function(p){return {type:p.type,name:p.name,lv:p.lv,exp:p.exp,hp:p.hp,maxhp:p.maxhp,str:p.str,con:p.con,dex:p.dex,align:p.align};}):[]),arenaBets:(typeof arenaBets!=='undefined'?arenaBets.slice():[]),arenaBetPid:(typeof arenaBetPid!=='undefined'?arenaBetPid:null),
   equip:Object.assign({},S.equip),inv:Object.assign({},S.inv),invOrder:(S.invOrder||[]).slice(),warehouse:Object.assign({},S.warehouse),
   hotbar:hotbar.map(p=>p.slice()), spells:(S.spells||[]).map(s=>({name:s.name,desc:s.desc||'',icon:s.icon||'📖'})), ats:(S.ats?JSON.parse(JSON.stringify(S.ats)):null), atsProf:(S.atsProf?JSON.parse(JSON.stringify(S.atsProf)):null), trial50:(S.trial50||null), redKnight:!!S.redKnight, seen:Date.now(),
   partySlots:(typeof party!=='undefined'?party.map(function(p){return p.slot;}):[]), partyMode:(typeof partyMode!=='undefined'?partyMode:'focus'), statPoints:S.statPoints||0 }; }
@@ -7792,6 +8337,7 @@ function renderCraft(){
   }
   w.innerHTML=h; w.style.display='block'; if(typeof navBuildPanel==='function')navBuildPanel('craftw');
 }
+Object.assign(CRAFT_PX,{'npc_ridi':[{result:'精靈餅乾', req:[['精靈粉末',5],['安特的水果',1]]}]});   // 里迪：精靈餅乾
 Object.assign(CRAFT_PX, {"npc_nalien": [{"result": "魔法笛子", "yield": 1, "req": [["安特的樹皮", 1], ["奧里哈魯根", 10]]}], "npc_narupa": [{"result": "吉薩", "yield": 1, "req": [["短劍的劍身", 1], ["安特的樹枝", 10], ["純粹的米索莉塊", 90], ["芮克妮的網", 10]]}, {"result": "木甲", "yield": 1, "req": [["安特的樹皮", 2], ["潘的鬃毛", 5]]}, {"result": "木製的夾克", "yield": 1, "req": [["安特的樹枝", 10], ["線", 6]]}, {"result": "木盾", "yield": 1, "req": [["安特的樹皮", 1], ["安特的樹枝", 5], ["芮克妮的網", 5]]}, {"result": "細劍", "yield": 1, "req": [["奧里哈魯根的劍身", 1], ["精靈羽翼", 2], ["芮克妮的網", 25], ["奧里哈魯根", 50], ["品質紅寶石", 1]]}, {"result": "鎖子甲破壞者", "yield": 1, "req": [["短劍的劍身", 1], ["覆上米索莉的角", 1], ["安特的樹枝", 10], ["芮克妮的網", 50], ["鑽石", 1]]}, {"result": "木棒", "yield": 1, "req": [["安特的樹枝", 10], ["芮克妮的網", 5]]}, {"result": "米索莉箭", "yield": 1, "req": [["安特的樹枝", 1], ["純粹的米索莉塊", 1]]}, {"result": "長靴", "yield": 1, "req": [["芮克妮的蛻皮", 2], ["線", 10]]}, {"result": "艾爾穆的祝福", "yield": 1, "req": [["精靈皮盔", 1], ["奧里哈魯根金屬板", 3], ["米索莉線", 150], ["魔法寶石", 5], ["品質藍寶石", 1], ["品質綠寶石", 1], ["品質鑽石", 1]]}, {"result": "精靈皮盔", "yield": 1, "req": [["安特的樹皮", 2], ["精靈羽翼", 1], ["潘的鬃毛", 10], ["芮克妮的網", 20]]}, {"result": "精靈短劍", "yield": 1, "req": [["長劍的劍身", 1], ["安特的樹枝", 5], ["純粹的米索莉塊", 150], ["芮克妮的網", 50]]}, {"result": "精靈匕首", "yield": 1, "req": [["安特的樹枝", 1], ["粗糙的米索莉塊", 1]]}, {"result": "精靈斗篷", "yield": 1, "req": [["米索莉線", 10], ["魔法寶石", 2], ["元素石", 6]]}, {"result": "精靈盾牌", "yield": 1, "req": [["木盾", 1], ["米索莉金屬板", 2], ["芮克妮的網", 5]]}, {"result": "精靈鏈甲", "yield": 1, "req": [["米索莉金屬板", 4], ["米索莉線", 10]]}, {"result": "精靈之矛", "yield": 1, "req": [["覆上米索莉的角", 1], ["安特的樹枝", 10], ["芮克妮的網", 30]]}, {"result": "精靈金屬盔甲", "yield": 1, "req": [["奧里哈魯根金屬板", 8], ["米索莉線", 20], ["高品質鑽石", 1]]}, {"result": "精靈弓", "yield": 1, "req": [["安特的樹枝", 10], ["粗糙的米索莉塊", 1], ["芮克妮的蛻皮", 2], ["線", 2]]}, {"result": "精靈護胸金屬板", "yield": 1, "req": [["芮克妮的蛻皮", 2], ["線", 10]]}, {"result": "尤米弓", "yield": 1, "req": [["奧里哈魯根金屬板", 6], ["覆上奧里哈魯根的角", 1], ["米索莉線", 40], ["芮克妮的蛻皮", 5], ["品質綠寶石", 2], ["品質鑽石", 1]]}, {"result": "戰斧", "yield": 1, "req": [["短劍的劍身", 1], ["安特的樹枝", 10], ["粗糙的米索莉塊", 3], ["芮克妮的網", 5]]}, {"result": "短統靴", "yield": 1, "req": [["安特的樹皮", 2], ["線", 4]]}, {"result": "十字弓", "yield": 1, "req": [["奧里哈魯根金屬板", 3], ["精靈羽翼", 8], ["米索莉線", 20], ["芮克妮的網", 30]]}, {"result": "力量手套", "yield": 1, "req": [["米索莉線", 20], ["芮克妮的蛻皮", 5], ["品質鑽石", 1], ["食人巨魔的血", 1]]}, {"result": "法丘", "yield": 1, "req": [["精靈之矛", 1], ["覆上奧里哈魯根的角", 1], ["奧里哈魯根", 60], ["芮克妮的網", 50], ["品質紅寶石", 1]]}, {"result": "箭", "yield": 1, "req": [["安特的樹枝", 10]]}, {"result": "弓", "yield": 1, "req": [["安特的樹枝", 1], ["線", 5]]}, {"result": "腕甲", "yield": 1, "req": [["安特的樹皮", 3], ["米索莉線", 20]]}], "npc_elf": [{"result": "純粹的米索莉塊", "yield": 1, "req": [["粗糙的米索莉塊", 1]]}, {"result": "精靈粉末", "yield": 1, "req": [["元素石", 1]]}, {"result": "精靈羽翼", "yield": 1, "req": [["米索莉線", 5], ["元素石", 2]]}], "npc_elfqueen": [{"result": "奧里哈魯根", "yield": 1, "req": [["純粹的米索莉塊", 10]]}], "npc_ent": [{"result": "安特的樹皮", "yield": 1, "req": [["蘑菇汁", 1]]}], "npc_pan": [{"result": "米索莉金屬板", "yield": 1, "req": [["純粹的米索莉塊", 50], ["芮克妮的蛻皮", 1]]}, {"result": "奧里哈魯根金屬板", "yield": 1, "req": [["奧里哈魯根", 30], ["芮克妮的蛻皮", 1]]}, {"result": "潘的角", "yield": 1, "req": [["魔法笛子", 1]]}], "npc_rekne": [{"result": "線", "yield": 1, "req": [["潘的鬃毛", 1]]}, {"result": "米索莉線", "yield": 1, "req": [["線", 1], ["純粹的米索莉塊", 5]]}, {"result": "芮克妮的網", "yield": 1, "req": [["安特的樹枝", 2]]}, {"result": "芮克妮的蛻皮", "yield": 1, "req": [["安特的樹皮", 3]]}], "npc_brabo": [{"result": "覆上米索莉的角", "yield": 1, "req": [["潘的角", 2], ["純粹的米索莉塊", 80]]}, {"result": "覆上奧里哈魯根的角", "yield": 1, "req": [["潘的角", 4], ["奧里哈魯根", 80], ["紅寶石", 3]]}, {"result": "短劍的劍身", "yield": 1, "req": [["精靈羽翼", 1], ["純粹的米索莉塊", 50]]}, {"result": "長劍的劍身", "yield": 1, "req": [["精靈羽翼", 3], ["純粹的米索莉塊", 150]]}, {"result": "奧里哈魯根的劍身", "yield": 1, "req": [["精靈羽翼", 3], ["紅寶石", 3], ["奧里哈魯根", 150]]}]});
 Object.assign(CRAFT_PX, {"npc_mother":[{"result":"精靈T恤","yield":1,"req":[["受詛咒的精靈書",1]]},{"result":"精靈羽翼","yield":1,"req":[["受詛咒的精靈書",1]]}]});
 function craftDo(key,idx){ var r=(CRAFT_PX[key]||[])[idx]; if(!r)return;
@@ -8414,7 +8960,7 @@ function loadCharacter(data){
   S.atsProf=(data.atsProf&&typeof data.atsProf==='object')?data.atsProf:null;
   S.trial50=data.trial50||null; S.redKnight=!!data.redKnight; S.st={}; S.statPoints=data.statPoints||0;
   if(typeof ensureEnhDefs==='function') try{ ensureEnhDefs(); }catch(_e){}
-  deriveStats(); S.hp=((data.hp||0)>0)?data.hp:Math.max(1,Math.floor(S.maxhp*0.1)); S.mp=data.mp||S.maxmp; S.food=(data.food!=null?data.food:100); S.kills=data.kills||0; S.mapId=((data.hp||0)>0)?(data.mapId||'village'):'village'; S.ketaKilledAt=data.ketaKilledAt||0; S.baphoKilledAt=data.baphoKilledAt||0; S.ketaBossKills=data.ketaBossKills||0; S.baphoBossKills=data.baphoBossKills||0;
+  deriveStats(); S.hp=((data.hp||0)>0)?data.hp:Math.max(1,Math.floor(S.maxhp*0.1)); S.mp=data.mp||S.maxmp; S.food=(data.food!=null?data.food:100); S.kills=data.kills||0; S.mapId=((data.hp||0)>0)?(data.mapId||'village'):'village'; S.ketaKilledAt=data.ketaKilledAt||0; S.baphoKilledAt=data.baphoKilledAt||0; S.elfAttr=data.elfAttr||null; S.ketaBossKills=data.ketaBossKills||0; S.baphoBossKills=data.baphoBossKills||0;
   arenaBets=(data.arenaBets||[]).map(function(b){ return {racerId:b.racerId, tickets:b.tickets}; });
   arenaBetPid=(data.arenaBetPid!=null)?data.arenaBetPid:null;
   if(arenaBets.length && arenaBetPid!==arenaPeriodId()) arenaBetPid=arenaPeriodId();   // 讀檔時把注單接到目前這一場，避免因為關閉遊戲/改版而讓已買的票平白消失
