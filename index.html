@@ -5,6 +5,23 @@
 ※ 公告欄（noticeBody）採「只增不刪」原則：新版本一律加在最上方，舊紀錄永久保留，
    除非玩家明確要求才刪除舊紀錄。
 ========================================
+v76 2026-08-23 外圍城牆排列修正、競技場勝負機制調整：
+             ・外圍城牆(T_TOWNWALL)原本一律把木樁畫成「水平一排」，但等角投影下
+               相鄰格是斜向相接，整段牆看起來就會歪斜。改為 drawTownWallIso() 接收
+               四方鄰居資訊，判斷這段牆是東西向還是南北向，木樁與橫樑都沿該走向
+               鋪設(+X＝螢幕右下、+Y＝螢幕左下)，牆面才會連成直線。
+               影響：說話之島村莊、銀騎士村莊、史萊姆競技場的外牆。
+             ・競技場勝負：原本 base 直接取 spd/100，隨機加速(burst)只影響瞬間，
+               30格跑下來會被平均掉，導致速度最高的那隻穩贏(實測勝率78.7%，
+               最慢的一場都沒贏過)，賭盤完全沒有懸念。
+               改為每場開賽前給每隻一個「當日狀態」係數(0.65~1.35，±35%)，
+               模擬真實賽馬的當日狀況。實測1000場後：最強39.8%、最弱3.3%，
+               20隻選手每一隻都有贏過。
+               連帶調整 arenaOdds() 的權重指數 2.2→1.4：既然比賽有大幅隨機，
+               賠率就不該按實力大幅拉開，否則押強的完全不划算、押弱的又賠太多。
+               調整後各注期望值都是0.85，維持莊家抽水15%的設計。
+             ・競技場選手名字統一為白色(原本傳奇金色/一般藍色)。
+========================================
 v75 2026-08-22 掉落系統改版、變形卷軸手動使用、競技場擴充、NPC名條改版：
              ・掉落系統：玩家反映很多怪打死不掉東西。查證後確認問題屬實
                (長老只有2.5%會掉、狼人7.9%、妖魔鬥士9.7%，且史萊姆/人形
@@ -1709,14 +1726,23 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     <div id="titleLogo">天堂 · 像素版</div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
-      <div id="noticeBody"><div class="noticeVer">◆ v75（2026-08-22）</div>
+      <div id="noticeBody"><div class="noticeVer">◆ v76（2026-08-23）</div>
+<ul>
+<li><b>妖精森林擴建</b>：地圖從 44×36 放大為 <b>56×50</b>（與說話之島村莊同尺寸），外圍樹林收成單層。所有 NPC 重新配置到四個象限，東南方草地留給隊友駐守</li>
+<li><b>新增娜魯帕洞穴</b>：妖精森林中央大樹左側有地下入口，可進入 20×25 的洞穴。娜魯帕搬到洞內工房，還有四位妖精居民在洞裡走動</li>
+<li><b>競技場勝負更有懸念</b>：每場開賽前每隻史萊姆會隨機決定「當日狀態」，實力最強的也不再穩贏——傳奇「流星」奪冠率約 4 成，最弱的也有機會爆冷</li>
+<li><b>外圍城牆改版</b>：說話之島村莊、銀騎士村莊、史萊姆競技場的外牆，木樁改為沿著牆的走向排列，整段牆連成直線</li>
+<li><b>倉庫確實跨角色共用</b>：修正批量存取沒有寫回共用倉庫的問題，現在 9 個存檔格的倉庫互通，可用來在角色之間搬運物品</li>
+<li>其他修正：傳送到冒險洞穴會卡在牆縫、娜魯帕的製作清單顯示成別人的、競技場選手名字顏色不一致等問題</li>
+</ul>
+<div class="noticeVer">◆ v75（2026-08-22）</div>
 <ul>
 <li><b>冒險洞穴大幅擴建</b>：1樓與2樓從 40×34 放大為 <b>91×91</b>（面積 6 倍），通道長度約 8 倍。兩層都新增主題房間（礦坑、地底湖、石柱廳、水池房、骷髏房等）。<b>迷宮版面已固定</b>，每次登入都是同一張地圖，可以記住路線。傳送過去會直接抵達該層入口</li>
 <li><b>掉落系統大改版</b>：怪物依等級保底掉落（1-9等至少1件、10-19等2件，每10等再+1），高等怪更有價值。同時補上史萊姆、人形殭屍、杜賓犬、飄浮之眼、野豬原本完全沒有的掉落表</li>
 <li><b>後台掉落機率設定</b>：每個已勾選的掉落物旁邊可直接修改掉落機率（%），武器、防具、道具、藥水、卷軸、魔法書全部適用</li>
 <li><b>變形卷軸可手動使用</b>：在背包點擊變形卷軸會跳出變身選單，依怪物等級分組，達到等級即可點名字直接變身，持續20分鐘</li>
 <li><b>妖精屬性魔法</b>：妖精森林的艾利溫可締結屬性契約（地／水／火／風）。締約後只能學習一般精靈水晶與該屬性的水晶，也可選擇「忘記魔法」重新締約</li>
-<li><b>史萊姆競技場大擴充</b>：選手增為 20 隻並加上編號（「#18 獵鷹」）。三位妖魔執行者各司其職——阿門售票並在開賽前倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉公告賽事資訊。巴風特的傳送魔法陣改開在王房內。每場開賽前每隻史萊姆會隨機決定「當日狀態」，所以最強的也不再穩贏——傳奇「流星」奪冠率約4成，最弱的也有機會爆冷；選手名字統一為白色</li>
+<li><b>史萊姆競技場大擴充</b>：選手增為 20 隻並加上編號（「#18 獵鷹」）。三位妖魔執行者各司其職——阿門售票並在開賽前倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉公告賽事資訊。巴風特的傳送魔法陣改開在王房內</li>
 <li><b>新增聊天氣泡</b>：角色說話時頭上會冒出對話框。競技場有 30 位各種風格 ID 的虛擬玩家，會在場邊走動並成群聊天，同時約 10～15 人在講話</li>
 <li><b>NPC 名條改版</b>：改成兩行顯示，第一行名字、第二行職稱，例如「艾爾／【倉庫管理員】」</li>
 <li><b>柵欄改版</b>：圍欄會依相鄰狀況自動連接成直線，轉角形成完整直角</li>
@@ -2148,6 +2174,17 @@ function carveMaze(g,W,H,entryX,entryY,opts){
 /* carveMaze 的隨機行走不會走訪到「最外圈」的迷宮格，導致地圖四周固定留下約4格厚的未鑿死區，
    看起來像超厚的外牆。這裡在鑿完迷宮後補鑿外圈，並各自連回內側鄰居，讓通道一路鋪到邊界，
    外牆就只剩1格厚，多出來的空間也變成可以探索的迷宮。*/
+/* 在指定位置清出一塊圓形空地，讓傳送落點周圍不會被牆夾住。
+   保留最外框的邊界牆(不打穿地圖外圍)，只清內部的迷宮牆。*/
+function carveEntryPlaza(g,W,H,cxi,cyi,r){
+  r=r||4;
+  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    if(Math.hypot(dx,dy)>r+0.3) continue;                          // 圓形而非方形，看起來自然
+    const x=cxi+dx, y=cyi+dy;
+    if(x<1||y<1||x>W-2||y>H-2) continue;                           // 不動最外框
+    g[y][x]=T_DIRT;
+  }
+}
 function carveMazeOuterRing(g,W,H){
   const PITCH=3, ix0=1, iy0=1;
   const cols=Math.floor((W-2-2)/PITCH)+1, rows=Math.floor((H-2-2)/PITCH)+1;
@@ -2268,6 +2305,32 @@ function placeBossCircle(grid,mapId,targetX,targetY,bossRoomId,spawnX,spawnY){
 }
 
 /* 史萊姆競技場：5條賽道、每條30格長。左側是觀眾區與兩位侏儒NPC，右側是終點線。*/
+/* 娜魯帕洞穴：妖精森林地下的小洞穴。出入口在洞內最東方，娜魯帕待在最西方。*/
+function buildNarupaCave(){
+  const W=20,H=25,g=NG(W,H),ex={},houses=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++) g[y][x]=T_DIRT;                     // 洞穴地面
+  for(let x=0;x<W;x++){ g[0][x]=T_STONEWALL; g[H-1][x]=T_STONEWALL; }          // 岩壁
+  for(let y=0;y<H;y++){ g[y][0]=T_STONEWALL; g[y][W-1]=T_STONEWALL; }
+  for(let y=3;y<H-3;y+=6)for(let x=4;x<W-4;x+=5) g[y][x]=T_STONEWALL;          // 洞內零星石柱，不會太空曠
+  g[H>>1][W-2]=T_STAIRS;                                                        // 出入口：最東方的階梯
+  MAP_WARPS['narupa_cave']=[{x:W-2, y:H>>1, kind:'map', toMap:'elf_forest', toX:24, toY:25}];
+  return {name:'娜魯帕洞穴', id:'narupa_cave', wild:false, grid:g, houses:houses, exits:ex,
+          px:(W-4)*TS, py:(H>>1)*TS, W:W, H:H, dungeon:true};
+}
+/* 洞穴裡的妖精居民：娜魯帕在最西方，另外幾位妖精假玩家會在洞內自由走動 */
+const NARUPA_NPCS=[
+  {name:'娜魯帕', job:'妖精製作匠人', mob:'娜魯帕', art:'mage', x:2*TS, y:12*TS, craft:'npc_narupa',
+   lines:['娜魯帕：「這裡是我的工房，妖精的器物都在這兒打造。」']},
+].concat([
+  {n:'翠羽',  cls:'elf', g:'female', x:6,  y:5},
+  {n:'風鈴草',cls:'elf', g:'female', x:13, y:8},
+  {n:'橡實',  cls:'elf', g:'male',   x:5,  y:18},
+  {n:'苔蘚',  cls:'elf', g:'male',   x:14, y:19},
+].map(function(o){
+  // gambler 欄位在這裡只是「會自由走動」的標記，洞穴居民不會發話(聊天只在競技場觸發)
+  return {name:o.n, psheet:{cls:o.cls, gender:o.g}, art:'hero', x:o.x*TS, y:o.y*TS,
+          gambler:'idle', lines:['『'+o.n+'』：「……」']};
+}));
 function buildSlimeArena(){
   const W=48,H=26,g=NG(W,H),ex={},houses=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++) g[y][x]=T_DIRT;                       // 整場鋪土
@@ -2352,11 +2415,17 @@ function buildTerminal(name,id,wild,back,extra,size){   // size 可選：{W,H}�
   }
   return {name,id,wild,grid:g,houses,exits:ex,px:sx*TS,py:sy*TS,W,H};
 }
-function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},houses=[];
-  const VX0=3,VX1=W-4,VY0=3,VY1=H-4, cx=W>>1, cy=H>>1;
-  const WALL = forest?T_BIGTREE:T_TOWNWALL;                                       // 妖精森林：圍牆＝大樹
-  for(let x=VX0;x<=VX1;x++){g[VY0][x]=WALL;g[VY1][x]=WALL;}
-  for(let y=VY0;y<=VY1;y++){g[y][VX0]=WALL;g[y][VX1]=WALL;}
+function buildBirthTown(name,id,exitTo,forest,size){   // size 可選：{W,H}，不給就用預設 44x36
+  const W=(size&&size.W)||44, H=(size&&size.H)||36, g=NG(W,H),ex={},houses=[];
+  // 圍牆內縮1格就好(原本內縮3格，跟最外框的樹之間會形成兩排樹林，白白浪費空間)
+  const VX0=1,VX1=W-2,VY0=1,VY1=H-2, cx=W>>1, cy=H>>1;
+  // 妖精森林的邊界一律交給最外框那一圈大樹(見下方 border 之後的處理)，
+  // 這裡就不再多畫一圈圍牆，否則兩者相鄰會變成兩層樹牆、白白吃掉空間。
+  if(!forest){
+    const WALL = T_TOWNWALL;
+    for(let x=VX0;x<=VX1;x++){g[VY0][x]=WALL;g[VY1][x]=WALL;}
+    for(let y=VY0;y<=VY1;y++){g[y][VX0]=WALL;g[y][VX1]=WALL;}
+  }
   for(let y=cy-2;y<cy+2;y++)for(let x=cx-3;x<cx+3;x++)g[y][x]=T_DIRT;            // 中央廣場
   vLane(g,cx,VY0,VY1); hLane(g,cy,VX0,VX1); g[VY1][cx]=T_GATE;                    // 十字路 + 南門
   if(forest){ scatterTrees(g,60,3);                                              // 林間散樹
@@ -2368,13 +2437,13 @@ function buildBirthTown(name,id,exitTo,forest){ const W=44,H=36,g=NG(W,H),ex={},
   }
   g[cy-1][cx] = forest?T_MOTHERTREE:T_BIGTREE;                                    // 中心巨樹：妖精森林＝森林之母、銀騎士村莊＝大樹
   border(g);
-  if(forest){ for(let x=0;x<W;x++){g[0][x]=T_BIGTREE;g[H-1][x]=T_BIGTREE;} for(let y=0;y<H;y++){g[y][0]=T_BIGTREE;g[y][W-1]=T_BIGTREE;} } // 外框也是樹
+  if(forest){ for(let x=0;x<W;x++){g[0][x]=T_BIGTREE;g[H-1][x]=T_BIGTREE;} for(let y=0;y<H;y++){g[y][0]=T_BIGTREE;g[y][W-1]=T_BIGTREE;} } // 最外框：與內縮1格的圍牆合為單排樹林
   gapS(g,cx,ex,exitTo); vLane(g,cx,VY1,H-2);
   return {name:name,id:id,wild:false,grid:g,houses:houses,exits:ex,px:cx*TS,py:(cy+2)*TS,W:W,H:H}; }
 /* 地城(冒險洞穴)版面持久化：迷宮用亂數生成，若每次進圖都重新生成會導致玩家每次進去都是完全不同的
    格局(暗門/樓梯位置也會跟著變)，無法熟悉地圖。改成只在「第一次」生成迷宮，之後存進localStorage，
    下次進圖直接讀取存好的版面，格局、暗道、王房位置都會維持一致，直到玩家自己在後台清除重置。*/
-const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v11';   // v10→v11：迷宮改為固定種子生成(版面永遠相同)、移除舊的裝飾魔法陣   // v9→v10：1樓新增5間主題房、巴風特魔法陣改開在王房內   // v8→v9：傳送落點改為各層入口(不再落在地圖中央)   // v7→v8：修正傳送進洞穴會卡在牆裡的問題(出生點自動避開牆壁)   // v6→v7：修正1樓尺寸參數沒生效的bug，1F/2F都是91x91   // v5→v6：迷宮91x91、密度提高、補鑿外圈讓外牆只剩1格   // v3→v4：迷宮尺寸由40x34放大為90x90，舊快取失效重新生成   
+const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v13';   // v12→v13：修正入口廣場把2樓回程樓梯抹掉的問題   // v11→v12：傳送入口清出半徑4格空地，不會一到就被牆夾住   // v10→v11：迷宮改為固定種子生成(版面永遠相同)、移除舊的裝飾魔法陣   // v9→v10：1樓新增5間主題房、巴風特魔法陣改開在王房內   // v8→v9：傳送落點改為各層入口(不再落在地圖中央)   // v7→v8：修正傳送進洞穴會卡在牆裡的問題(出生點自動避開牆壁)   // v6→v7：修正1樓尺寸參數沒生效的bug，1F/2F都是91x91   // v5→v6：迷宮91x91、密度提高、補鑿外圈讓外牆只剩1格   // v3→v4：迷宮尺寸由40x34放大為90x90，舊快取失效重新生成   
 function loadDungeonLayouts(){ try{ var r=localStorage.getItem(DUNGEON_LAYOUT_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
 function saveDungeonLayouts(){ try{ localStorage.setItem(DUNGEON_LAYOUT_KEY, JSON.stringify(DUNGEON_LAYOUTS)); }catch(e){} }
 let DUNGEON_LAYOUTS=loadDungeonLayouts();
@@ -2436,7 +2505,10 @@ const MAP_BUILDERS = {
     MAP_WARPS['cave']=warps;
     }, {W:91,H:91});
     m.dungeon=true;
-    { const _e=findNearestWalkable(m.grid, Math.floor(m.W/2), 2);   // 傳送到1樓＝出現在地面入口(北側缺口)，不再落到地圖正中央
+    { const _ex=Math.floor(m.W/2), _ey=5;                           // 落點往內移到y=5，不再貼著地圖邊界
+      carveEntryPlaza(m.grid, m.W, m.H, _ex, _ey, 4);              // 入口清出半徑4格的空地，不會一到就被牆夾住
+      if(stairsDown) m.grid[stairsDown.y][stairsDown.x]=T_STAIRS;  // 保險：廣場會覆蓋地磚，萬一下樓梯剛好在範圍內要補回來
+      const _e=findNearestWalkable(m.grid, _ex, _ey);
       m.px=_e.x*TS; m.py=_e.y*TS; }
     DUNGEON_LAYOUTS.cave={grid:m.grid, exits:m.exits, px:m.px, py:m.py, W:m.W, H:m.H, warps:MAP_WARPS['cave'], stairsDown:stairsDown};
     saveDungeonLayouts();
@@ -2466,7 +2538,10 @@ const MAP_BUILDERS = {
         g[2][o.cx]=T_STAIRS;
         MAP_WARPS['cave2']=[{x:o.cx,y:2,kind:'map',toMap:'cave',toX:stairsUp.x+1,toY:stairsUp.y}];   // 落地點跟1樓下樓梯本身差1格，不會一到就站在下樓觸發格上
       }, {W:91,H:91});
-      { const _e=findNearestWalkable(m.grid, Math.floor(m.W/2), 1);  // 傳送到2樓＝出現在1樓樓梯通往的入口(回程樓梯旁)
+      { const _ex=Math.floor(m.W/2), _ey=5;
+        carveEntryPlaza(m.grid, m.W, m.H, _ex, _ey, 4);            // 2樓入口同樣清出空地
+        m.grid[2][_ex]=T_STAIRS;                                   // 廣場會覆蓋地磚，所以清完之後要把回程樓梯重新補上
+        const _e=findNearestWalkable(m.grid, _ex, _ey);
         m.px=_e.x*TS; m.py=_e.y*TS; }
       gridBase=m.grid; pxBase=m.px; pyBase=m.py; wBase=m.W; hBase=m.H; bossRoomBase=bossRoom; warpsBase=MAP_WARPS['cave2']||[];
       DUNGEON_LAYOUTS.cave2={grid:gridBase, px:pxBase, py:pyBase, W:wBase, H:hBase, bossRoom:bossRoomBase, warps:warpsBase};
@@ -2496,9 +2571,13 @@ const MAP_BUILDERS = {
   hunt_w: ()=>buildTerminal('西邊狩獵場','hunt_w',true,{e:'cross_s'},(g,o)=>scatterTrees(g,90,3)),
   hunt_s: ()=>buildTerminal('南邊狩獵場','hunt_s',true,{n:'cross_s'},(g,o)=>scatterTrees(g,90,9)),
   hunt_e: ()=>buildTerminal('東邊狩獵場','hunt_e',true,{w:'cross_s', n:'cross_e'},(g,o)=>scatterTrees(g,90,5)),
-  elf_forest: ()=>{ var _m=buildBirthTown('妖精森林','elf_forest','village',true); if(typeof ELF_NPCS!=='undefined') ELF_NPCS.forEach(function(nn){ var _gx=(nn.x/TS)|0,_gy=(nn.y/TS)|0; if(_m.grid[_gy]&&_m.grid[_gy][_gx]===T_TREE) _m.grid[_gy][_gx]=T_GRASS; }); return _m; },        // 妖精出生地
+  elf_forest: ()=>{ var _m=buildBirthTown('妖精森林','elf_forest','village',true,{W:56,H:50});   /* 尺寸比照說話之島村莊 */
+    { var _cx=_m.W>>1, _cy=(_m.H>>1)-1, _ex=_cx-4;                              /* 娜魯帕洞穴入口：森林之母左側4格 */
+      _m.grid[_cy][_ex]=T_STAIRS;
+      MAP_WARPS['elf_forest']=[{x:_ex, y:_cy, kind:'map', toMap:'narupa_cave', toX:16, toY:12}]; } if(typeof ELF_NPCS!=='undefined') ELF_NPCS.forEach(function(nn){ var _gx=(nn.x/TS)|0,_gy=(nn.y/TS)|0; if(_m.grid[_gy]&&_m.grid[_gy][_gx]===T_TREE) _m.grid[_gy][_gx]=T_GRASS; }); return _m; },        // 妖精出生地
   silver_knight: ()=>buildBirthTown('銀騎士村莊','silver_knight','village',false),// 騎士出生地
   slime_arena: ()=>buildSlimeArena(),                                            // 史萊姆競技場(賭場)
+  narupa_cave: ()=>buildNarupaCave(),                                            // 娜魯帕洞穴(妖精森林地下)
 };
 /* 野外地圖清單：給「傳送術」等隨機傳送類功能使用，涵蓋岔路/港口/狩獵場/冒險洞穴1-2樓（訓練場是固定佈局的特殊場地，不列入隨機傳送目的地）*/
 const WILD_MAP_IDS=['north_island','port_n','port_e','hunt_w','hunt_s','hunt_e','cross_e','cross_w','cross_s','cross_n'];
@@ -2905,29 +2984,46 @@ function drawIsoObject(t,cx,cy,treeScale,fenceNb){
   } else if(t===T_FENCE){ drawFenceIso(cx,cy,fenceNb);
   } else if(t===T_WELL){ drawWellIso(cx,cy);
   } else if(t===T_SIGN){ drawSignIso(cx,cy);
-  } else if(t===T_TOWNWALL){ drawTownWallIso(cx,cy);
+  } else if(t===T_TOWNWALL){ drawTownWallIso(cx,cy,fenceNb);
   } else if(t===T_GATE){ drawGateIso(cx,cy);
   } else if(t===T_BIGTREE){ drawBigTreeIso(cx,cy,treeScale||1); }
   else if(t===T_MOTHERTREE){ drawMotherTreeIso(cx,cy); }
 }
 
-function drawTownWallIso(cx,cy){
+/* 城牆：依相鄰的城牆決定木樁要沿哪個方向排列。
+   原本一律畫成「水平一排」，但等角投影下相鄰格是斜向相接，整段牆看起來就會歪斜。
+   改成沿著牆的走向(+X＝螢幕右下、+Y＝螢幕左下)鋪木樁，牆面才會連成一直線。*/
+function drawTownWallIso(cx,cy,nb){
+  nb=nb||{};
   shadow(cx,cy,20,7);
   const woodL='#c08a48', wood='#9a6a34', woodD='#734f24', tip='#8a5a2a', grain='rgba(80,52,22,.45)';
-  const top=cy-30, h=30;
-  // 後方橫樑（先畫，被木樁擋住一部分）
-  ctx.fillStyle=woodD; ctx.fillRect(cx-28,cy-24,56,4); ctx.fillRect(cx-28,cy-12,56,4);
-  // 一排尖頭木樁（跨整格寬，左亮右暗）
-  for(let i=-3;i<=3;i++){ const px=cx+i*8.5;
-    ctx.fillStyle = i<0?woodL : i>0?woodD : wood;
-    ctx.fillRect(px-3.5, top, 7, h);                              // 木板
-    ctx.fillStyle='#d8a860'; ctx.fillRect(px-3.5, top, 1.5, h);   // 左緣高光
-    ctx.fillStyle=tip; ctx.beginPath();                          // 尖頂
-    ctx.moveTo(px-3.5,top); ctx.lineTo(px,top-5); ctx.lineTo(px+3.5,top); ctx.closePath(); ctx.fill();
-    ctx.fillStyle=grain; ctx.fillRect(px+1, top+3, 1, h-5);       // 木紋
+  const h=30, top=cy-30;
+  // 決定走向：有東西向鄰居就沿 +X，否則沿 +Y(南北向)。兩者皆無時預設沿 +X。
+  const alongX = (nb.e||nb.w) || !(nb.n||nb.s);
+  const ux = alongX ? HW : -HW;            // 一格在螢幕上的水平位移
+  const uy = HH;                           // 一格在螢幕上的垂直位移(兩個方向都是往下)
+  const N=7;                               // 每格鋪幾根木樁
+  // 後方橫樑：沿著走向斜著畫
+  const beam=function(off,col,th){
+    ctx.strokeStyle=col; ctx.lineWidth=th; ctx.lineCap='butt';
+    ctx.beginPath();
+    ctx.moveTo(cx-ux/2, cy-off-uy/2);
+    ctx.lineTo(cx+ux/2, cy-off+uy/2);
+    ctx.stroke();
+  };
+  beam(24,woodD,4); beam(12,woodD,4);
+  // 一排尖頭木樁：位置沿走向分布，越靠+X/+Y方向越暗
+  for(let i=0;i<N;i++){
+    const t=(i/(N-1))-0.5;                                        // -0.5 ~ +0.5
+    const px=cx+ux*t, py=cy+uy*t;
+    ctx.fillStyle = t<-0.05?woodL : t>0.05?woodD : wood;
+    ctx.fillRect(px-3.5, py-h, 7, h);                             // 木板
+    ctx.fillStyle='#d8a860'; ctx.fillRect(px-3.5, py-h, 1.5, h);  // 左緣高光
+    ctx.fillStyle=tip; ctx.beginPath();                           // 尖頂
+    ctx.moveTo(px-3.5,py-h); ctx.lineTo(px,py-h-5); ctx.lineTo(px+3.5,py-h); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=grain; ctx.fillRect(px+1, py-h+3, 1, h-5);      // 木紋
   }
-  // 前方橫樑高光
-  ctx.fillStyle='#a87a3a'; ctx.fillRect(cx-28,cy-24,56,1); ctx.fillRect(cx-28,cy-12,56,1);
+  beam(24,'#a87a3a',1); beam(12,'#a87a3a',1);                     // 前方橫樑高光
 }
 function drawGateIso(cx,cy){
   // 紅色牌樓（村口）
@@ -3187,22 +3283,21 @@ const SILVER_NPCS=[
   {name:'瑞奇', mob:'瑞奇', art:'knight', x:15*TS, y:20*TS, lines:['瑞奇：「……」']},
 ];
 const ELF_NPCS=[
-  {name:'那翰', job:'道具製作', mob:'那翰', art:'mage', x:12*TS, y:10*TS, craft:'npc_nalien', lines:['那翰：「我能協助你製作魔法笛子。」']},
-  {name:'娜魯帕', job:'妖精製作匠人', mob:'娜魯帕', art:'mage', x:30*TS, y:10*TS, craft:'npc_narupa', lines:['娜魯帕：「妖精專用的裝備，我都能打造。」']},
-  {name:'精靈', job:'森林守護者', mob:'精靈', art:'mage', x:16*TS, y:9*TS, craft:'npc_elf', lines:['精靈：「需要純粹的米索莉塊或精靈羽翼嗎？」']},
-  {name:'精靈女皇', job:'森林守護者', mob:'精靈女皇', art:'mage', x:28*TS, y:12*TS, craft:'npc_elfqueen', lines:['精靈女皇：「奧里哈魯根，唯有我能煉製。」']},
-  {name:'安特', job:'森林守護者', mob:'安特', art:'mage', x:32*TS, y:26*TS, craft:'npc_ent', lines:['安特：「森林的素材，我來為你加工。」']},
-  {name:'潘', job:'森林守護者', mob:'潘', art:'mage', x:32*TS, y:14*TS, craft:'npc_pan', lines:['潘：「想製作點什麼呢？」']},
-  {name:'芮克妮', job:'森林守護者', mob:'芮克妮', art:'mage', x:10*TS, y:15*TS, craft:'npc_rekne', lines:['芮克妮：「蛛網與絲線，交給我吧。」']},
-  {name:'布拉伯', job:'道具製作', mob:'布拉伯', art:'mage', x:13*TS, y:24*TS, craft:'npc_brabo', lines:['布拉伯：「精靈武器與部件的製作找我。」']},
-  {name:'艾爾', job:'倉庫管理員', mob:'艾爾', art:'mage', x:24*TS, y:19*TS, warehouse:true, lines:['艾爾：「要寄放東西嗎？倉庫四個角色共用。」']},
-  {name:'琳達', job:'精靈魔法商', mob:'琳達', art:'mage', x:30*TS, y:23*TS, shop:'琳達', lines:['琳達：「各種基本精靈水晶，歡迎選購。」']},
-  {name:'艾利溫', job:'精靈魔法傳授者', mob:'艾利溫', art:'mage', x:17*TS, y:26*TS, elfAttr:true,
+  {name:'那翰', job:'道具製作', mob:'那翰', art:'mage', x:38*TS, y:20*TS, craft:'npc_nalien', lines:['那翰：「我能協助你製作魔法笛子。」']},
+  {name:'精靈', job:'森林守護者', mob:'精靈', art:'mage', x:14*TS, y:10*TS, craft:'npc_elf', lines:['精靈：「需要純粹的米索莉塊或精靈羽翼嗎？」']},
+  {name:'精靈女皇', job:'森林守護者', mob:'精靈女皇', art:'mage', x:8*TS, y:11*TS, craft:'npc_elfqueen', lines:['精靈女皇：「奧里哈魯根，唯有我能煉製。」']},
+  {name:'安特', job:'森林守護者', mob:'安特', art:'mage', x:18*TS, y:37*TS, craft:'npc_ent', lines:['安特：「森林的素材，我來為你加工。」']},
+  {name:'潘', job:'森林守護者', mob:'潘', art:'mage', x:10*TS, y:18*TS, craft:'npc_pan', lines:['潘：「想製作點什麼呢？」']},
+  {name:'芮克妮', job:'森林守護者', mob:'芮克妮', art:'mage', x:12*TS, y:31*TS, craft:'npc_rekne', lines:['芮克妮：「蛛網與絲線，交給我吧。」']},
+  {name:'布拉伯', job:'道具製作', mob:'布拉伯', art:'mage', x:22*TS, y:30*TS, craft:'npc_brabo', lines:['布拉伯：「精靈武器與部件的製作找我。」']},
+  {name:'艾爾', job:'倉庫管理員', mob:'艾爾', art:'mage', x:34*TS, y:19*TS, warehouse:true, lines:['艾爾：「要寄放東西嗎？倉庫四個角色共用。」']},
+  {name:'琳達', job:'精靈魔法商', mob:'琳達', art:'mage', x:36*TS, y:10*TS, shop:'琳達', lines:['琳達：「各種基本精靈水晶，歡迎選購。」']},
+  {name:'艾利溫', job:'精靈魔法傳授者', mob:'艾利溫', art:'mage', x:42*TS, y:15*TS, elfAttr:true,
    lines:['艾利溫：「妖精必須選定一種屬性，才能與精靈締結契約。你想學習哪一種？」']},
-  {name:'里迪', job:'道具製作', mob:'里迪', art:'mage', x:11*TS, y:27*TS, craft:'npc_ridi', lines:['里迪：「精靈餅乾的製作找我。願精靈守護你。」']},
-  {name:'迷幻森林之母', mob:'', art:'mage', x:22*TS, y:17*TS, nodraw:true, motherTrial:true, reach:46, lines:['迷幻森林之母：「年輕的妖精啊，帶來受詛咒的精靈書，我將為你淨化它。」']}
+  {name:'里迪', job:'道具製作', mob:'里迪', art:'mage', x:19*TS, y:33*TS, craft:'npc_ridi', lines:['里迪：「精靈餅乾的製作找我。願精靈守護你。」']},
+  {name:'迷幻森林之母', mob:'', art:'mage', x:28*TS, y:24*TS, nodraw:true, motherTrial:true, reach:46, lines:['迷幻森林之母：「年輕的妖精啊，帶來受詛咒的精靈書，我將為你淨化它。」']}
 ];
-function curNpcs(){ return curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:(curMapId==='slime_arena'?ARENA_NPCS:[]))); }
+function curNpcs(){ return curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:(curMapId==='slime_arena'?ARENA_NPCS:(curMapId==='narupa_cave'?NARUPA_NPCS:[])))); }
 /* ===================== 史萊姆競技場（賭場） =====================
    5 條賽道、賽道長 30 格。常駐 12 隻史萊姆選手，每場隨機抽 5 隻出賽，每 30 分鐘一場。
    一張票 200 金幣，可一次買多張；賠率由勝率換算（勝率越低賠率越高）。*/
@@ -3595,7 +3690,7 @@ function arenaCountTick(){
   } else el.textContent='下一場開賽倒數　'+arenaFmtCountdown(arenaNextRaceAt()-now);
 }
 function arenaChatTick(){
-  if(curMapId!=='slime_arena') return;
+  if(curMapId!=='slime_arena') return;                              // 只有競技場的賭客會聊天；洞穴居民只走動不說話
   var now=Date.now();
   // 處理所有進行中的對話(可同時多組)：時間到就講下一句
   for(var k=_arenaDlgs.length-1;k>=0;k--){
@@ -3640,11 +3735,13 @@ function arenaChatTick(){
   sayBubble(g, line, 10000);
 }
 /* 賭客走動：在觀眾區隨機晃來晃去，偶爾停下來。講話中的會暫停移動並面向對方。*/
+/* NPC自由走動：在自己的起始位置附近隨機晃動，走一段停一下。
+   套用對象＝標了 gambler(競技場賭客/洞穴居民) 或 wander(妖精森林的守護者) 的NPC。*/
 function arenaWanderTick(dt){
-  if(curMapId!=='slime_arena') return;
-  if(typeof ARENA_NPCS==='undefined') return;
-  ARENA_NPCS.forEach(function(n){
-    if(!n.gambler) return;                                         // 只有賭客會走動，執行者/售票員站原地
+  var list=(typeof curNpcs==='function')?curNpcs():null;
+  if(!list||!list.length) return;
+  list.forEach(function(n){
+    if(!n.gambler && !n.wander) return;                            // 其他NPC(商人/倉庫管理員等)站原地
     if(n.home==null){ n.home={x:n.x,y:n.y}; n.wc=0; }
     if(_arenaDlgs.some(function(x){return x.a===n||x.b===n;})) return;   // 對話中：站著講話
     n.wc-=dt;
@@ -4345,9 +4442,12 @@ const VILLAGE_PARTY_SPOTS=[[32,31],[36,30],[40,31],[31,35],[35,34],[39,35],[36,3
    往外螺旋搜尋可站立又互不重疊的格子。回傳的座標對同一張地圖是固定的(不含亂數)，
    所以出村再回來，每位隊友都會回到自己原本的位置。*/
 const _villageSpotCache={};
+/* 妖精森林：隊友固定安置在東南方那片草地(該區刻意留白給隊伍用) */
+const ELF_PARTY_SPOTS=[[34,31],[38,30],[42,31],[34,36],[38,35],[42,36],[46,33]];
 function villagePartySpots(){
   const id=curMapId||'';
   if(id==='village') return VILLAGE_PARTY_SPOTS;
+  if(id==='elf_forest') return ELF_PARTY_SPOTS;
   if(_villageSpotCache[id]) return _villageSpotCache[id];
   const cx=Math.floor(MAPW/2), cy=Math.floor(MAPH/2);
   const used={}, out=[];
@@ -5240,9 +5340,9 @@ function render(){
     if(s.x<-HW-40||s.x>VW+HW+40||s.y<-120||s.y>VH+HH+40) continue;
     const _fade=_wallOccludes(tx,ty);                          // 會擋到角色 → 用40%不透明度畫，看得到後面的人
     const _ts=(t===T_BIGTREE)?bigTreeScaleAt(tx,ty):1;              // 只有村莊正中央那棵大樹會放大
-    const _fn=(t===T_FENCE)?{                                      // 柵欄：查四方鄰居，決定要往哪幾邊接出橫桿
-      e:(MAP[ty]&&MAP[ty][tx+1]===T_FENCE), w:(MAP[ty]&&MAP[ty][tx-1]===T_FENCE),
-      s:(MAP[ty+1]&&MAP[ty+1][tx]===T_FENCE), n:(MAP[ty-1]&&MAP[ty-1][tx]===T_FENCE)}:null;
+    const _fn=(t===T_FENCE||t===T_TOWNWALL)?{                       // 柵欄/城牆：查四方同類鄰居，決定連接方向
+      e:(MAP[ty]&&MAP[ty][tx+1]===t), w:(MAP[ty]&&MAP[ty][tx-1]===t),
+      s:(MAP[ty+1]&&MAP[ty+1][tx]===t), n:(MAP[ty-1]&&MAP[ty-1][tx]===t)}:null;
     talls.push({d:tx+ty, f:()=>{ if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts,_fn); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts,_fn); }});
   } } }
   curNpcs().forEach(n=>{ const gx=(n.x+16)/TS, gy=(n.y+16)/TS;
@@ -5924,7 +6024,7 @@ function drawNpcIso(n){
   const sheet = n.mob && mobSheetReady(n.mob);
   if(sheet){ const gs=groundScreen(n.x+16,n.y+28); actorShadow(ctx,gs.x,gs.y,14,5);
     const sc=MOB_SCALE[n.mob]||1.4;
-    const topY=drawSheetFrame(ctx,sheet,gs.x,gs.y,sc,(DIR8_FRAME['down']??0),(n.mob||n.name));
+    const topY=drawSheetFrame(ctx,sheet,gs.x,gs.y,sc,(DIR8_FRAME[n.dir8||'down']??0),(n.mob||n.name));   // 會走動的NPC依移動方向轉身
     if(!n.gambler||npcHovered(n)) nameTagJob(n.name, n.job, gs.x, topY-2, '#ffe0a0');
     if(n.quest && !S.questRewarded){ ctx.fillStyle='#ffd54a'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center'; ctx.fillText('!', gs.x+20, topY-2); }
   } else if(n.psheet){ const img=sheetReady(n.psheet.cls, n.psheet.gender);
@@ -7086,6 +7186,8 @@ function whConfirm(){ let moved=0;
     if(whMode==='deposit'){ q=Math.min(q, availCount(id)); if(q<=0)continue; removeItem(id,q); S.warehouse[id]=(S.warehouse[id]||0)+q; moved+=q; }
     else { q=Math.min(q, S.warehouse[id]||0); if(q<=0)continue; S.warehouse[id]-=q; if(S.warehouse[id]<=0)delete S.warehouse[id]; addItem(id,q); moved+=q; } }
   whQty={}; recalcStats(); refreshUI();
+  if(typeof persistSharedWarehouse==='function') persistSharedWarehouse(S.warehouse);   // 批量存取也要寫回共用倉庫，否則換角色後看不到
+  if(typeof persistSaves==='function') persistSaves();
   if(moved>0) sysMsg((whMode==='deposit'?'\u5b58\u5165':'\u53d6\u56de')+' '+moved+' \u4ef6\u7269\u54c1'); else sysMsg('\u672a\u9078\u64c7\u4efb\u4f55\u6578\u91cf');
   renderWarehouse(); }
 function renderWarehouse(){ const choose=document.getElementById('whChoose'), tabs=document.getElementById('whTabs'), list=document.getElementById('whList'), greet=document.getElementById('whGreet'), bottom=document.getElementById('whBottom');
@@ -8247,6 +8349,8 @@ function redSubmit(){ for(var i=0;i<REDQ_PX.length;i++){ if((S.inv[REDQ_PX[i][0]
 // 依製作鍵反查工匠名（用於標題）
 function craftNpcName(key){ var ov={npc_mother:'迷幻森林之母'}; if(ov[key])return ov[key];
   var pools=[]; if(typeof npcs!=='undefined')pools.push(npcs); if(typeof ELF_NPCS!=='undefined')pools.push(ELF_NPCS);
+  if(typeof SILVER_NPCS!=='undefined')pools.push(SILVER_NPCS);
+  if(typeof NARUPA_NPCS!=='undefined')pools.push(NARUPA_NPCS);   // 洞穴NPC也要納入，否則娜魯帕會抓到別人的名字
   for(var p=0;p<pools.length;p++){ for(var i=0;i<pools[p].length;i++){ if(pools[p][i].craft===key)return pools[p][i].name; } }
   return '工匠'; }
 function closeCraft(){ var w=document.getElementById('craftw'); if(w)w.style.display='none'; _craftIdx=null; if(typeof navClear==='function')navClear(); }   // 關閉時回到清單頁，下次打開不會停在上次的詳細頁
