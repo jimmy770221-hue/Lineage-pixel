@@ -5,7 +5,119 @@
 ※ 公告欄（noticeBody）採「只增不刪」原則：新版本一律加在最上方，舊紀錄永久保留，
    除非玩家明確要求才刪除舊紀錄。
 ========================================
-v79 2026-08-26 （本日開發中）
+v80 2026-08-27 （本日開發中）
+             ・修正房屋半透明擋人邏輯觸發範圍過大的問題：原本只要站在房子四周(含前面、側面)都會半透明，
+               但前面、側面其實已經靠footprint後角當深度鍵正確排序了，不需要再套用，站在那邊反而變得
+               房子動不動就透明很奇怪。改成只有站在房子「北側/背面」才觸發半透明，前面、側面維持正常
+               不透明繪製
+             ・房屋貼圖是單張固定視角的美術，沒有真正的「背面牆」可以擋角色，玩家站在房子後方/側邊時
+               光靠深度排序沒辦法完美判斷該不該擋住人物，會出現人物跟房子疊在一起、卡卡的觀感。改成
+               比照城牆/柵欄既有的半透明擋人邏輯：只要玩家或隊友站在房子footprint四周(含背面)附近，
+               房子就自動變成40%透明度，確保角色一定看得到，不會再有人卡進房子裡的錯覺
+             ・修正房屋貼圖深度排序錯誤導致角色被房子蓋住的問題：用模擬算過，玩家站在房子前面、側面
+               絕大多數位置時，排序鍵都比之前用「前角」算出來的房屋深度值還小，導致角色被誤判成「站在
+               房子後面」而被貼圖整個蓋住(尤其是頭部貼近石座裝飾時最明顯)。改用footprint的「後角」
+               (取最小值)當排序鍵後，重新驗證西側/西南/正南/東側/東南六種站位全部正確排到房子前面
+             ・修正房屋貼圖錨點錯誤導致玩家會穿進房子下半部的問題：原本貼圖是對齊footprint的「中心點」，
+               但正確應該對齊「最靠近鏡頭的前角」，兩者在畫面上差了快一整格的距離，導致碰撞範圍比畫面
+               看到的房子牆面更往前凸出一截，玩家會像整個人陷進房子裡。改成對齊前角後，畫面與碰撞範圍
+               終於對齊；深度排序鍵也同步改用前角座標，跟繪製錨點保持一致
+             ・修正房屋貼圖換新後占地(碰撞範圍)沒跟著縮小的問題：說話之島村莊、銀騎士村莊的房子改用貼圖
+               後，可走區域還是沿用舊版程序繪製方塊屋的大尺寸(5x3/7x4/6x4格)，導致玩家在肉眼看到的
+               牆邊很遠處就被隱形牆擋住，無法真正走近新房子。改成用原本排版設計的座標算出「中心點」，
+               碰撞范圍改用貼近新貼圖視覺大小的尺寸(小屋3x2、大屋4x3格)置中鋪設，房子原本的排版位置
+               不變，但周圍可走空間變大，能真正走到牆邊
+             ・接上PixelLab生成的小木屋美術，取代說話之島村莊、銀騎士村莊所有房屋原本的程序繪製方塊屋
+               (兩座村莊共用同一個drawHouse()繪製函式，一次改完全部生效)；大屋(big)畫得比小屋大一圈
+               做出尺寸區別；貼圖尚未載入完成前會先退回舊版程序繪製當備援，不會出現空白
+             ・冒險洞穴入口新增立體石階造景(T_STAIRUP)：1樓入口廣場、2樓回程樓梯旁各放了一座，呼應
+               「這裡是通往另一層的出入口」；PixelLab生成的正式美術(左向/右向兩款)還在等玩家上傳，
+               目前先用既有的程序繪製版本頂著，之後圖到位會直接換上不用動地圖資料。地城版面快取升版
+               (v14→v15)，玩家下次進洞穴會自動重新生成套用新造景
+             ・接上新一批PixelLab生成的地面材質圖集(16格：草地4款/沙地4款/泥地4款/海水4款)，取代原本
+               純程序繪製的草地/泥地/海水，畫面質感大幅提升；每格地磚依座標固定挑選其中一款紋理，
+               同一格每次畫都一樣、不同格自然錯開，不會排出規律格線；圖尚未載入完成前會先退回舊版
+               純色程序繪製當備援，不會出現空白
+             ・新增沙地地磚(T_SAND)，並讓所有海水旁的草地自動鋪上沙灘過渡帶(beachify)：只要地圖上
+               草地緊鄰海水，該格就會自動換成沙地，海邊不再是草地直接貼著海水；地牢地底湖是泥地地板
+               不受影響，不會冒出沙灘
+             ・冒險洞穴1樓「往下地窖」樓梯正式套用新樣式：深色凹陷方框＋漸窄階梯線＋木石外框，
+               取代原本單純的階梯剪影；往上/入口用的立體石階暫緩，先不放進地圖
+             ・修正「永晝」設定在地牢內無效的問題：原本地牢一律強制黑夜、不受設定影響；
+               現在只要開啟永晝，不管在不在地牢一律維持白天(類似外掛效果)；若選擇「夜間」模式，
+               地牢仍固定黑夜，地面則照正常日夜曲線走
+             ・新增PVP模式：按住CTRL滑鼠移到假玩家身上時，鼠標會變成攻擊圖示，點擊即可強制攻擊該假玩家
+               (優先於一般點怪/移動指令)；假玩家會反擊，戰鬥期間頭上會出現血條。所有地圖的假玩家
+               (村莊買賣/野外狩獵)都隨機賦予了正義(約1/3)、中立(約1/3)、邪惡(約1/3)三種性向值。
+               擊殺正義或中立的假玩家，性向值大幅下降15000~20000；擊殺邪惡的假玩家，性向值反而
+               提升約5000。攻擊假玩家期間玩家名字會暫時變成粉紅色，停止攻擊超過15秒後才恢復成
+               原本性向值對應的顏色。假玩家被擊殺後30秒會在原地圖補一位新的，維持人口密度
+             ・修正假玩家名字沒有依性向變色的問題：名條共用函式在對象沒有職稱(job)時會直接忽略
+               傳入的顏色、寫死成白色，導致假玩家不管性向是什麼一律顯示白名字。現在改用跟主角
+               一樣的alignNameColor()，正義藍色、邪惡紅色、中立白色(跟主角中立時同色，屬正常現象)
+             ・新增物品「稀有度」系統：後台編輯器每項物品都新增稀有度欄位(①尋常~⑥超稀有共6級)，
+               並附「🎲重擲售價」按鈕，依所選等級隨機重新產生一個符合區間與進位規則的售價。
+               6個等級的售價區間與進位規則：①≤2000(個位進位)　②≤1萬(百位進位)　③≤10萬(千位進位)
+               ④≤50萬(千位進位)　⑤≤100萬(萬位進位)　⑥≤500萬(十萬位進位)。全遊戲442項一般物品
+               (不含金幣、魔法書，魔法書另有自己的等級定價)已批次套用：商店可直接買到的55項固定
+               為①且沿用原本已校正過的實際售價，其餘依材質/職業限制/強化難度/描述關鍵字等線索
+               估算等級並隨機定價；此為自動分類的第一版結果，可在編輯器內個別調整稀有度與售價
+             ・修正自動分類誤判的幾項稀有度：精靈餅乾/勇敢藥水/惡魔之血/強化自我加速藥水
+               （二段/一段加速類消耗品）原本被誤判成稀有度3~4，已一併修正回①尋常
+             ・補上製作類物品的稀有度規則：尋常製作(2~3種材料)=①、簡單製作(4種以上)=②、
+               中等製作(6種以上)=③、高難製作(用到稀有度③材料)=④、稀有製作(用到④材料)=⑤、
+               高稀有製作(用到⑤材料)=⑥。連帶修正原本沒被正確判斷的原料本身稀有度(奧里哈魯根⑥、
+               精煉/粗糙米索莉塊⑤/④、各色寶石依「高品質/品質」分級等)，並依配方鏈逐層往上疊代
+               重新計算所有88項受影響的製作類物品與原料，確保上游材料稀有度會正確反映到下游成品
+             ・修正PVP攻擊未排除村莊安全區域的問題：村莊內CTRL+點擊假玩家不會再顯示攻擊鼠標、
+               也無法設定強制攻擊；若在野外攻擊到一半跑回村莊，會立即中止PVP，不能繼續出手也
+               不會被假玩家反擊，跟其他戰鬥系統一樣把村莊視為安全區域
+             ・假玩家小型社會系統：每位假玩家都有等級(3~45級，多數低等、少數高手、極少數大神)，
+               並依等級搭配武器與防具(職業對應)：等級愈高，裝備的稀有度區間與強化程度也愈高，
+               低等大多是基礎或安定值裝備，但保留約6%機率讓低等玩家意外配到偏高等的裝備(有錢玩家)。
+               生命值依等級與裝備強化程度成長，等級越高、裝備越強的假玩家愈難打。
+               PVP戰鬥傷害改為讀取雙方實際的等級、武器強化值與防具計算(不再是固定數值)，
+               角色頭上武器會依實際裝備顯示對應款式
+             ・改為用「鑑定卷軸」查看假玩家資訊：滑鼠移上去的名條不再直接顯示等級，改成使用一次
+               鑑定卷軸、接著點擊要鑑定的假玩家，才會跳出鑑定結果視窗，顯示姓名、職業、等級、
+               裝備的武器與防具名稱(不顯示HP等個人數值)，視窗大小與位置跟其他視窗一致(左上角)
+             ・假玩家改為全身穿滿裝備：頭盔、盔甲、內衣、手套、長靴、斗篷、項鍊、戒指(兩枚)、腰帶
+               都會配戴，雙手武器(弓/雙手劍/部分矛與鈍器)不配盾牌，其餘單手武器一律配盾牌。
+               HP與有效AC改依全身裝備的強化值加總計算，鑑定卷軸的結果視窗也一併列出全部部位
+             ・修正假玩家的項鍊/戒指/腰帶被誤配上強化值的問題：這三個部位跟玩家自己的強化系統
+               規則一致，本來就不能強化，假玩家配到這三類裝備時一律維持基礎(無+號)
+             ・修正假玩家PVP時沒有實際反擊動作的問題：原本被玩家攻擊時，假玩家的AI仍在自顧自打怪
+               或逛街，只有頻道文字顯示「反擊了你」。現在只要玩家鎖定攻擊，假玩家會停下手邊的事、
+               轉身面向玩家應戰，反擊命中時角色本身也會有揮擊的閃光效果，不再只是文字訊息
+             ・修正假玩家反擊距離判定錯誤的問題：原本誤用玩家自己武器的射程去判斷假玩家能不能
+               反擊，導致近戰武器的假玩家(如騎士拿劍)也能在遠距離反擊。現在改成依假玩家自己裝備
+               的武器種類決定反擊距離：劍/鈍器/魔杖近戰、矛2格、弓遠距；法師的魔杖武器本身仍是
+               近戰，但額外享有跟弓箭同等距離的魔法攻擊，符合法師可遠距離施法的設定
+             ・修正法師會配到匕首/劍等不合理武器、卻仍套用遠距魔法攻擊判定的問題：法師的武器
+               挑選現在強制限定為魔杖，且遠距魔法攻擊也只有在實際裝備魔杖時才會套用，不會再出現
+               「法師拿匕首卻能遠距離攻擊」的狀況
+             ・修正近戰假玩家原地反擊、不用靠近就打得到人的問題：改成比照怪物AI，假玩家如果不在
+               自己武器的攻擊範圍內，會主動朝玩家移動貼近，近戰武器(劍/鈍器/魔杖)要追到約1格內
+               才會真正反擊；拿弓的、或拿魔杖的法師本來就有遠距離攻擊能力，站定不動也能反擊，
+               不需要追近。已用完整多幀模擬驗證：近戰單位從150像素外一路追近到約34像素才命中，
+               弓箭手與法師則全程站定原地、150像素外照樣能命中
+             ・PVP戰鬥不再逐次跳出「造成X點傷害」「沒有命中」「反擊了你」等頻道文字，改成只保留
+               視覺回饋(揮擊閃光、頭上血條、名字變粉紅)，畫面比較乾淨；擊殺假玩家後的性向值增減
+               提示也一併拿掉，性向值仍會照常變動，只是不再跳出文字通知
+             ・接上PixelLab生成的道路材質：說話之島村莊的石板路(T_PATH)改用生成的石板貼圖，
+               取代原本純色程序繪製；草地/土地/水維持原樣不受影響，範圍只限道路這一種地形
+             ・拿掉每格地板都會畫的斜角高光/陰影線條：原本是想模擬立體感，但整片地圖疊在一起
+               會變成明顯的菱形格線，尤其貼上真實材質後更明顯。拿掉後地板銜接更平滑無縫
+             ・修正草地/土地/水的雜色小點紋理排列過於規律、看起來像網格的問題：改成依格子座標
+               算出固定亂數偏移，同一格每次畫都一樣(不會閃爍)，但不同格彼此錯開，不再排成格線
+             ・終於抓到畫面上斜向網格的真正原因：不是地板繪製邏輯，是整個遊戲畫面縮放造成的
+               摩爾紋。視窗大小很少剛好是1024x768的整數倍，縮放比例幾乎都是非整數，而主畫布用
+               image-rendering:pixelated(最近鄰插值)，兩者疊加就會產生規律的干涉網格。改成主畫布
+               單獨使用平滑縮放，介面圖示等其他畫布維持pixelated不受影響
+========================================
+========================================
+========================================
+v79 2026-08-26
              ・說話之島村莊新增NPC：法林(皮革加工師，可製作銀釘皮帽/涼鞋/背心/盾)、
                詹森(寵物管理員，可寄放狼與狗，領出時收費70金幣，不收迷魅或召喚的怪物)
              ・修正連的骷髏製作配方：材料名稱改回沿用既有道具「骨頭碎片」與「骷髏盔甲」，
@@ -918,6 +1030,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   #frame{position:fixed;left:0;top:0;width:1024px;height:768px;flex:none;transform-origin:top left;
     background:#1a140c;overflow:hidden;}
   canvas{position:absolute;inset:0;image-rendering:pixelated;background:#3a5a2a;}
+  #cv{image-rendering:auto;}   /* 主遊戲畫布：整體視窗縮放比例幾乎不會是整數倍，pixelated最近鄰插值在非整數縮放下會產生摩爾紋(斜向網格)，改用平滑縮放來源避免這個問題 */
   .ui{position:absolute;z-index:95;}
 
   /* 共用木質金邊面板 */
@@ -1237,7 +1350,14 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   #shopw2 .sx{background:#7a2a1a;color:#fff;border:0;border-radius:3px;padding:3px 10px;cursor:pointer;font-size:16px;}
   /* 寵物寄放視窗：外框比照矮人倉庫(#shopw2)，清單列比照製作視窗(#craftw)的樣式 */
   #petwhw{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:96;}
-  #petwhw.on{display:block;}
+  #fpIdentW{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:96;}
+  #fpIdentW.on{display:block;}
+  #fpIdentW .win{background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 6px 24px rgba(0,0,0,.6);border-radius:5px;width:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#e8dcc0;padding:12px;}
+  #fpIdentW h2{color:#e8c060;font-size:20px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+  #fpIdentW .sx{background:#7a2a1a;color:#fff;border:0;border-radius:3px;padding:3px 10px;cursor:pointer;font-size:16px;}
+  #fpIdentW .frow{display:flex;padding:6px 2px;border-bottom:1px solid rgba(139,106,42,.28);font-size:16px;}
+  #fpIdentW .flbl{width:70px;flex:none;color:#c0a860;}
+  #fpIdentW .fval{color:#f2d489;}
   #petwhw .win{background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 6px 24px rgba(0,0,0,.6);border-radius:5px;width:100%;height:500px;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#e8dcc0;padding:12px;}
   #petwhw h2{color:#e8c060;font-size:20px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
   #petwhw .sx{background:#7a2a1a;color:#fff;border:0;border-radius:3px;padding:3px 10px;cursor:pointer;font-size:16px;}
@@ -1846,6 +1966,11 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     <div id="petwhBody"></div>
   </div></div>
 
+  <div id="fpIdentW"><div class="win">
+    <h2>🔍 鑑定結果 <button class="sx" onclick="closeFpIdent()">關閉</button></h2>
+    <div id="fpIdentBody"></div>
+  </div></div>
+
   <div id="pyxShopW"><div class="win">
     <h2>🎁 皮賽爾（畢克斯商人） <button class="sx" onclick="closePyxShop()">關閉</button></h2>
     <div id="pyxShopBody"></div>
@@ -1889,7 +2014,11 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     <div id="titleLogo">天堂 · 像素版</div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
-      <div id="noticeBody"><div class="noticeVer">◆ v79（2026-08-26）</div>
+      <div id="noticeBody"><div class="noticeVer">◆ 2026-08-28</div>
+<ul>
+<li>目前暫時停更，鑑於要往獨立遊戲發展，需要換個方向製作，改風格，避免遭到侵權風波，感謝前陣子大家的支持，後續有更新，會再到獨立遊戲版發佈。</li>
+</ul>
+<div class="noticeVer">◆ v79（2026-08-26）</div>
 <ul>
 <li><b>說話之島村莊新增NPC</b>：法林(皮革加工師，可將皮製裝備升級為銀釘系列)、詹森(寵物管理員，可寄放狼與狗，領回時收費70金幣)、多瑪(鐵匠，武器防具修復功能尚未開放)、皮賽爾(畢克斯商人)</li>
 <li><b>商品清單移除「攻X／防X」數值提示</b>：只留名稱＋價格</li>
@@ -2270,9 +2399,9 @@ const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 const VX0=28,VX1=52,VY0=24,VY1=48;
 const GATE_NX=[39,40], GATE_SX=[39,40], GATE_WY=[35,36], GATE_EY=[35,36];
 function inVillage(px,py){ return curMap ? !curMap.wild : true; }
-const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20;
+const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20,T_STAIRUP=22,T_SAND=23;   // T_STAIRUP：立體的「往上/入口」石階結構(用於冒險洞穴入口、2樓落點)，T_STAIRS則是平面的「往下地窖」樣式；T_SAND：沙灘(可走)，由beachify()在陸地緊鄰海水處自動鋪設
 const T_BOSSPORTAL=21;              // 惡魔召喚魔法陣（進入王座之間）：一律以 2x2 共4格為一組
-const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL]);
+const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL]);   // T_STAIRUP改為可走(不在此清單)：它本身就是真正的樓梯出入口，玩家要能踩上去
 
 let MAP=[];
 /* ================= 多地圖系統（寶可夢式一圖接一圖） ================= */
@@ -2567,7 +2696,11 @@ function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
   for(let y=22;y<28;y++)for(let x=23;x<33;x++)g[y][x]=T_DIRT;                 // 中央廣場
   vLane(g,cx,VY0,VY1); hLane(g,cy,VX0,VX1);                                     // 村內十字
   g[VY0][cx]=T_GATE; g[VY1][cx]=T_GATE; g[cy][VX0]=T_GATE; g[cy][VX1]=T_GATE;   // 四門
-  const hs=(x,y,w,d,big)=>{houses.push({x,y,w,d,big}); for(let j=0;j<d;j++)for(let i=0;i<w;i++)if(g[y+j]&&g[y+j][x+i]!==undefined)g[y+j][x+i]=T_HOUSE;};
+  const hs=(x,y,w,d,big)=>{                                                    // 原本(x,y,w,d)是排版設計用的大小，改用它算出中心點；實際碰撞footprint改用貼近新木屋貼圖視覺大小的尺寸，置中鋪設，讓玩家能真正走到房子牆邊
+    const cx2=x+w/2, cy2=y+d/2, nw=big?4:3, nd=big?3:2, nx=Math.round(cx2-nw/2), ny=Math.round(cy2-nd/2);
+    houses.push({x:nx,y:ny,w:nw,d:nd,big});
+    for(let j=0;j<nd;j++)for(let i=0;i<nw;i++)if(g[ny+j]&&g[ny+j][nx+i]!==undefined)g[ny+j][nx+i]=T_HOUSE;
+  };
   hs(8,8,7,4,true); hs(17,8,5,3,false); hs(34,8,5,3,false); hs(43,8,7,4,true);
   hs(8,38,7,4,true); hs(17,40,5,3,false); hs(34,40,5,3,false); hs(43,38,7,4,true);
   hs(9,19,5,3,false); hs(43,26,5,3,false); hs(9,29,5,3,false); hs(43,16,5,3,false);
@@ -2589,6 +2722,32 @@ function buildCross(name,id,sides){ const W=40,H=34,g=NG(W,H),ex={},houses=[], c
   scatterTrees(g,60,7);
   return {name,id,wild:true,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
 }
+function beachify(g,W,H){                                            // 陸地緊鄰海水處自動鋪沙灘：只把T_GRASS換成T_SAND，地牢通道是T_DIRT不受影響，不會在地底湖邊冒出沙灘
+  const isWater=(x,y)=> !!(g[y] && g[y][x]===T_WATER);
+  const ring1=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(g[y][x]!==T_GRASS) continue;
+    let near=false;
+    for(let dy=-1;dy<=1&&!near;dy++)for(let dx=-1;dx<=1&&!near;dx++){
+      if(!dx&&!dy) continue;
+      if(isWater(x+dx,y+dy)) near=true;
+    }
+    if(near) ring1.push([x,y]);
+  }
+  const sandSet=new Set();
+  ring1.forEach(([x,y])=>{ if(tileRand(x,y,30)<0.92){ g[y][x]=T_SAND; sandSet.add(x+','+y); } });   // 貼水第一排留8%縫隙不鋪，讓草地偶爾探到水邊，不會是死板的一整圈
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){                          // 第二排：往內陸再擴一點，用低頻波形決定沿岸寬度緩慢起伏(有的地方窄、有的地方寬)，做出彎曲自然的海岸線
+    if(g[y][x]!==T_GRASS) continue;
+    let nearSand=false;
+    for(let dy=-1;dy<=1&&!nearSand;dy++)for(let dx=-1;dx<=1&&!nearSand;dx++){
+      if(!dx&&!dy) continue;
+      if(sandSet.has((x+dx)+','+(y+dy))) nearSand=true;
+    }
+    if(!nearSand) continue;
+    const wave=Math.sin(x*0.35+y*0.22)*0.5+0.5;
+    if(wave>0.45 && tileRand(x,y,31)<0.55) g[y][x]=T_SAND;
+  }
+}
 function buildTerminal(name,id,wild,back,extra,size){   // size 可選：{W,H}，不給就用預設 40x34
   const W=(size&&size.W)||40, H=(size&&size.H)||34, g=NG(W,H),ex={},houses=[],
         cx=Math.floor(W/2), cy=Math.floor(H/2);
@@ -2600,6 +2759,7 @@ function buildTerminal(name,id,wild,back,extra,size){   // size 可選：{W,H}�
     if(side==='e'){ gapE(g,cy,ex,to); hLane(g,cy,cx,W-2); }
   }
   if(extra) extra(g,{W,H,cx,cy,ex});
+  beachify(g,W,H);                                                     // 水岸自動鋪沙灘過渡帶
   // 出生點預設是地圖正中央，但迷宮類地圖(冒險洞穴)可能把中央填成牆，
   // 導致用傳送卷軸過來時卡在牆裡動不了。這裡統一往外找最近的可站立格。
   let sx=cx, sy=cy;
@@ -2631,7 +2791,11 @@ function buildBirthTown(name,id,exitTo,forest,size){   // size 可選：{W,H}，
   if(forest){ scatterTrees(g,60,3);                                              // 林間散樹
     [[9,10],[W-10,10],[9,H-12],[W-10,H-12]].forEach(function(p){ if(g[p[1]]&&g[p[1]][p[0]]===T_GRASS)g[p[1]][p[0]]=T_FLOWER; });
   } else {
-    const hs=(x,y,w,d)=>{houses.push({x,y,w,d,big:w>5}); for(let j=0;j<d;j++)for(let i=0;i<w;i++)if(g[y+j]&&g[y+j][x+i]!==undefined)g[y+j][x+i]=T_HOUSE;};
+    const hs=(x,y,w,d)=>{
+      const big=w>5, cx2=x+w/2, cy2=y+d/2, nw=big?4:3, nd=big?3:2, nx=Math.round(cx2-nw/2), ny=Math.round(cy2-nd/2);
+      houses.push({x:nx,y:ny,w:nw,d:nd,big});
+      for(let j=0;j<nd;j++)for(let i=0;i<nw;i++)if(g[ny+j]&&g[ny+j][nx+i]!==undefined)g[ny+j][nx+i]=T_HOUSE;
+    };
     hs(6,6,6,4); hs(W-12,6,6,4); hs(6,H-11,6,4); hs(W-12,H-11,6,4);
     if(g[cy-3])g[cy-3][cx+4]=T_WELL;
   }
@@ -2643,7 +2807,7 @@ function buildBirthTown(name,id,exitTo,forest,size){   // size 可選：{W,H}，
 /* 地城(冒險洞穴)版面持久化：迷宮用亂數生成，若每次進圖都重新生成會導致玩家每次進去都是完全不同的
    格局(暗門/樓梯位置也會跟著變)，無法熟悉地圖。改成只在「第一次」生成迷宮，之後存進localStorage，
    下次進圖直接讀取存好的版面，格局、暗道、王房位置都會維持一致，直到玩家自己在後台清除重置。*/
-const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v14';   // v13→v14：修正外圈迷宮格彼此互通、繞外圍一圈就能到終點的問題，外圈只接回內部不再自成環狀捷徑   // v12→v13：修正入口廣場把2樓回程樓梯抹掉的問題   // v11→v12：傳送入口清出半徑4格空地，不會一到就被牆夾住   // v10→v11：迷宮改為固定種子生成(版面永遠相同)、移除舊的裝飾魔法陣   // v9→v10：1樓新增5間主題房、巴風特魔法陣改開在王房內   // v8→v9：傳送落點改為各層入口(不再落在地圖中央)   // v7→v8：修正傳送進洞穴會卡在牆裡的問題(出生點自動避開牆壁)   // v6→v7：修正1樓尺寸參數沒生效的bug，1F/2F都是91x91   // v5→v6：迷宮91x91、密度提高、補鑿外圈讓外牆只剩1格   // v3→v4：迷宮尺寸由40x34放大為90x90，舊快取失效重新生成   
+const DUNGEON_LAYOUT_KEY='lineage_pixel_dungeon_layout_v17';   // v16→v17：石階美術直接取代原本的樓梯觸發格本身(不再是另外擺一份裝飾)，並改為可踩踏；只補西側牆靠牆   // v15→v16：石階造景改成靠牆擺放(西側+北側補薄石牆)，不再浮在空地正中央   // v14→v15：1樓入口廣場、2樓回程樓梯旁新增立體石階(T_STAIRUP)造景   // v13→v14：修正外圈迷宮格彼此互通、繞外圍一圈就能到終點的問題，外圈只接回內部不再自成環狀捷徑   // v12→v13：修正入口廣場把2樓回程樓梯抹掉的問題   // v11→v12：傳送入口清出半徑4格空地，不會一到就被牆夾住   // v10→v11：迷宮改為固定種子生成(版面永遠相同)、移除舊的裝飾魔法陣   // v9→v10：1樓新增5間主題房、巴風特魔法陣改開在王房內   // v8→v9：傳送落點改為各層入口(不再落在地圖中央)   // v7→v8：修正傳送進洞穴會卡在牆裡的問題(出生點自動避開牆壁)   // v6→v7：修正1樓尺寸參數沒生效的bug，1F/2F都是91x91   // v5→v6：迷宮91x91、密度提高、補鑿外圈讓外牆只剩1格   // v3→v4：迷宮尺寸由40x34放大為90x90，舊快取失效重新生成   
 function loadDungeonLayouts(){ try{ var r=localStorage.getItem(DUNGEON_LAYOUT_KEY); if(r){ var o=JSON.parse(r); if(o&&typeof o==='object') return o; } }catch(e){} return {}; }
 function saveDungeonLayouts(){ try{ localStorage.setItem(DUNGEON_LAYOUT_KEY, JSON.stringify(DUNGEON_LAYOUTS)); }catch(e){} }
 let DUNGEON_LAYOUTS=loadDungeonLayouts();
@@ -2708,6 +2872,9 @@ const MAP_BUILDERS = {
     { const _ex=Math.floor(m.W/2), _ey=5;                           // 落點往內移到y=5，不再貼著地圖邊界
       carveEntryPlaza(m.grid, m.W, m.H, _ex, _ey, 4);              // 入口清出半徑4格的空地，不會一到就被牆夾住
       if(stairsDown) m.grid[stairsDown.y][stairsDown.x]=T_STAIRS;  // 保險：廣場會覆蓋地磚，萬一下樓梯剛好在範圍內要補回來
+      { const _sx=_ex, _sy=_ey-2;                                    // 石階座標(偏北2格，靠近地面通道那一側)，象徵剛從地面走下來
+        if(m.grid[_sy]&&m.grid[_sy][_sx-1]!==undefined) m.grid[_sy][_sx-1]=T_STONEWALL;   // 西側補牆讓樓梯靠牆(北側留通道，不擋)
+        m.grid[_sy][_sx]=T_STAIRUP; }                                // 石階本身可走，玩家可以直接站上去
       const _e=findNearestWalkable(m.grid, _ex, _ey);
       m.px=_e.x*TS; m.py=_e.y*TS; }
     DUNGEON_LAYOUTS.cave={grid:m.grid, exits:m.exits, px:m.px, py:m.py, W:m.W, H:m.H, warps:MAP_WARPS['cave'], stairsDown:stairsDown};
@@ -2735,12 +2902,13 @@ const MAP_BUILDERS = {
         // 若1樓還沒生成過(例如玩家用瞬間移動卷軸/傳送視窗直接跳到2樓，跳過1樓)，先強制生成1樓一次，確保拿得到stairsDown座標
         if(!DUNGEON_LAYOUTS.cave) MAP_BUILDERS['cave']();
         const stairsUp=(DUNGEON_LAYOUTS.cave&&DUNGEON_LAYOUTS.cave.stairsDown)||{x:o.cx,y:o.cy};
-        g[2][o.cx]=T_STAIRS;
+        g[2][o.cx]=T_STAIRUP;
         MAP_WARPS['cave2']=[{x:o.cx,y:2,kind:'map',toMap:'cave',toX:stairsUp.x+1,toY:stairsUp.y}];   // 落地點跟1樓下樓梯本身差1格，不會一到就站在下樓觸發格上
       }, {W:91,H:91});
       { const _ex=Math.floor(m.W/2), _ey=5;
         carveEntryPlaza(m.grid, m.W, m.H, _ex, _ey, 4);            // 2樓入口同樣清出空地
-        m.grid[2][_ex]=T_STAIRS;                                   // 廣場會覆蓋地磚，所以清完之後要把回程樓梯重新補上
+        if(m.grid[2]&&m.grid[2][_ex-1]!==undefined) m.grid[2][_ex-1]=T_STONEWALL;   // 西側補牆讓樓梯靠牆(北側是1樓傳來的落地點y=1，不能擋)
+        m.grid[2][_ex]=T_STAIRUP;                                  // 廣場會覆蓋地磚，所以清完之後要把回程樓梯重新補上；直接用石階美術本身當觸發格，不再另外放裝飾
         const _e=findNearestWalkable(m.grid, _ex, _ey);
         m.px=_e.x*TS; m.py=_e.y*TS; }
       gridBase=m.grid; pxBase=m.px; pyBase=m.py; wBase=m.W; hBase=m.H; bossRoomBase=bossRoom; warpsBase=MAP_WARPS['cave2']||[];
@@ -3080,25 +3248,66 @@ function groundScreen(wx,wy){ return proj(wx/TS, wy/TS); }
 function screenToWorld(sx,sy){ const rx=sx-originX, ry=sy-originY;
   const gx=(rx/HW+ry/HH)/2, gy=(ry/HH-rx/HW)/2; return { wx:gx*TS, wy:gy*TS }; }
 
-function diamondPath(cx,cy){ ctx.beginPath();
-  ctx.moveTo(cx,cy-HH); ctx.lineTo(cx+HW,cy); ctx.lineTo(cx,cy+HH); ctx.lineTo(cx-HW,cy); ctx.closePath(); }
-function fillDiamond(cx,cy,c){ diamondPath(cx,cy); ctx.fillStyle=c; ctx.fill(); }
+function diamondPath(cx,cy,pad){ const p=pad||0, q=p/2; ctx.beginPath();   // pad：菱形外擴像素數(地板磚用)。相鄰地磚各自fill時，斜邊反鋸齒讓共用邊覆蓋率不足100%，畫布底色會從次像素縫隙透出形成菱形格線；外擴讓相鄰磚彼此重疊蓋掉縫隙
+  ctx.moveTo(cx,cy-HH-q); ctx.lineTo(cx+HW+p,cy); ctx.lineTo(cx,cy+HH+q); ctx.lineTo(cx-HW-p,cy); ctx.closePath(); }
+function fillDiamond(cx,cy,c,pad){ diamondPath(cx,cy,pad); ctx.fillStyle=c; ctx.fill(); }
 function sp(x,y,w,h){ ctx.fillRect(x|0,y|0,w,h); }
 
 /* 地面磚（含草地層次、石板、泥土邊緣、水波）*/
 /* 地面磚（含草地層次、石板、泥土邊緣、水波）*/
-function drawIsoFloor(t,cx,cy){
-  let base = t===T_WATER?'#3a72b8' : (t===T_DIRT||t===T_DOORMAT)?'#b58a55' : t===T_PATH?'#9a8c6c' : t===T_MAGICCIRCLE?'#241a30' : t===T_ALTAR?'#2e1f3a' : t===T_STAIRS?'#4a4048' : '#5a9a3a';
-  fillDiamond(cx,cy,base);
-  // 斜角立體感：上緣高光、下緣陰影
-  ctx.lineWidth=1;
-  ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(cx-HW,cy); ctx.lineTo(cx,cy-HH); ctx.lineTo(cx+HW,cy); ctx.stroke();
-  ctx.strokeStyle='rgba(0,0,0,.16)';       ctx.beginPath(); ctx.moveTo(cx-HW,cy); ctx.lineTo(cx,cy+HH); ctx.lineTo(cx+HW,cy); ctx.stroke();
-  if(base==='#5a9a3a'){ ctx.fillStyle='#4e8c30'; sp(cx-9,cy-2,3,3); sp(cx+5,cy+3,3,3); ctx.fillStyle='#6cae46'; sp(cx+1,cy-5,2,2); sp(cx-3,cy+5,2,2); }
-  else if(t===T_DIRT||t===T_DOORMAT){ ctx.fillStyle='#a67c48'; sp(cx-7,cy-1,3,2); sp(cx+7,cy+3,3,2); ctx.fillStyle='#c89a64'; sp(cx+1,cy-3,2,2); }
+/* 道路材質貼圖：來自PixelLab生成的石板路，用菱形裁切套用在T_PATH地板磚上；其餘地形(草地/土地/水)維持原本程序繪製 */
+const ROAD_TEX=new Image(); ROAD_TEX.src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAGvklEQVR4nK1W2XIcSRU9NzNr6V3dWlu7ZmxJNtYYPEP4YYIgeADmjS/hh/gInokYIiACHlgGO8bYY2SmbS2tXqSWulWqqq4t8/JQrcWS4ImMjo6qyqw8dc85ee+l5uqWFMQMIQh3BjPnF0QE4PLuetA9L02GYTaGFYBf/+p5veLuPF4I/OzWon+8OQzG8fb6/NxMBUAYxDdnPT9emK/e3ZqACz9++a/2b373UgGwq+Un2zPacKEoby0Vgtom+vlyLY+vUCzenB1640JRgoAbkRHR4eGof+ZrYwAIAM+3ppn53lg3V2ctiA97w3s+k0hKAYA10yVTRJSmenf/ODPGsdQEoN32/huVxnCT7OXFqbsLkiSbn62OhnG368fxhNs4zl591/vqp9tffr72dHNpAgCAzT1yCUGno9AAwThhA6WElOLKCweHHsDnF+PM6E7Xyx92up5SlKRZmulMGwAKADvi/d7ZxlpDqI9QxuP03wfHUohv/nmwsTg9M1u0LKmkKBYsY3hlqea4olJtACAg3+7TT6ZfvDrKGcv3UgD++N3eHNkA1lfqmllrA8Aw93r+/Ewld2p/6HUG5wCVXesHjxaKBct2BDOyzFyyP6FUfEyFAvCzjVXLlX99td8Z+RXLKrk2EdmOXFmaerQ1e6UeEfb2h6/2+u22t7pScxxpDAP5dswMKUUUZVHykdcFgDBNm83yg7WZEZKjk9HcTKVeK6wuT1kOjaM0/4XjJAiTxcXKfuhnabb77sRouI7l2NKxpetYrmNFUfZ293gw9G/GoAAIoiwzTx83fyyWf/v16zjV0ThxA6tYUreOd07Ii/0uABDqjYKlJIA00wDaR+f9oVd0bJ2yUHQNkOeJcZRGImPmNEuVLcoVy5jbmYGIpl232LCVElGWtrtxwbVBiKIUgO2KlYX6Uf98t3WyvTl7DaCUyBIuluwwSAlYW5liXKt3cxjmx43Gk81mtWppAhGSVDMzCQKDmc9HiZKi1R78cGfxGmB0EQatuFZzh8OxNhwnmgh039krONZZMH6717edSVKZrpUcWxrDDDAzG9pYnjk+898fnFr51wNoHZ6C2RguFKxq2S24VpzcznrMAGj3/XHv+LzdHV6xtzBTLTiWbamH67OWJftDzzuPgjD5898/rDTrE4Cnj5oA0pQPu8P56eru+5O1xQaJq1QNBltKtFrD1++6O9vNm8GlmTbMjq12P/SLRZs1LzardkEKQaPReALweHNBSgq8rNMZKiGOT3zWtL5Sl9al1aQ8GYTf7HdUUT7ZWrglOwBm/v2fvm/3R7/8yXapbDUXKgB63WACoLU+HyZ+kJ5SumnJ5bkpL4j29k7npssMJtB5MD7qeBekvSAMx+ldbUB4/OnCy7eHhaJKU5MkGkCcpBOAo47XH/h+mCTjrHU4cGzLddTfDrvlrm1ZMs3M0AuZORb81c7GvYUPQG3K8cNEa74ySP6vALx+13Md68HG9IPVeqy1pVSn630yXzeG2/3RXKO882zdGJagndXZ8R39JzQq+uKz5bvWUwBsS332qDnTKIJAIGaeqrj9jg9CQ9oXQbQ13ShVrDQ1fpTKOxEwA2BjsL7cuGs/BeDZztJUzb05Vy7beqEEAAM6OB5djNOjE295qebYMk01Pq7+SgmlpCBiRrEwMYZhzlcqALWqm6bmpvmyjGtVB0Cn60lBo/Pwwo+1ZgAba1MApBRXGMfHfm9wEUTJ1etSCkvJ07NLF2WZucUdEfLtZhrlzsC78OP52WpeJ1ofhgCOh76UlKSZIFqcnpqfq2TaECbJ+3Qw3uucRXEyAfgfvU19yq2V3I31um1P0mMYKQDVmn12Fu22eok2n+8sF1yLCMawYSagUS0sLlYGJwH+8DrPpnxv5gEgFUkpCoXrzFou2QCEcLKIT5V+tjzX6/t5ZpxulIolyQZC0FTFjQONvOBYlmS+3bXlTwYnoT+Oteb8lhlas9acptp2VApTK7r7nWGW6iwzSogshmMrS8k005m+FPkvLw6e/2gFmPA+8YYkEHVOvDCIpbwdH4FsW2XafN3aW3fKvTAzYdg784BJC/rlF2t516QAHA8uvn3TA/Bkez5XKQpN6+DEGO6enB/puPX+7Kb+AIIouQjiXzzcaMwWbCGYCKYBcBBoZibQt296XhBNAFYW6mwYwOgs8oMYwPeHA8dRD1dmewNvSbmE6wiCMAbghREzHm40hCDOCSUK/axWUsWyCv2s02dRKAGg5uqWbanL7pJyKbRhIUgK0oaBj4tPfnBzC0hxUzpmgECUq8UAJWl2f+X6fw0i+g+B0KOkXH6VbQAAAABJRU5ErkJggg==";
+function tileRand(tx,ty,salt){ const v=Math.sin((tx||0)*127.1+(ty||0)*311.7+salt*74.7)*43758.5453; return v-Math.floor(v); }   // 依格子座標算出的固定亂數(0~1)，同一格每次畫都一樣，不同格彼此不同，避免紋理規律成格線
+/* 地面材質圖集(PixelLab)：131x131，4x4共16格，每格32x32、格間1px透明縫；由左至右4欄=紋理變化度，由上至下4列=草地/沙地/泥地/海水 */
+const GROUND_TEX=new Image(); GROUND_TEX.src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIMAAACDCAYAAACunahmAAAQAElEQVR4Aezde6xnV3Uf8DNjY/wee8Aw2BiMsT3Bxo0pGCrzMEYOTUMKIaElpWmSirZCqlI1bSMVtVJVqWkjVVUl0j+qqlGrhNKi0jgl0CQUATY2xJjyto3BNga/bTx+jR8Yz0zvZ3u+l3X3nPN73Dv3jhMR+XvXe+199lp7n8e9GbaffcE5B97225cfQN/4m5c1ig9O+6VXN91r3v/mRiOHJjayuMt+6xeaL/5nfvvdjU88XXzPeflLDgwr/4duJoz59/7D2w/800/8YptLP9bKFIZedzhl48/Lt9lzmDc++3aTgFe876zhmzc+MpzxnjMbHn3VjkZjQ3e+/cXDT7zi5IHtta87tVF6MvoT73t1033jG7cN8tFvGx5ouu/e/mjLR1djxcHuf3jesFkwly/d+chwzXX3tnnVcYwdVP3h5I0/K1/GR2f5babN2NsV5wvXPohfxcknH7XKh1HM407c1hpGQzzyyL7WGLHTXXftzYNCR4fKHV3yimXbf+wxyJbghacf3ea+7GAX7n7+siHPKv9773p6yHr3E6OH6Lef9OWHWwFTtCf2Hhjwiuuk4BgZD/SA722SizUJdo1Ah6cji33pmSdRjSL+o8Z1Ko1tXua7zhTrDqsNVfl5CTPX0DH/WTb+Y5vA+gJ7xfbtTz412Tm1YHa1RhGsoKiiooC32Ogdd+wfHnjoAPVqbjFOl0zCKdMcZvyI7wyXQZFn2ddrUzQQ31O6eehjyLDnW4/PC22bkZP1twYoeazw1pVtFnoftVQnFBK7PQxqYAUzuMLj6RXZoisgG12FxFXe++jeAejY5MLLQ0bJGhGtMAcyWidKZw7oemCHyNcvzFQuRYPYFfLrN31/OGPb8VHNpHzF9E47zzu+5Rizxdf6uH6yOZs7fpG5p2ESL24MY7m2u2+nQKhAg2sEhTex6FG2DMiXnR8+IENkMQrpwuhQufA92Hod2cVpRnyF3FXmF1T9MrxC3Xlg9g5epCk0RD/urgdOHuQes8XXGsDYtcVnilp3a20DovHDZ13w0Ve6ejIYnEHHpNhZfAVnCwyIP/GkE5EGcQrMVyPVCzEJOrQ5H/yhEQ+ya4i5QJTiyP0Fxl4pn/hW/bK8YtvFiVO8NEmlsY9Rfr3+nuc9Mozpe78q460BGkwVNOuudsCf7+WX7Rpef/ELG/CpMXvQmkEhGRUSJXOwsApsccnAjsKLX7y9PaEb1GQ1iRiUn3z85AiVm+2VrzxrGLtN8OthfBeUC+3tVeazqG+Nq7zC271uE3iUHY/CIgWt/nIAHcixKKyXNeBvnQE/BWvAH/jaiBnzd3732wOMxbZmMJjCCa6FlIReQgVnA3rJapE9NJoEfR4eY6e7+HXnIA1y+hax760va/IiP5I7dJEY17WI35SPhmALxYOFDcizED85ctJcuMDrap279VID6wmzxqs2MWr63l8+tz1o1yaQs/riWzPYrQTBaKDweBOQNE1AD2yA98CYC3jeKdtWv0EYlP3RR+7j2t4u5DPmtqvubLr1/ugX1fwh85Q3c8I/G2DOGgSdNR/r44RzPdYe6AC/6KZw/ZrAmqiFeJBD/jqHNa+WHGJUMKeBY18SgWjsPVXw6AyMN2jykEE+1EUuepvgPwaLWvXmL79xzdec8NVns3jFhVn5zRf4hOKnoOCuacpObx1dK76HWNcfkKuP/FVefZuIowaoRVdYNlRhk4AcP7ykFh9Pz9dE6YFMj+d354dux24YOl+SjGV+Fgel3yimClz14fsCR7/ROcyLVzPXzC/rEEq3KNrnaM6CLayikb0phCdXKHiVdR6dSdGLS+FRMn2Fz+BV3ijvROhzjDVEFq33XVZW+L7YZG8hcuH54A8H1EaNguS0UcHauzZvDMZGb7jhh3FbiK5+jlYwhQO8ZwBFlsUgqB0dPn70Joj2kAf4suFRjYPOgouvduMap9fLzWYx4j/WBIlbZOzksajhe8qm2KGxe1Ck8+aQxohtI9Taa3iFR5PLmrh+Otft+SA4//znxG0NzVqIq4b2AClhlAqWJqA3CQtIh2bRTUoMvRh8aM/HV+HkEMNnCsYds8kjR7XRWQS06nvemMmbxeh9elmxoeoVGuh6WnV5c6A7HHCNIFeoYr5ix0mD7wbAZn0APwVrYQ2SJ36tGRSRA8pgEE1AVjy6gC48nywwXSYRSgfxEctmIijbGBTWfKrNxMXZAVW/Hr7PvZ4cG4lJE83KkTXjU3lyoDZOoshOIs0B0VWqrpHH1qA1A0Md0MIbSCAbKpHnCDydwjglFJisMRQKTxe/6FP8o4/ayTTwnfoC2RwmfpibuTDXOZPnYazJ5sX09npSuBWwh+IraqHSAGjNUf0rb67WmA6PjoGPv9OQ03g3PvzocMWfPvPKzpYYa2btIo/R1gwWVQEVDCRBFR+vwJrDPQgvMZoYMnsdQBPIG70LktPHJjT6GjOP73PyNwa6VVDMjGXx8aEKQh4DW40d8+l11tj6V32V2a2lOtBbCzy9mFD8WCOIYQtaM0hAYbemaHQeIukNgkJfeDEpbCg/g8thstFHFsNnGZi4k0iMnGRzXU8uOdYLRQ3kwIcqdmS6HmzQ62fJtaD8qqwW1sAmsSb42EPFTKH32X7Ge85svpJhMgA+UMQEKizfNEhkOv7iTQ4fHZ4eBZ+r/W4CvyhqLjGZzwtPP5o4Cg0zathkpYJDHUajRHZvD78otd5BYnLtqEaIfoqKn7LRb/fxx8LWHaZwbhEcgJ0OUhQNUvlMRqHFZGB+5AonzvEnPLzwL6pqLD5j4afgHdu8p+yL6GsBF/HXACl0HxsbvdsKOiun9UszW3ffDYLoZ8XHJjZ8rXF0lbbbhIAcwXY6BwVDA0Vm8wupvhgWXQ6Uv1wG5peG0b1s9PxmXZBcvV2uQJ556Oc/z7/aUygFxEO1z+KnCi1HXjfxcs/Kw2btNHXWToxvCDZqvz78x6AW1rPayKDhqr41g8EUSbFNAHXUQ5z98olcF9mu5y8xP8n5KZocdPKiAb0LERddT81HwyRvb58nxz4Wb46xT1FvBwo2ZZ9ly8kglh/gFRJdFNYQ/JmA9frwFXev/jkc3aJ54ue6rWtkdZA/Mrr6iyrGFAglAyeTkYjcF0lD0LMrPF6MxhGHF6PD5Y0sDj8GExcr55h9li4NYMyx+Fnj9nlTSPrw6KzCOhnYK8TDmI5+HqylTWj9gL/rQ+dBwa0DGl/yWPzqL6oyiMVKYHQmk0SogrNJ2NvoFJMP38DFyNv7xx6qmJoqeaJflLrQWb6O2Fl2xa4Frb5sCopW/Wbw1tBaqIf81sP6BXRTEAtT9ujlD4+2k8FAeRZQLIlQA3OywHT4PoGiawx6fnZ0LoCePbFs8TGmfD3c44Bvxu99yHICflGYo9uY3FMxKbaC58iniz99laM/3NS1WyvrhNb8riPy2LWIhfiEVl851CY2tD0zMNi5FB4UFVNB6OlAs6AVSW7gPnH1w2suFPBThZQLLALfKfCBKfuY3qK6rjFbr1PwnBBs5IB8JKAeUK/BOtEtMh++1U8dqtyaIYVUoDSFhog+Ra+B7JE9D+B7P8e9AVFNxscY+LHmYt9saKB+UfoxFb3XbYU87/O8ZgbXUOdDV+VFeDFQfVszRFELHF1omiQNEj0aG76CbxAfY+Ch+mqoI4Fn0xz85deRWANjWoc1zUCxGfDQNobNGOvHOde/Aq0Zdnz+/mEzcdQnvjNAjzptNn8gWyl+ESRuyneWvZ+DHPwBPwY2qLYpudcnpur7OVRb/DdK5YSap8rmsP3mW7637UjCJDL+rdff3OYSGv08Os9/nr3OwVj8AT8GNqi2KbnXJ6bX1zn0tsRshMoJNUcvb/ePNBxJWIQjOb6xfzyHlxywDu028bmP/MZwJKAIwcc+8KtDReZD93v/8l3NFh1KX0EX8IcpOz07ZHw08VtNjR1s9dgZz/itGTDzsOeu+4eK3r/aKt/7LSLvPP205ibPgw/uHU499cQhOgZ6NBizient4m65/jtDclaf+P55p64fxq5zZjNk8fpgi0nHDnjJFaVH7CifeRDPh79x+oJlLD4QfzxbH8MuV7X1OcVuFTKXrRqvjmMNyK7/iquuw67BaDNkwllYwTWKDNG9/IKXrdm50aOKwVcuk5Gbvgc/oOfHXxw5+j42ej5BYsjsYpIrNvqA3xgsFozZNqIzF+u1GblnzauOZw5/4XnPHz70v69aE9KaweJXcOaVxcMHWcRKY5uifC0Au9wZi1yhcGx0GVssmU1s9HQViYtO3FgMfXxm0ScefGJ455suHuoizvJfxqYIci8TsxFf16D4yfG1B74/ANkaodCawQKPgUNgESHyeqiGqKg5FDPFNhe2jFdt9BAbnh1NHB6SDw99TF0I9oqfvvgVbedYxOSv9vXyrv8973jTesPXFaexE6gJXBPQWSMUWjNgZqEu4iy/jdgUEuQwHihWChFb7CjwQSsS2+vI8kHNR99DDkVTPOjtWyG7NtjoWBr72ptvH+D7X79r+NRnvtbwunPObA/nyT/ZDBYjiPNm0zqeRUjX1sLxyTziww7Ro2KjS0yaoNfzP5wwTrCevK4LxGbu+PVCDo0Nv/DOS4ZAk7Ml72ozUFbEYR41aRfuvoQG9DAvPnZj4xOfYtbCxUdefvERF/BhixxKl1x0/NBlYNx5/hnHWI7kef5jdnMLxuzL6swpkFe8taPDB60Z4hCli+YYkCF2NDZJyZeec1Y7ciwC0AO/Ppb/GPhGLwfe3AAvDx95yfHBAz92fGzRRWajQ5fFonFX3nzbAFMPiTbOsmNvxD/X7iSQ54+vu7E9QLpdkIPWDAQLDRbTYksAbGRgC+jZA3JF9Ghi5a8+lZeXzB8sPNCxgQUmswOeT8CHLjZ8PyZf+s2CBdcEkDH6OVRbfDaTumbzyhhuF+bwd//+O6JqtDWDRVQwsJDQrCs/8FNYMa/5z6CwRrkiiF8h7cufsQK6gA+Qk8Mi8qWDnD54PhCf+CVHfHJNkdGthnlu9ZjrGa81gwUMlk3iQoPE9jL9IvlrnOIqZI2NHWWHnBbxQ4GPRsH/ucAWXERrhvWMY7FhVix7EL80BRodyg8FRUYhfrGzQWw5LeJHH1/NFH107EHyRJ5H+QfzfP8s2lszWKhF4ALjh7fzetCPIXGVjvlZ7OhrIY3DRhfELzS5qy8bPVohV5WX4b2vL+P/Z8W3NcOik82iWmwYi7PIMGabp6s5FZy/MeWru5we2CrE977sfCv4kTMGfgz8IDb+GsEDWHRTVBxM2Z+N+kOawQX0qBNnq3LPWzBQlHm+fayC04lHFTI5oos+NuOA17WxeP494tfre9kYED1+kUbgzxfwuQb8kYR5VPRzac3AwYJCv1AuiD2BZIg8RRVPLkWSd8ov+viIo8sYclQdPV9g48vePzvwY+uRaxEz5dPHbFSu45h3sNG8y8S7bvOooIPkac1QF9UixYhylgBf+buHNgAAEABJREFUUXV4qHa8XIqEzwJUSl/Bn5xcxiZXiI/MHyKjYgHfQz5vH31M77dZso3hfT8gb9ZYNa/rrnJ46wSRWzNYHIgyVJOAAowllAjij4fIoXIH0fWUnS7xxjN21ZsHH6h6MQEb8JUDH8iX5uQf/VZScwKN4MPPVo29yPW2ZpiaUDoYtZBjCzwWa2AYsyliUO38gc5i1R0cPVti6YAuML+AX7XT0/GtevKGsESw4ruu/3XF59rfSiwRum5Xa7no9a5pBkEVdQYaAtIU1TbFJ9eUfUyvaMbIDo4PfXh5w7tYNlBsME8+vU0MPQrs6FZCQ/SfgTdz/Hq988ZpzSAA5jmzW2iw+EAXWFyIHCr3GGJHxSWfgtKBOBSi50tG7TR8bPGXS1PRA5/YxMVOP4b4OM7xYz7Pdt2y827NsJ6L0hAW2aJCHRgfLJNbPkhMiid/dJUqtr/YSUzvX/WxmZc4eWLH99Bk7E4ofG/fCtl1w3rGcp255kXjJ5tBsmAqmcE0BeDHsN6Lkcu4iVcYMrCZG77qyb0/X3r+bBpBDNBvJowZLDuOE8kcAb9ofMbLdS8ax++QZqjJkjA6ActCoyQenRdvTOAXfwtChtgUlRzQx7/q8PTxH8vFp0dOBKcCvrdHlhsi91Q89Pp5sr9bNGex+Hn+5gD8rAW6LA5pBokgifCBwSC2RWni+YsHfEX1oedjMWrx6IHNXxHFJpaeP0ofHd+qZ4fY8RX8yewe9gBPNwY2mLKJhzH7LF3+blEj4Gf5splDQF4PDmmGWUmmBnP8BlnMsTyJR3u7uECuFLD6Jc5u8axQbeHnNYIcEP+ezrL1vpspm4dP34CfGsuaTdmW1bdmcE/aCOzSQKEWzVUnq/hiIblQcpC84qot+uiafNV17U/P6KDPER+5gui2mmZ8dNmxXdeyMWP+xm7NgDnSULCtmMPUibIVYz/bx2jN8G8/8JnhSKAuzlaN/7f+xUfWXOuRmEN/rc+WOTyr/rGO+g9JbCWvGFs53thYz4Y5bPePNBxJWIQjOb6xfzyH8o91vO0VLxx67Nh2YHjZc48+BMcdve0Q3xrLLg6Faut5RQjGbL1uI7JxxuLpg2qni1z56NZD5fnbl52HrFnDpjj449UvOmk4HLD2y+QxfHtmwPTYecxzetVwz759w2tffOoh+qp4y7kvGL7zg6cHFKptI/ynvn3fcMOtDzQskueehx5f42ZhquLqb94zQNVtBv/xG+9tafc+sdz/rGALWvlx90oZYIVd89+YrjrsOuqoYc+eJ6qq8eL2vvtFAwpNefDHZDMctK8hTzx9YDjxuJXZrdEeKtg1VWvRFbPqZvF85UAtJmis889+3gCzYmPbdcrxrdhi6f7f3Y8OeDCfN/zErgHYxpDx2ewycfj1wHVceduewanwtW/evVCKFOqkn3/RIf5s9KjC9g5pgp07j1tj4n/g8hcM/slj8Ze8/8LWFMPB/xtthrEL3/PUD9vRdjBuYSLXwwe2tZPCzh4mIvlZNFThuYX2u5ptESi2osqJBuazSLzm5+c0vPSsna2ZFt3hrhXcbo/Zt1+aoTaChoRm6H4ommKh/kXdG884dqhFf9HKIfPo79890KM1XCNoAqj68P613k9++p6Ia+ghzWDh3PPXeK0IFnaFrOs/+Vy4hppKoFAWH+19sqt7/ZRsLJiyG8N1wpRP9Lnd2Nl0X7jjwUHT4qdQ7bndGtN1JOapo55Z+rE51GL7F3X988Z90Z977xPDK+58cuCbnOhUE7DxPf5P7x/Avzf9uX/z9TXxbUYmb1KgcAIrZhWRnwULyAGdnUG2KLMaytj8xmAhYcw2pss4dqa8fWx0vb7m4uNEstPo42uXa1q6KTjR3M6Aj5NIvh1PPTGkIc4/7USmydPWrtcEnDSCQuLNB/DR4ReFGHj5Z+9f0wjiWzN42NAEQBl4ENzz6KMz76124M33PNJCbrh/b6N+0Ju0JiBnYfBjsNhg0QI5LKBmXfR4Tm4N4YFXzuiSt+piQzVvGoiscNYALxa1o6fi2SvEJN6m2HnSSQPqliO3OVb/ytv1mgBVPLasMx6sL+B7TOl7vyq3ZqiKyrvoN/zkWVW1hlckxQYXZ0fEgS78vEaIH2rMUItl/OS1uGyLwi6uvslddZW3gLV4/ebwICnnMvNQfHmsh3VAc8upY/e8BnAreOz2RwZNABe99HntAVqeQJx5o0Hk0OhD6SFy6Mxm4GR3BuQKCxPZkRoezWRR8kbhLUYxFs2jYHbx2InCNpbHXDUMaEQyP8Wzm9OUi85DIyi+PCAXqjnYyFNIscRrAuDregAPnhEAH5CD6CqNzRiaDGUfbQa7w6Q5mAxYHHJgQenJfL3K4TcKeRVjLM8xj6/9djDmQ+fEkiPFc/xXPZtxgL4H/yy4wrFrCLRfB7op8LU2vZ2Ordf38psvOXuAs1/2/DUmG8PtDBQS1jgcFBQapuya4pxdJw+okO1+AEVgsejAxAF/OGHB+3wKUMfufdwy+PRxZA3gBMOnCfAW7sTnPqe9Fla9cYBPj10r3yjE0bv23q/m4bMZUAuvooH5gLE0ATsefcmLTsYeAoWGQwwTitYMLnjXygJYBOh9Dd7rsmPE9rZZst2ocPVhM/652Mhjc+l9+GoCBZrabWIc83zXi74hpvKYy1TDTsVM6e1q62Rn2xiw9wc/XN3JGkEsHTqF+MXu+wVEDm3NEKGnmgDoQ/GgCQC/KDSCJvL2AovGzfObaoLEKY6GiIz210O3UWgEc+nHSt4vP/aj2xweYuupBrCrvYIqJrn3Wa/sg9ZY7MxmUGwQGIqfBQUfs9NrhDHbZuvc741fx5l1Pb1vjZvFa4Qpu4Z8/C+dNmiAP/zOg83tVScc3+jYjzSAJgDymN8yOqcB+N8S87bSx85shjjPWrj4OMLsDG8VY7vOMbtInuQbo2N5x/yqzpyMDYsUOf6oAtZcG+GdFj70JMesRoiPBgii2wh1IviYNZVjoWaYCq5693c7w31uo0WveSsvbxpikcKKNScUNAQ6C/w1AqqAU74aJXOZ8un11ujBu/YOJzy98suF3rgFso9Y+ar5qbOObb/vcFJk6HU1w6xCWMQk3wyqIRTLe7piwOEeZ5Fr0CiZi/ksOgcPurCof+/nlhH0tnmyj1gaIn5+CVZvF0s3gwt379+MIsgNmewUVSxQDJjy2wq9ecAi815kPgrtdPUW0fuzVV0vV9sY75ajIXzi9r9GvO2T961xW7oZ1kSvQ5hVPIsKs06edQy5JSHmfTgGUrC8RRyab2ivlb4rAN8xH7ejsUaJzmlw+h/dN/6LqrGEYzpFylfHMfuiOg0Bs/yN5b4cHzJE3mzqqb+Ov9njjeV3P4fYUnzfFSD6UMXWCB7m48vmpAE84PkCORg9GSy6hEGcK51XzOq7KO9jlLE96IE4MpCBbqtwz889v70Krnc8tw5Yb/yycRpAzRRZwQMbGJwmgE9uvuEPaQbJGH3C5Qh2iIJ4VmDbjEaQ398J1IJ7SCODcSuu/uptVVyYX7Q4Xv3ysGVN4JoLT1iqOdw6YNEx60U4EbwK0uH9pRNKngUNwK7g4BdcGgDoAQ99Hdc0g6L7VbSif+/uR9r9KQF0EkXGH04ouE/GmqLmJUOv83uKqjvcvA9DPhJ5L7/ljacNsOejdwyaZNmxNMSiMQoO/P2tovE1hcZ0r6efgo2rARQ6GPO1yUC9nSbxWdMMvtTVorv/cBSoCYA8D4oXzPOtduNEthNBk0DyoeT4LUsVxk61EPJPxf/Vl506KP5LzzypueDpmrDJPxRfE2QYXwzDT1EneS3smJ/1tcm9CUL/3LGmGfJ7+kWLPjagYmko8DWSXP0UwrMBVD0+xWFzQqUZ2UATAB74obNgvN7uz9AsTJ+/91N8TfDd2x8dHn3Vjt68KbLdf+N/vG147y+fO1xz3b2DV0ADaZCcGOQeKayG+Mp3H2hm19iYlR94DcC+Irb/nCSNOfhjtRkU7XD88ijF8jcRChrZeO7zjjHjAF2gaIrDf+qjjDnGH53yYwucBDWu8vEZo04Oixfbruu+P9BF3giVB6ZyXHzqc4eP/9rnm9kfxGoMp4PTYlZDtICVH15NNYc11RiA1wgaILcQlLwS0v5bbQZFaJrD8MPJIh8kXZvMSc8cudFVqmhVFitG8YAM+Oq3CJ84+fAwL4+dJPfLD+wfLvrSg4PmjY5+LRaXMu4yuTTGW257cgAnx6KjaYoKcRrCrQKPkvGw2gwERQR8YAGDulNin0fFiPcnaPN8x+wKB7Hh5YPo5lFzcNtyKsVXHvrIY9RaVIz5LKsz7qxGcDq6/8v70O/eOjiR8IcTGsDJgRrLmPK3ZrAo7tcBObBjAwHRo/GvlL5CjCLYWfgp1Jjw4sJXSg/ROXKD6CqtY07p+cSG3wqMjUdnbLfACgXrwQ8U1HHfo/cfk50OGbM1g4Q1ETngGEQXWmPCx7aV1AUFh2PcXO9m06m5upZFxs6a8x/LtUiOGteawcPekUCdyJEY35g/nsPT7f9R2jr8+B/ruOV72yzE2D+gsZW6Z8McRv+xjrMvOOdA4B+zWBSJQadiYgu1CFO+y+jlg2Vj+M+bw1heukCOZZC4ULHz5sBnIzBW4sOjAVu7TfzN/37F8LMf+dAq3v7B/zoEVT+PTww65vuOD/634Z3/+b8MKB8LEPzrL1w39Pi9L311qOjtkX/9k/9n+Mcf+4MGfPArf/gHA9Qc+MT91lXXZPhGE9dTuXud67j0X/1mu57eNk+Wr2L/sce08f3I3A43da3JGR4NzKE1w8PPWfuPOpx7yinD8547/ceaJr0s5Dt71zP/0Me+Y9vJPOwvi9Dnu/+R+4dP3vmdNbjp3juHMex54qnh1nseXMV99/9goBuGZ7L2eeQG1qk5yPfFr1zfcvKrYCO/5qILkFGfZpj48dkrPz0EEy5HRN2aISNrArCYO487ZrjkJedONgU/SOwU1QTyyGcRNcRU3LXf+tbwia/c1PDlW/cM37177/DQw481yL/7hWcMgIen9x5oPvwefvzAENz56GOrerYecpuL8bY/+ZRUa8B+4lHHD4p9501fOaTYdKfsOKHFuB5yE8oPxS7iKkv/xksvG+Cue57JMTaH1YAtYM48+pjBHFozKJYxLQI4Kb790EOtKA/84PHWFHwCxWQHcT3ihyqYAsu7b+VEQEGT1Dg+ihndjuO3Da86e+fwuvPOa0gTOBnkvOHmJ4Zv3fNk3GdSueCMk55ZfM7GAnyFJiG/4LTnIsOJZ/7k0Bf7jSvF/L8f/crw4Q9/oWH3+Zc03/xIwdHoUCfNBa99PXawBo1Z+bF/xgm5Yt60/zQBZIDWDJ/73rebfOLO7QM0YeVHePaKqSZYCWn/KSyI0VjyACMKmowcKBa89EUnDm+9aHdrgNNOPm1wnGuAQCPY+SecsC+hjT722FEDNKH7YRfDBS9/ccstv3GM17muFl6x4MaOytgAAAuCSURBVFvX3Tycsfui5qZR6AjvfvdrhyCNo/igWdC+SZ54+L52Yskhr3i57Ep0K6D4wflDK//qsGulVfXGGMWGZbLUEyCFR+u9X76jT9w2KCReQ2gAII8hvmzyoeCkMSa+QiEVKrj40nMHtwKNMHaSJNYpofigEeRJkzgRgG7v7V8dII0gfqtOBk1gPLj96aeGP3n6mZM1TbEpzWCwZaFQQY11ElQ5vCLD+ecc11QaozEHf7DBQXH1uSNjhI4VQqECjSCHW4UGwU/BbevTn/rqoCFqEzsRQJyGAPxWQAMEGgDquFWe2wzvPvuCIejv88PE/3lWgEX9a5o8MHomAAuM1ofA+KBiNYTCh+LpNZJYuOv+7QOaPGLZ+c2Dne5hT4PwvfrrDyNrcNlbVp4tbrhpcJJkzk6TOHn2cHrIFd1mUg0gf4pt91cdPsgJMdoMiphi/s4Xvz4EFo/eA6SBKugCT+meGfhHV33lr3J4BcIrHDoFx3WguGN+Cq8oYzY68Xv3Pd6eosk9FO6LK6+WYCdrBE2QW1IttFi3BD7XXfnM8xddePH7Hrl7ePnuE9qpoSFq/FY8M6Tg5gVpErVVKyfkIc2gUB7uOKDu/YGHQXoPkDt++MzxLDHQeTBC9628NYjh76Lp5Q0eevgxIYfAQx7Y4XD6afsHeMOFO9qbhQc/bxhg9wc1kYbSIOIr5ACxgVvA/okneYXduev0llpjaIQmTPxwjV7Jc0Jwe/C++5H2airXFz9726ABj9vxgmHPPXcN1qY5HOYfdnyKndRXXHPz8IErbxjYgt7nkGbQABIoJtojeoWeslX9voONIW9AV32meI2hYLG7z7sXQ3Q9FaNJen0vz8oRX7nc6884f3dUw50rtwLIvDQBo53vecEJoSG+8Zmrh7f+tUtawRXeMwcZf8tNazfD/omGlHejUPiaQwN8ac+drTE0iI0R+yHNEMNWU8d6UMdWtCB6tx8nACTGaRDQV4hLjlD2eTvThzJHvBPlwJ4vDcfuu2P1dVKsEyON5wPVT739mVdQDfG+X3vboPDQGmr3Re2tJI3wmpWvl2mow3GbSNFDXfMYvKpf3T3zpCFaMzjyc4SH5l5PHkt6uHXeBkBeBVYsfA82zwKeKyB2H5QCXw/t6kBRgW8aBg9ThVBojcMHNAXqGUIjyH3execMyctWec8FZ+8+d6iNINatwy2I/+HGXz762JbS7tcU8Mc33TrAebuOHeAv7jxj0NwcI6c5WjN4d2fMMY669wOebQqaxUOlN45zTzllym0pvecEi50giwy7Vz5Hv/P15wzgQviBZwPXYEf6sASJRRUV8HYyyA9TR7SHPV8ZxYBC2s1A1qx2lLwBfeBLo3hvITkBxLpVxCd0ag6xz6OK7m3hhmH/gJI9H4BY6/HTu8/GttsDxvqh8cG3ZlBwoJgFhWdXdNAAZA+Vnko1D73m4IsHPPCdgoUFXatI1c+XSKg6F2iR+WoUYPdcAfhAE0HkSqdOBoXTEHzt8peccQ528JDoTeQT//NzTdYU13/hmuHWm370FsFgPk4AIAfm7GRx8qDRL0IVGfiiAflPVj4gORE0RC2wU9St4SM3fKN9vk8T0IPYoDVDhHlUwyhu/D586/UDnYdKoP92+Z1GZD5ArpgqhIWsfpV3YYoNdiQbGpCnoCFm5e7jNASdz9EeDh2nFtDHp5//xcuZ2nOAW0h8m3LOD88Rni/y6jm1DklTi07nduAEwGsAsC5kehsKH9hIuaXaRK4jtkqXagaBih2Qx1AbY8w+pjNhiE3RQAGjQ/nQsZFnwa4FjRO/xMtx+Rkvi3qVOgVgVbHC2M0+JnmLALxb0oppXf+9ZuXh0WnirWNeAo2g2MBXsVEngLeCNIHron/fld9A2nOBpgBvDZQ5FULp2FHomoHqyMBFKVp2eChdBT8zdPEKCuSgvmm4hQCbHImN7O8c+vu1e7ydPtYQjnzQHHKAo97zBODpAq+dELlSY4w1lOJXpAnEagRN4JagEegCMSl6dr5bmnVS8DRAfOggvvJsSTN4XgADVtRCKH61TfH8FBbik1PCKeCjjgaA2EPHYvsj2vGtERQrcWi9x6foCu35wU4HftXma6XnIPpAbog8RjVAoMjg1vDBPbe3B0AF9VYQsHtmq7nY/tHuc4brb7mjPee029vBX/njNQHUmMlm8BDoARGtAcvwGqDG4+mSoy9E9KGKC5ErpffZ28UqMpsGADzw8SoKXinp5kFj1UaQW/HcGtzrFdsHJHn8CtzzAx680vLBawI7Dx9oKM8fTp/opqgCA7sTAU3xvE15SKzQeMaDf3Dp+YOTQ/MoPIifhzXN4OFQwdC8IaB0QRIqKkRGyWL54hVAPAp/dNVn2m8P2UBMoAjhQxUWyAorB+DpwElQZToyP3xePRWOroIfn1lwb1dARfbBCPU5WYzbhW8NigweMukrNA+bI9vbiYdGtxo6tuobPk3gdKBzW1BYRVZsuh5uAxpXw2gSdjy6KFozKIwPTyaneKiHwIBOIe1CvmCA/g3BQjs6+bIlPnTHWWcM+1Y+T7OBHBWKA/IEZNAUdhv4OwSFCNjk4SfODq3fEtj40ImHt160u/0BDdssOCU0wBdXfq+g8KimSIyTgT5gjw11irD9/v/4JHHIbYhOY1DuH/kcrRE0hR3utnD1ylfDFJms+BoDlcPzhxMQv15sF6gwftewb6VQCofSB3Q7VgrJh28Qeyg/4BvdLLq/LIIHHUVO0RQOyCAPH8DbBUEeIvmJ8QGKD7BViAe2KdgM9YHQ84BXyWs//vkBPX3Xj363oLj0wV//Oz+1Jq1m8nuLU19w2qCJ8j1CEzkhOPe3yzQCmybIl1kypAHY3AI0hWcENjywkZfB9mWcx3ydEm4N6Jh9lq4ugid9qIXDu30AXi4+TionQEC2K4BPhQdNMVWHt+sAX6ERnAR/5U1vbmoyuAUoKOq24TmCg7n5PURApgdxTkpN4BZBB+I9g+DHYF4eCEFhPQ/wc5uQUwMAHbsxfFTCs6+nEeTaUDOkAXx3kExToOtBdrniQQpoF4Oc9Pze+5oLhwrHvoXgoyHSJKHu18nHx2LbfY5gcoVG8Otm/m5DjnLULg7o/DVTGqLGV94twrNKdL4r+JJJL2f0lXpYdDvQAG5ldrxrA/O96/7tzd3pQKcR+PqopAnQ5rCOH60ZFLXHIrnq7QKfpqix8i7SJHY+JFbRFV/hgJ7dhyKF9I0g4GtRLI4nbc0BKYQ/oGVXYHnEyY3v4Zag2BbWQ54d7ZahoeKrKfoTIjY7E8huEXL5FbhfWNF54KWfaiQPivwU23w1hrmYv7weiEEeeo3A/3CgNYNC9lDEimUH0wDi3SMtJt5bBozlUhxQ8EDh+So+mqbgR67wrKAp2FCnybvOf2U7QewwoGcX5zjng++h2L40esjTHGfvPne46YZnfhcRX8e8QtfXRAXz8Grnxw+VSwPIkROhxvEJ5NAIHggVO3pFt+srYjtctDXDWLK+OcZ8Zul0sRw7Vh48Ae/eDuK8vaDgQdKXQ/DGEvjVK5DF/adPfWIAbw2Q20AonRxyeqPhCxoA6AONwSdyTzWEv2K2g71eKmb1UVQ+ED1/BXcLoRPrVMCDBnDagAdPugrrQHaS1UagC/qHyeg3Sj2/bd9okqn4fStvJr3NmwbQezNBg+/defMwBQ9LdsaTR724ubuvA50n9YCOr+cGviDA6TQGtlnQAMEsv9jia1fTaQqnQhpC4wROJj4VCuIEc11TRWerMYeL37/yZrdpzbDIJE2An0VAp+AvjILqQ1dlPF0F3ZGCplB8zzKLzsE3BL6bVXS5x6AGrRk+9q73DB/9pV/dMhgPTCAT++w/+Y3hyn/+z7YcGR/995f/zPDvfvbnhtDK0wFdQB5D7Cg7CuHRCmMH1/363xiuff+vbDmM//8BAAD//10Ved0AAAAGSURBVAMAjYd1JCNgYe8AAAAASUVORK5CYII=";
+function groundVariant(tx,ty,salt,avoidDark){                                    // 以3x3小塊為單位決定主紋理，塊內大多沿用同一款，形成自然色塊而非逐格獨立亂數的雜訊棋盤紋
+  if(avoidDark){                                                                 // 草地專用：完全不用第0欄的深色款，只在淺色系(1淺綠/2淺綠帶三葉草/3淺綠帶小花)裡挑
+    const r=tileRand(tx,ty,salt);
+    if(r<0.80) return 1;                                                        // 80%用素面淺綠打底
+    if(r<0.92) return 2;                                                        // 12%三葉草叢裝飾
+    return 3;                                                                   // 8%小花點綴
+  }
+  const bx=Math.floor(tx/3), by=Math.floor(ty/3);
+  const base=tileRand(bx,by,salt+40)<0.5?0:1;                                    // 這一小塊(約3x3格)共用的主要紋理(基本款0或1)
+  const r=tileRand(tx,ty,salt);
+  if(r<0.74) return base;                                                        // 74%沿用區塊主紋理
+  if(r<0.88) return base===0?1:0;                                                // 14%切到另一款基本紋理，增加層次但不搶眼
+  if(r<0.95) return 2;                                                           // 5%裝飾款1(花草/貝殼/嫩芽/浪花，較稀疏)
+  return 3;                                                                      // 5%裝飾款2(更稀疏)
+}
+function drawGroundTex(row,cx,cy,tx,ty,salt,avoidDark){                           // 從圖集裁切一格(32x32)貼到菱形地磚範圍(64x32)，外擴2px蓋掉相鄰磚反鋸齒接縫
+  const col=groundVariant(tx,ty,salt,avoidDark), sx=col*33, sy=row*33;
+  ctx.save(); diamondPath(cx,cy,2); ctx.clip();
+  ctx.drawImage(GROUND_TEX, sx,sy,32,32, cx-HW-2,cy-HH-1, HW*2+4,HH*2+2);
+  ctx.restore();
+}
+function drawFlowerDecor(cx,cy){ const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
+  sp(cx-8+i*7,cy-2+((i%2)*4),4,4); ctx.fillStyle='#ffe27a'; sp(cx-7+i*7,cy-1+((i%2)*4),2,2);} }
+function drawIsoFloor(t,cx,cy,tx,ty){
+  if(t===T_PATH && ROAD_TEX.complete && ROAD_TEX.naturalWidth){             // 道路：貼上PixelLab生成的石板路材質，取代原本純色程序繪製
+    ctx.save(); diamondPath(cx,cy,2); ctx.clip();                          // 外擴2px裁切+貼圖放大，讓相鄰道路磚重疊、蓋掉反鋸齒接縫
+    ctx.drawImage(ROAD_TEX, cx-HW-2, cy-HH-1, HW*2+4, HH*2+2);
+    ctx.restore();
+    return;
+  }
+  const GT_OK=GROUND_TEX.complete && GROUND_TEX.naturalWidth;               // 地面材質圖集(草地/沙地/泥地/海水)是否已載入完成
+  if(GT_OK){
+    if(t===T_GRASS || t===T_FLOWER){ drawGroundTex(0,cx,cy,tx,ty,11,true); if(t===T_FLOWER) drawFlowerDecor(cx,cy); return; }
+    if(t===T_SAND){ drawGroundTex(1,cx,cy,tx,ty,12); return; }
+    if(t===T_DIRT || t===T_DOORMAT){ drawGroundTex(2,cx,cy,tx,ty,13); return; }
+    if(t===T_WATER){ drawGroundTex(3,cx,cy,tx,ty,14); return; }
+  }
+  let base = t===T_WATER?'#3a72b8' : (t===T_DIRT||t===T_DOORMAT)?'#b58a55' : t===T_PATH?'#9a8c6c' : t===T_MAGICCIRCLE?'#241a30' : t===T_ALTAR?'#2e1f3a' : t===T_STAIRS?'#4a4048' : t===T_SAND?'#d9c48d' : '#5a9a3a';
+  fillDiamond(cx,cy,base,2);                                                // 外擴2px：相鄰地磚彼此重疊，蓋掉反鋸齒造成的暗色接縫格線
+  const rx1=(tileRand(tx,ty,1)-0.5)*14, ry1=(tileRand(tx,ty,2)-0.5)*6;      // 每格各自獨立的隨機斑點偏移，避免同款紋理疊成規律格線
+  const rx2=(tileRand(tx,ty,3)-0.5)*14, ry2=(tileRand(tx,ty,4)-0.5)*6;
+  const rx3=(tileRand(tx,ty,5)-0.5)*10, ry3=(tileRand(tx,ty,6)-0.5)*6;
+  if(base==='#5a9a3a'){ ctx.fillStyle='#4e8c30'; sp(cx-9+rx1,cy-2+ry1,3,3); sp(cx+5+rx2,cy+3+ry2,3,3); ctx.fillStyle='#6cae46'; sp(cx+1+rx3,cy-5+ry3,2,2); sp(cx-3-rx3,cy+5-ry3,2,2); }
+  else if(t===T_DIRT||t===T_DOORMAT){ ctx.fillStyle='#a67c48'; sp(cx-7+rx1,cy-1+ry1,3,2); sp(cx+7+rx2,cy+3+ry2,3,2); ctx.fillStyle='#c89a64'; sp(cx+1+rx3,cy-3+ry3,2,2); }
+  else if(t===T_SAND){ ctx.fillStyle='#e6d19f'; sp(cx-8+rx1,cy-1+ry1,4,2); sp(cx+6+rx2,cy+3+ry2,4,2); ctx.fillStyle='#c2a466'; sp(cx+1+rx3,cy-3+ry3,2,2); }
   else if(t===T_PATH){ ctx.fillStyle='#8a7c5c'; sp(cx-12,cy-2,9,5); sp(cx+3,cy-4,9,5); sp(cx-3,cy+5,9,4);
     ctx.strokeStyle='rgba(0,0,0,.18)'; ctx.strokeRect(cx-12,cy-2,9,5); ctx.strokeRect(cx+3,cy-4,9,5); ctx.strokeRect(cx-3,cy+5,9,4); }
-  else if(t===T_WATER){ ctx.fillStyle='#5f9ae0'; sp(cx-10,cy-2,8,2); sp(cx+2,cy+4,8,2); ctx.fillStyle='#8fc0f0'; sp(cx-4,cy+1,5,1); }
+  else if(t===T_WATER){ ctx.fillStyle='#5f9ae0'; sp(cx-10+rx1,cy-2+ry1,8,2); sp(cx+2+rx2,cy+4+ry2,8,2); ctx.fillStyle='#8fc0f0'; sp(cx-4+rx3,cy+1+ry3,5,1); }
   else if(t===T_MAGICCIRCLE){ const pulse=0.55+0.35*Math.sin(Date.now()/500);
     ctx.strokeStyle='rgba(180,110,255,'+pulse.toFixed(2)+')'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.ellipse(cx,cy,HW*0.78,HH*0.78,0,0,Math.PI*2); ctx.stroke();
@@ -3109,13 +3318,30 @@ function drawIsoFloor(t,cx,cy){
     ctx.fillStyle='rgba(150,100,200,'+(pulse*0.3).toFixed(2)+')'; diamondPath(cx,cy); ctx.fill();
     ctx.strokeStyle='rgba(190,140,240,'+pulse.toFixed(2)+')'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(cx-10,cy-3); ctx.lineTo(cx,cy-8); ctx.lineTo(cx+10,cy-3); ctx.lineTo(cx,cy+2); ctx.closePath(); ctx.stroke(); }
-  else if(t===T_STAIRS){ ctx.fillStyle='#241f28'; sp(cx-10,cy-1,20,5);            // 暗道/樓梯：向下凹陷的階梯剪影，暗示「這裡可以往下走」
-    ctx.strokeStyle='#6a5a72'; ctx.lineWidth=1;
-    for(let k=0;k<3;k++){ const yy=cy-3+k*3; ctx.beginPath(); ctx.moveTo(cx-9+k*2,yy); ctx.lineTo(cx+9-k*2,yy); ctx.stroke(); }
-    const pulse=0.4+0.3*Math.sin(Date.now()/400);
-    ctx.fillStyle='rgba(160,120,220,'+pulse.toFixed(2)+')'; sp(cx-2,cy-1,4,3); }
-  if(t===T_FLOWER){ const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
-    sp(cx-8+i*7,cy-2+((i%2)*4),4,4); ctx.fillStyle='#ffe27a'; sp(cx-7+i*7,cy-1+((i%2)*4),2,2);} }
+  else if(t===T_STAIRS){                                            // 樓梯(地窖式)：深色凹陷方框，裡面畫幾道漸窄階梯線，暗示往下探入地底(前面通過的B樣式)
+    fillDiamond(cx,cy,'#6b5a42',2);
+    ctx.save(); diamondPath(cx,cy); ctx.clip();
+    const ix0=cx-HW*0.62, ix1=cx+HW*0.62, iy0=cy-HH*0.62, iy1=cy+HH*0.62;
+    ctx.beginPath(); ctx.moveTo(cx,iy0); ctx.lineTo(ix1,cy); ctx.lineTo(cx,iy1); ctx.lineTo(ix0,cy); ctx.closePath();
+    ctx.fillStyle='#14100c'; ctx.fill();
+    for(let k=0;k<4;k++){
+      const s=1-(k/4)*0.85;
+      ctx.strokeStyle='rgba(200,190,170,'+(0.35-k*0.06).toFixed(2)+')'; ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(cx-HW*0.55*s, cy-HH*0.08*k);
+      ctx.lineTo(cx, cy-HH*0.5*s-HH*0.08*k);
+      ctx.lineTo(cx+HW*0.55*s, cy-HH*0.08*k);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.strokeStyle='#3a2e20'; ctx.lineWidth=3; diamondPath(cx,cy); ctx.stroke();       // 外框：地窖艙口的木/石框
+    ctx.strokeStyle='#c9b98f'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-HW*0.85,cy-HH*0.02); ctx.lineTo(cx,cy-HH*0.85); ctx.lineTo(cx+HW*0.85,cy-HH*0.02); ctx.stroke();
+    ctx.lineWidth=1;                                                  // 補畫斜角高光/陰影(前面fillDiamond把通用那份蓋掉了)
+    ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(cx-HW,cy); ctx.lineTo(cx,cy-HH); ctx.lineTo(cx+HW,cy); ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.16)';       ctx.beginPath(); ctx.moveTo(cx-HW,cy); ctx.lineTo(cx,cy+HH); ctx.lineTo(cx+HW,cy); ctx.stroke();
+  }
+  if(t===T_FLOWER) drawFlowerDecor(cx,cy);
 }
 
 /* 立體方塊（牆 / 屋頂用）*/
@@ -3132,8 +3358,18 @@ function faceLines(cx,cy,h,col,step){ const Lx=cx-HW,Ly=cy,Bx=cx,By=cy+HH,Rx=cx+
 function poly(pts,fill,stroke){ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y); ctx.closePath();
   if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();} }
+const HOUSE_TEX=new Image(); HOUSE_TEX.src="data:image/png;base64,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";   // PixelLab生成的小木屋美術，96x96px，圖片內(46,83)是正面石座落地點(最靠近鏡頭的那個角)
 function drawHouse(h){
   const {x,y,w,d,big}=h;
+  if(HOUSE_TEX.complete && HOUSE_TEX.naturalWidth){                 // 貼圖已載入：貼上PixelLab生成的小木屋美術，取代程序繪製的方塊屋
+    const fwx=(x+w)*TS, fwy=(y+d)*TS;                               // 錨點改用footprint「最靠近鏡頭的前角」，跟圖片裡的正面石座落地點意義才對得上；原本用中心點會讓整張圖被拉向後方，造成碰撞範圍比畫面上的房子更往前凸出一截，玩家會像整個人穿進房子下半部
+    const g=groundScreen(fwx,fwy);
+    const scale=big?2.8:2.2;                                        // 大屋(big)畫大一點，跟小屋做出尺寸區別
+    const ax=46*scale, ay=83*scale;                                 // 圖片內的正面石座落地點，換算成縮放後的像素座標
+    shadow(g.x,g.y,26*scale/2.2,9*scale/2.2);                       // 淡淡地基陰影，隨縮放等比例調整
+    ctx.drawImage(HOUSE_TEX, g.x-ax, g.y-ay, 96*scale, 96*scale);
+    return;
+  }
   const WALLH=big?50:40, ROOFH=big?38:30;
   const A=groundScreen(x*TS, y*TS);            // 北(後)
   const B=groundScreen((x+w)*TS, y*TS);        // 東(右)
@@ -3203,6 +3439,7 @@ function drawIsoObject(t,cx,cy,treeScale,fenceNb){
   } else if(t===T_TREE){ drawTreeIso(cx,cy);
   } else if(t===T_FENCE){ drawFenceIso(cx,cy,fenceNb);
   } else if(t===T_WELL){ drawWellIso(cx,cy);
+  } else if(t===T_STAIRUP){ drawStairsUpIso(cx,cy);
   } else if(t===T_SIGN){ drawSignIso(cx,cy);
   } else if(t===T_TOWNWALL){ drawTownWallIso(cx,cy,fenceNb);
   } else if(t===T_GATE){ drawGateIso(cx,cy);
@@ -3325,6 +3562,43 @@ function drawWellIso(cx,cy){ shadow(cx,cy,18,8);
   ctx.fillStyle='#6a4a2a'; sp(cx-14,cy-40,4,30); sp(cx+10,cy-40,4,30); // 立柱
   ctx.fillStyle='#8a3a2a'; ctx.beginPath(); ctx.moveTo(cx,cy-52); ctx.lineTo(cx+20,cy-38); ctx.lineTo(cx-20,cy-38); ctx.closePath(); ctx.fill(); // 小屋頂
 }
+/* 立體石階：改成正統的「兩層方塊階梯」——把整格對半切成前後兩塊，後半塊較高、前半塊較矮，
+   中間高度差的那面牆自然形成一道踢腳(階梯的直角轉折)，跟牆壁/水井一樣是真正擋路的立體物件。
+   用於冒險洞穴1樓入口、2樓落點，是「往上/入口」方向的標示，跟平面的T_STAIRS(往下地窖)方向相反。*/
+const STAIRUP_L_TEX=new Image(); STAIRUP_L_TEX.src="data:image/png;base64,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";   // PixelLab生成的立體石階(向左款)，64x80px，圖片底部尖點=菱形地磚的南頂點(cx,cy+HH)，圖片y=58列=地磚中心(cx,cy)
+function drawStairsUpIso(cx,cy){
+  if(STAIRUP_L_TEX.complete && STAIRUP_L_TEX.naturalWidth){        // 貼圖已載入：直接貼上PixelLab生成的立體石階美術
+    shadow(cx,cy,HW*0.95,HH*0.6);
+    ctx.drawImage(STAIRUP_L_TEX, cx-32, cy-58, 64, 80);            // 對齊：圖片底部尖點＝菱形南頂點(cx,cy+HH)，圖片中段(y=58)＝地磚中心(cx,cy)
+    return;
+  }
+  shadow(cx,cy,HW*0.95,HH*0.6);
+  const N={x:cx,y:cy-HH}, E={x:cx+HW,y:cy}, S={x:cx,y:cy+HH}, W={x:cx-HW,y:cy};
+  const hBack=26, hFront=13;                                    // 後半塊(西側)較高、前半塊(東側)較矮＝一階
+  const topBack='#a89880', topFront='#8f8069';
+  const faceNW='#8c7d64', faceWS='#786a53';                      // 後半塊兩側外面(較亮)
+  const faceNE='#665c49', faceES='#544b3a';                      // 前半塊兩側外面(較暗)
+  const riser='#443d30';                                         // 高度差露出的踢腳面
+  const pt=(p,h)=>({x:p.x,y:p.y-h});
+  const Nb=pt(N,hBack), Wb=pt(W,hBack), Sb=pt(S,hBack);
+  const Nf=pt(N,hFront), Ef=pt(E,hFront), Sf=pt(S,hFront);
+  const poly=(pts,fill)=>{ ctx.fillStyle=fill; ctx.beginPath(); pts.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); }); ctx.closePath(); ctx.fill(); };
+  poly([N,W,Wb,Nb],faceNW);                                      // 後半塊：西北面
+  poly([W,S,Sb,Wb],faceWS);                                      // 後半塊：西南面
+  poly([Nb,Wb,Sb],topBack);                                      // 後半塊頂面
+  poly([N,E,Ef,Nf],faceNE);                                      // 前半塊：東北面
+  poly([E,S,Sf,Ef],faceES);                                      // 前半塊：東南面
+  poly([Nf,Ef,Sf],topFront);                                     // 前半塊頂面(踏板)
+  poly([Nf,Nb,Sb,Sf],riser);                                     // 踢腳：高度差露出的那面牆
+  ctx.strokeStyle='rgba(25,20,15,.55)'; ctx.lineWidth=1;
+  [[N,W,Wb,Nb],[W,S,Sb,Wb],[N,E,Ef,Nf],[E,S,Sf,Ef],[Nf,Nb,Sb,Sf]].forEach(function(pts){
+    ctx.beginPath(); pts.forEach(function(p,i){ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); }); ctx.closePath(); ctx.stroke();
+  });
+  ctx.strokeStyle='rgba(255,240,210,.4)'; ctx.lineWidth=1;        // 兩層頂緣各補一條淺色稜線，強調「踏板邊」
+  ctx.beginPath(); ctx.moveTo(Nb.x,Nb.y); ctx.lineTo(Wb.x,Wb.y); ctx.lineTo(Sb.x,Sb.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(Nf.x,Nf.y); ctx.lineTo(Ef.x,Ef.y); ctx.lineTo(Sf.x,Sf.y); ctx.stroke();
+}
+
 function drawSignIso(cx,cy){ shadow(cx,cy,10,5);
   ctx.fillStyle='#6a4a2a'; sp(cx-2,cy-26,4,26);
   ctx.fillStyle='#c8a15a'; ctx.fillRect(cx-16,cy-40,32,16);
@@ -4128,9 +4402,109 @@ function releaseFakePlayerName(name){ _usedFakeNames.delete(name); }
 
 let FAKE_PLAYERS=[];
 const FP_CLASSES=['royal','knight','elf','mage'];
+const FP_JOB_OF_CLS={royal:'王族',knight:'騎士',elf:'妖精',mage:'魔法師'};
+function fpRandomAlign(){                                       // 隨機性向：約1/3正義(>500)、1/3中立(0~500)、1/3邪惡(<0)，各地圖三種都會出現
+  const r=Math.random();
+  if(r<0.34) return 600+Math.floor(Math.random()*2000);        // 正義 600~2600
+  if(r<0.67) return Math.floor(Math.random()*501);              // 中立 0~500
+  return -(200+Math.floor(Math.random()*2800));                  // 邪惡 -200~-3000
+}
+function fpRandomLevel(){                                       // 假玩家等級分佈：多數平民、少數高手、極少數大神
+  const r=Math.random();
+  if(r<0.55) return 3+Math.floor(Math.random()*13);             // 55%　lv3~15
+  if(r<0.82) return 16+Math.floor(Math.random()*10);            // 27%　lv16~25
+  if(r<0.95) return 26+Math.floor(Math.random()*10);            // 13%　lv26~35
+  return 36+Math.floor(Math.random()*10);                        //  5%　lv36~45，鳳毛麟角的高手
+}
+function fpEquipTierForLevel(lv){                                // 等級對應的「大致裝備稀有度」，用來挑選武器/防具
+  const base = lv<15?(1+Math.floor(Math.random()*2)) : lv<26?(2+Math.floor(Math.random()*2)) : lv<36?(3+Math.floor(Math.random()*3)) : (4+Math.floor(Math.random()*3));
+  if(Math.random()<0.06) return Math.min(6, base+2+Math.floor(Math.random()*2));   // 少數例外：不管等級，裝備特別好(有錢的低等玩家)
+  return Math.min(6, base);
+}
+function fpPickItem(cat, jobName, tier){                         // 依職業與目標稀有度，從對應分類裡挑一件基礎(未強化)裝備
+  const pool=Object.keys(ITEM_DEF).filter(function(id){
+    const d=ITEM_DEF[id];
+    if(d.cat!==cat || d._base) return false;                     // 排除已強化的衍生品，只從基礎品項挑
+    const job=d.job||'全職業';
+    if(cat==='weapon' && jobName==='魔法師' && d.kind!=='staff') return false;   // 法師的武器一定要是魔杖，不能隨機配到匕首/劍這類不合理的武器
+    return job==='全職業' || job.indexOf(jobName)>=0;
+  });
+  if(!pool.length) return null;
+  pool.sort(function(a,b){ return Math.abs((ITEM_DEF[a].rarity||1)-tier)-Math.abs((ITEM_DEF[b].rarity||1)-tier); });
+  const top=pool.slice(0, Math.max(3, Math.ceil(pool.length*0.25)));
+  return top[Math.floor(Math.random()*top.length)];
+}
+function fpPickEnhLevel(lv, baseId){                              // 依等級決定強化程度：低等多半基礎/安定值，高等多半重強化，各自留一點例外
+  const bd=ITEM_DEF[baseId]; if(!bd) return 0;
+  const safe=(typeof safeOf==='function')?safeOf(bd):6, cap=(typeof enhCapOf==='function')?enhCapOf(bd):20;
+  const r=Math.random();
+  let en;
+  if(lv<15){ en = r<0.55?0 : r<0.90?safe : r<0.98?safe+1+Math.floor(Math.random()*2) : safe+3+Math.floor(Math.random()*2); }
+  else if(lv<26){ en = r<0.15?0 : r<0.55?safe : r<0.90?safe+1+Math.floor(Math.random()*2) : safe+3+Math.floor(Math.random()*2); }
+  else if(lv<36){ en = r<0.03?0 : r<0.25?safe : r<0.70?safe+1+Math.floor(Math.random()*2) : safe+3+Math.floor(Math.random()*2); }
+  else { en = r<0.05?safe : r<0.40?safe+1+Math.floor(Math.random()*2) : safe+3+Math.floor(Math.random()*3); }
+  return Math.max(0, Math.min(cap, en));
+}
+function fpEquipIdWithEnh(baseId, en){
+  if(!baseId || en<=0) return baseId;
+  return (typeof cloneEnhDef==='function' && cloneEnhDef(baseId,en)) || baseId;
+}
+function fpPickArmorBySlot(slot, jobName, tier){                 // 依防具部位挑一件基礎(未強化)防具
+  const pool=Object.keys(ITEM_DEF).filter(function(id){
+    const d=ITEM_DEF[id];
+    if(d.cat!=='armor' || d.slot!==slot || d._base) return false;
+    const job=d.job||'全職業';
+    return job==='全職業' || job.indexOf(jobName)>=0;
+  });
+  if(!pool.length) return null;
+  pool.sort(function(a,b){ return Math.abs((ITEM_DEF[a].rarity||1)-tier)-Math.abs((ITEM_DEF[b].rarity||1)-tier); });
+  const top=pool.slice(0, Math.max(2, Math.ceil(pool.length*0.3)));
+  return top[Math.floor(Math.random()*top.length)];
+}
+const FP_ARMOR_SLOTS=['helmet','tshirt','cloak','boots','gloves','necklace','ring','belt'];   // body另外處理，shield依武器是否雙手決定要不要配
+function fpEquipBySlot(base, slot, lv){                           // 依部位決定要不要強化：項鍊/戒指/腰帶不可強化(比照玩家強化系統的既有規則)，其餘部位正常隨等級決定強化程度
+  if(!base) return null;
+  if(typeof ENH_EXCLUDE_SLOT!=='undefined' && ENH_EXCLUDE_SLOT[slot]) return base;
+  return fpEquipIdWithEnh(base, fpPickEnhLevel(lv,base));
+}
+function fpBuildEquip(jobName, lv){                               // 幫假玩家配全套裝備：武器＋身體防具＋頭盔/內衣/斗篷/長靴/手套/項鍊/戒指x2/腰帶/盾牌(單手武器才配)
+  const tier=fpEquipTierForLevel(lv);
+  const wBase=fpPickItem('weapon', jobName, tier);
+  const weapon=fpEquipBySlot(wBase, 'weapon', lv);
+  const isTwoHand=!!(wBase && ITEM_DEF[wBase] && ITEM_DEF[wBase].two);
+  const equip={weapon:weapon};
+  const aBase=fpPickItem('armor', jobName, tier);                  // body(主防具)
+  equip.body = fpEquipBySlot(aBase, 'body', lv);
+  FP_ARMOR_SLOTS.forEach(function(slot){
+    const base=fpPickArmorBySlot(slot, jobName, tier);
+    equip[slot]=fpEquipBySlot(base, slot, lv);
+  });
+  const ring2Base = fpPickArmorBySlot('ring', jobName, tier);       // 第二枚戒指，重新挑一次(可能跟ring1不同件)
+  equip.ring2 = fpEquipBySlot(ring2Base, 'ring', lv);
+  if(!isTwoHand){
+    const sBase=fpPickArmorBySlot('shield', jobName, tier);
+    equip.shield = fpEquipBySlot(sBase, 'shield', lv);
+  } else equip.shield=null;                                        // 雙手武器沒有另一隻手拿盾牌
+  return equip;
+}
+function fpGearBonus(equip){                                       // 全身裝備的強化值加總，用來推算HP/AC等綜合戰力
+  let total=0;
+  for(const slot in equip){ const id=equip[slot]; const d=id&&ITEM_DEF[id]; if(d&&d._en) total+=d._en; }
+  return total;
+}
 function fpNewBase(name){
-  return {name, psheet:{cls:FP_CLASSES[Math.floor(Math.random()*4)], gender:(Math.random()<0.5?'male':'female')},
-          art:'hero', x:0, y:0, dir8:'down', gambler:'fp'};   // gambler旗標沿用既有「名字預設隱藏、滑鼠移上去才顯示」的繪製邏輯
+  const cls=FP_CLASSES[Math.floor(Math.random()*4)], jobName=FP_JOB_OF_CLS[cls];
+  const lv=fpRandomLevel();
+  const equip=fpBuildEquip(jobName, lv);
+  const gearBonus=fpGearBonus(equip)*2;                             // 全身裝備強化值加總，而不是只看武器防具兩件
+  const _hp=60+lv*14+gearBonus;                                    // HP隨等級與裝備強化程度成長，高手真的比較難打
+  return {name, psheet:{cls, gender:(Math.random()<0.5?'male':'female')},
+          art:'hero', x:0, y:0, dir8:'down', gambler:'fp', job:jobName, lv:lv, equip:equip,
+          align:fpRandomAlign(), hp:_hp, maxhp:_hp, pvpAtkCd:0};   // gambler旗標沿用既有「名字預設隱藏、滑鼠移上去才顯示」的繪製邏輯
+}
+function fakePlayerAt(wx,wy){                                    // PVP用：找出滑鼠位置附近可攻擊的假玩家
+  if(typeof FAKE_PLAYERS==='undefined') return null;
+  return FAKE_PLAYERS.find(fp=>fp.hp>0 && Math.hypot((fp.x+16)-wx,(fp.y+16)-wy)<24);
 }
 function clearFakePlayers(){ FAKE_PLAYERS.forEach(f=>releaseFakePlayerName(f.name)); FAKE_PLAYERS=[]; }
 function spawnFakePlayers(){
@@ -4253,6 +4627,11 @@ function fpHuntTick(fp,dt){
     }
   }
 }
+function fpPvpFaceTick(fp,dt){                                    // 正在被玩家PVP攻擊時：停下手邊的事，轉身面向玩家、擺出應戰姿態，不再自己打怪或逛街
+  const dx=(player.x+player.w/2)-(fp.x+16), dy=(player.y+player.h/2)-(fp.y+16);
+  const d8=dir8of(dx,dy); if(d8) fp.dir8=d8;
+  if(fp.atkFlash>0) fp.atkFlash-=dt;
+}
 function fakePlayersTick(dt){
   if(!FAKE_PLAYERS.length) return;
   FAKE_PLAYERS.forEach(fp=>{
@@ -4260,6 +4639,7 @@ function fakePlayersTick(dt){
       const w=findNearestWalkable(MAP, Math.floor((fp.x+16)/TS), Math.floor((fp.y+16)/TS));
       fp.x=w.x*TS; fp.y=w.y*TS; fp._path=null;                    // 保險：萬一還是卡進牆裡，自動脫困到最近可走格
     }
+    if(fp===pvpTarget){ fpPvpFaceTick(fp,dt); return; }            // 正在跟玩家對打：不執行原本狩獵/逛街的AI，改成轉身應戰
     if(fp.mode==='village') fpVillageTick(fp,dt); else fpHuntTick(fp,dt);
   });
 }
@@ -4346,6 +4726,23 @@ DI('紅包','etc',0,{desc:'喜氣洋洋的紅包，開啟後可隨機獲得道�
 DI('老舊獵人的箭桶','etc',0,{desc:'老舊的箭桶，是某位獵人曾經使用過的痕跡。'});
 DI('老舊皮革的箭桶','etc',0,{desc:'以老舊皮革製成的箭桶，皮革已經斑駁磨損。'});
 DI('變鈍的武器','etc',0,{desc:'刀刃已經變得遲鈍的武器，攻擊力大幅降低。'});
+/* 物品稀有度系統：等級1~6，決定該物品在後台編輯器裡預設建議售價的區間。
+   1=商店尋常價(≤2000，個位數為0) 2=怪物掉落重要物品(≤1萬，百位以下為0)
+   3=製作取得，小有難度(≤10萬，千位以下為0) 4=高等怪掉落，難取得(≤50萬，千位以下為0)
+   5=試煉/高等怪/難製作，稀有(≤100萬，萬位以下為0) 6=BOSS級或高等材料製作，超稀有(≤500萬，十萬位以下為0)
+   商店可直接買到的商品，稀有度固定為1，且沿用原本已校正過的實際售價(不重新隨機)；
+   其餘物品依材質/職業限制/強化難度/描述關鍵字等訊號估算稀有度，並依區間隨機出一個售價，
+   可於後台編輯器【稀有度】欄位調整。*/
+const ITEM_RARITY_PRICE={'弓':[1,110],'精靈弓':[5,420000],'歐西斯弓':[1,60],'尤米弓':[6,1000000],'短弓':[3,4000],'十字弓':[6,2600000],'獵人之弓':[3,36000],'沙哈之弓':[4,126000],'被遺忘的弩槍':[6,1500000],'古老的弩槍':[4,72000],'赤焰之弓':[5,950000],'熾炎天使弓':[6,4200000],'武士刀':[4,347000],'長劍':[1,5500],'闊劍':[4,380000],'精靈匕首':[5,700000],'歐西斯匕首':[1,10],'匕首':[1,22],'彎刀':[1,2200],'小侏儒短劍':[4,45000],'精靈短劍':[6,400000],'歐西斯短劍':[1,60],'短劍':[1,335],'瑟魯基之劍':[6,500000],'紅騎士之劍':[4,17000],'侵略者之劍':[4,16000],'骰子匕首':[4,48000],'大馬士革刀':[4,112000],'短劍的劍身':[6,3500000],'長劍的劍身':[6,700000],'奧里哈魯根的劍身':[6,3900000],'細劍':[6,200000],'鎖子甲破壞者':[6,3600000],'銀長劍':[4,102000],'銀劍':[4,367000],'被遺忘的劍':[6,4200000],'古老的劍':[6,4500000],'黑燄之劍':[5,700000],'赤焰之劍':[5,540000],'黃金權杖':[5,290000],'雷雨之劍':[5,580000],'橡木魔法杖':[3,76000],'美基魔法杖':[4,143000],'巫術魔法杖':[4,415000],'力量魔法杖':[4,446000],'瑪那魔杖':[4,4000],'水晶魔杖':[3,98000],'冰之女王魔杖':[6,1100000],'惡魔魔杖':[5,900000],'巴風特魔杖':[6,2800000],'巴列斯魔杖':[5,440000],'天使魔杖':[6,1800000],'雙手劍':[4,80000],'巨劍':[4,111000],'被遺忘的巨劍':[6,4900000],'古老的巨劍':[6,2200000],'矛':[1,880],'巴迪須':[1,352],'柴刀':[4,53000],'貝卡合金':[5,120000],'法丘':[6,2500000],'闊矛':[1,88],'吉薩':[6,2400000],'戟':[4,184000],'槍':[4,434000],'露西錘':[4,177000],'帕提森':[4,310000],'精靈之矛':[6,3800000],'歐西斯之矛':[1,150],'三叉戟':[4,414000],'潘的角':[6,400000],'覆上米索莉的角':[6,3300000],'覆上奧里哈魯根的角':[6,3000000],'深紅長矛':[5,690000],'酷寒之矛':[4,64000],'亞連':[1,110],'斧':[1,50],'釘錘':[1,650],'戰斧':[6,1400000],'木棒':[1,100],'弗萊爾':[4,41000],'戰錘':[1,1100],'流星錘':[4,283000],'侏儒鐵斧':[4,151000],'巨斧':[4,425000],'狂戰士斧':[5,810000],'銀斧':[4,317000],'箭':[1,1],'銀箭':[1,1],'米索莉箭':[6,600000],'說話之島卷軸':[2,4700],'精靈皮盔':[6,2800000],'歐西斯頭盔':[1,150],'侏儒鐵盔':[4,99000],'頭盔':[4,361000],'騎士面甲':[5,90000],'抗魔法頭盔':[4,24000],'艾爾穆的祝福':[6,2700000],'治癒魔法頭盔':[5,300000],'敏捷魔法頭盔':[5,990000],'力量魔法頭盔':[5,380000],'皮帽子':[1,180],'銀釘皮帽':[1,620],'皮頭盔':[5,120000],'骷髏頭盔':[6,3600000],'鋼鐵頭盔':[1,220],'法師之帽':[5,550000],'死亡騎士頭盔':[5,360000],'精靈敏捷頭盔':[5,590000],'精靈體質頭盔':[5,820000],'騎士頭巾':[5,470000],'紅騎士頭巾':[3,21000],'巴土瑟之帽':[4,190000],'卡士柏之帽':[4,182000],'馬庫爾之帽':[4,108000],'西瑪之帽':[4,344000],'克特頭盔':[6,1800000],'淨化頭飾':[6,4500000],'金屬盔甲':[4,480000],'水晶盔甲':[4,350000],'青銅盔甲':[4,332000],'藤甲':[4,37000],'皮甲':[4,312000],'鏈甲':[1,6600],'歐西斯鏈甲':[1,800],'鱗甲':[1,2200],'銀釘皮甲':[1,330],'環甲':[1,550],'歐西斯環甲':[1,200],'小藤甲':[1,110],'皮夾克':[1,22],'抗魔法鏈甲':[4,326000],'綿質長袍':[1,1100],'木甲':[1,160],'精靈護胸金屬板':[1,1450],'精靈金屬盔甲':[6,4700000],'精靈鏈甲':[6,800000],'木製的夾克':[1,580],'皮背心':[1,1620],'皮盔甲':[1,1610],'銀釘皮背心':[1,1500],'硬皮背心':[1,160],'骷髏盔甲':[1,1480],'鋼鐵金屬盔甲':[5,890000],'法師長袍':[6,3800000],'水龍鱗盔甲':[6,1500000],'地龍鱗盔甲':[6,4400000],'火龍鱗盔甲':[6,2100000],'風龍鱗盔甲':[6,5000000],'死亡騎士盔甲':[5,1000000],'被遺忘的金屬盔甲':[6,400000],'被遺忘的皮盔甲':[6,1500000],'被遺忘的長袍':[6,300000],'被遺忘的鱗甲':[6,2100000],'古老的金屬盔甲':[6,2600000],'古老的皮盔甲':[6,1800000],'古老的長袍':[6,500000],'古老的鱗甲':[6,1400000],'黑長者長袍':[4,468000],'克特盔甲':[6,3700000],'T恤':[3,92000],'精靈T恤':[1,1020],'精靈斗篷':[6,400000],'歐西斯斗篷':[1,50],'侏儒斗篷':[3,84000],'保護者斗篷':[3,64000],'隱身斗篷':[3,51000],'抗魔法斗篷':[3,83000],'紅色斗篷':[4,235000],'君主的威嚴':[4,74000],'瑪那斗篷':[4,136000],'藍海賊斗篷':[3,18000],'短統靴':[1,330],'長靴':[1,570],'皮涼鞋':[1,120],'銀釘皮涼鞋':[1,1430],'皮長靴':[2,1800],'鋼鐵長靴':[4,135000],'深水長靴':[4,383000],'死亡騎士長靴':[5,750000],'黑長者涼鞋':[5,550000],'克特長靴':[6,3800000],'神意長靴':[5,520000],'勇氣長靴':[5,470000],'賽菲亞長靴':[5,290000],'瑪那長靴':[5,180000],'手套':[4,261000],'腕甲':[6,1900000],'力量手套':[6,2700000],'鋼鐵手套':[4,387000],'石製手套':[4,25000],'水晶手套':[5,150000],'死亡騎士手套':[4,79000],'保護者手套':[4,322000],'克特手套':[6,1100000],'小盾牌':[1,66],'精靈盾牌':[6,1000000],'阿克海盾牌':[1,90],'大盾牌':[1,1325],'侏儒圓盾':[4,349000],'反射之盾':[4,217000],'伊娃之盾':[6,3500000],'塔盾':[5,90000],'木盾':[1,310],'銀騎士之盾':[5,490000],'皮盾牌':[1,1470],'銀釘皮盾':[1,790],'骷髏盾牌':[1,1440],'鋼鐵盾牌':[5,330000],'受詛咒的魔法書':[5,710000],'魔法能量之書':[4,441000],'紅騎士盾牌':[5,20000],'瑪那水晶球':[5,880000],'力量項鍊':[6,4700000],'敏捷項鍊':[6,800000],'體質項鍊':[6,4400000],'智力項鍊':[6,3500000],'精神項鍊':[6,4900000],'魅力項鍊':[6,1800000],'妖魔戰士項鍊':[6,5000000],'老舊的力量項鍊':[6,4200000],'老舊的敏捷項鍊':[6,2200000],'老舊的體質項鍊':[6,800000],'老舊的智力項鍊':[6,1900000],'老舊的精神項鍊':[6,2800000],'老舊的魅力項鍊':[6,1100000],'守護項鍊':[5,590000],'長老項鍊':[6,100000],'抗魔項鍊':[6,4700000],'傳送控制戒指':[6,4700000],'變形控制戒指':[6,1700000],'抗魔戒指':[6,3300000],'滅魔戒指':[6,4900000],'火靈戒指':[2,8800],'水靈戒指':[2,2400],'地靈戒指':[2,1400],'風靈戒指':[2,7500],'守護者的戒指':[6,2000000],'守護戒指':[5,820000],'長者戒指':[5,650000],'魔力戒指':[6,3900000],'智力戒指':[6,1300000],'力量戒指':[6,1000000],'敏捷戒指':[6,2400000],'老舊的身體皮帶':[6,4900000],'老舊的精神腰帶':[6,1100000],'老舊的靈魂皮帶':[6,3500000],'身體腰帶':[6,5000000],'精神腰帶':[6,3400000],'靈魂腰帶':[6,100000],'多羅皮帶':[6,3900000],'歐吉皮帶':[6,2100000],'勇敢皮帶':[6,3200000],'光明身體腰帶':[6,200000],'光明精神腰帶':[6,800000],'光明靈魂腰帶':[6,2400000],'火精靈的皮帶':[6,2000000],'水精靈的皮帶':[6,1600000],'地精靈的皮帶':[6,400000],'風精靈的皮帶':[6,1600000],'守護皮帶':[6,3700000],'抗魔皮帶':[6,600000],'紅色藥水':[1,40],'橙色藥水':[1,138],'黑色藥水':[3,11000],'自我加速藥水':[1,220],'精靈餅乾':[1,120],'翡翠藥水':[1,77],'白色藥水':[1,220],'安特的樹枝':[1,1470],'安特的水果':[1,1640],'勇敢藥水':[1,120],'伊娃的祝福':[3,69000],'人魚之鱗':[3,99000],'藍色藥水':[3,17000],'強化自我加速藥水':[1,180],'惡魔之血':[1,200],'慎重藥水':[2,6100],'萬能藥(STR)':[1,490],'萬能藥(DEX)':[1,960],'萬能藥(CON)':[1,250],'萬能藥(INT)':[1,1410],'萬能藥(WIS)':[1,1830],'萬能藥(CHA)':[1,170],'肉':[1,1],'鑑定卷軸':[1,55],'瞬間移動卷軸':[1,77],'解除詛咒的卷軸':[1,110],'對武器施法的卷軸':[3,28000],'對盔甲施法的卷軸':[3,70000],'復活卷軸':[1,1100],'返回卷軸':[1,132],'精靈羽翼':[6,3700000],'變形卷軸':[3,94000],'空的魔法卷軸(等級1)':[3,89000],'空的魔法卷軸(等級2)':[3,26000],'空的魔法卷軸(等級3)':[3,92000],'空的魔法卷軸(等級4)':[3,40000],'血盟返回卷軸':[3,52000],'解除封印卷軸':[3,86000],'祝福的對武器施法卷軸':[2,8400],'祝福的對防具施法卷軸':[2,4800],'詛咒的對武器施法卷軸':[2,5700],'詛咒的對防具施法卷軸':[2,6700],'燈':[1,10],'新手裝備箱':[2,5800],'新手戒指箱':[2,1600],'新手武器箱':[2,3200],'燈籠':[1,110],'燈油':[1,33],'蠟燭':[1,2],'漂浮之眼肉':[2,2900],'松木魔杖':[2,900],'楓木魔杖':[2,4400],'烏木魔杖':[2,300],'胡蘿蔔':[2,7600],'蛋':[2,7100],'黃金鑰匙':[2,3000],'銀鑰匙':[2,7600],'檸檬':[2,2900],'橘子':[2,100],'烤薄餅':[2,1000],'蘋果':[2,9100],'香蕉':[2,8100],'夏洛伯之爪':[2,800],'往古魯丁的船票':[2,3000],'往說話之島的船票':[2,900],'阿吐巴圖騰':[2,500],'那魯加圖騰':[2,4300],'都達瑪拉圖騰':[2,1000],'甘地圖騰':[2,6600],'羅孚圖騰':[2,3100],'魔法寶石':[2,3600],'鑽石':[2,8600],'品質鑽石':[4,31000],'高品質鑽石':[5,800000],'綠寶石':[2,7000],'品質綠寶石':[4,106000],'高品質綠寶石':[5,640000],'紅寶石':[2,7400],'品質紅寶石':[4,349000],'高品質紅寶石':[5,690000],'藍寶石':[2,3200],'品質藍寶石':[4,219000],'高品質藍寶石':[5,1000000],'信紙':[1,37],'潘的鬃毛':[1,810],'粗糙的米索莉塊':[4,239000],'元素石':[2,1300],'蘑菇汁':[1,1500],'食人巨魔的血':[2,5600],'線':[1,1170],'純粹的米索莉塊':[5,470000],'精靈粉末':[1,770],'芮克妮的網':[1,640],'安特的樹皮':[1,470],'奧里哈魯根':[6,4500000],'米索莉線':[6,5000000],'芮克妮的蛻皮':[1,630],'魔法笛子':[6,600000],'米索莉金屬板':[6,3700000],'奧里哈魯根金屬板':[6,2000000],'皮革':[1,1350],'金屬塊':[2,9400],'皮帶':[1,1270],'高級皮革':[2,1400],'骨頭碎片':[2,3200],'哨子':[1,550],'磨刀石':[1,155],'血盟信紙':[1,1200],'項圈':[2,2500],'糖果':[1,5],'藍色布料':[2,2500],'紅色布料':[2,6900],'白色布料':[2,5800],'鋼鐵原石':[2,1800],'水龍鱗':[6,2200000],'地龍鱗':[6,4700000],'火龍鱗':[6,2900000],'風龍鱗':[6,1900000],'阿西塔基奧的灰燼':[2,3200],'精靈玉':[4,312000],'古老的交易文件':[3,57000],'搜索狀':[4,414000],'黑騎士的誓約':[4,442000],'都達瑪拉妖魔魔法書':[2,7100],'那魯加妖魔魔法書':[2,1300],'甘地妖魔魔法書':[2,700],'阿吐巴妖魔魔法書':[2,8400],'骷髏頭':[2,7000],'食屍鬼的指甲':[2,200],'食屍鬼的牙齒':[2,1200],'龍龜甲':[3,97000],'古代的卷軸':[2,3100],'生命的卷軸':[2,2200],'蛇女之鱗':[2,5300],'返生藥水':[2,6300],'感謝信':[2,6200],'村民的遺物':[2,2800],'不死族的骨頭':[2,5200],'受詛咒的精靈書':[2,800],'不死族的鑰匙':[2,2200],'殭屍鑰匙':[2,4900],'骷髏鑰匙':[2,100],'密室鑰匙':[2,5000],'神秘水晶球':[2,3400],'神秘魔杖':[2,5900],'蛇女房間鑰匙':[2,3700],'黑色血痕':[2,5500],'光明的鱗片':[2,9000],'月光之氣息':[2,9400],'神聖獨角獸之角':[3,72000],'畢克斯的羽毛':[2,8500],'畢克斯的沙漏':[2,9200],'贖罪聖書':[3,63000],'贖罪聖書箱':[3,20000],'畢克斯的沙漏箱':[4,98000],'解除封印卷軸箱子':[2,3800],'摺紙傳令鳥':[2,2800],'摺紙傳令鳥箱':[2,800],'被偷的項鍊':[2,7500],'被偷的戒指':[2,9500],'獨眼巨人的血':[2,7000],'污染的精靈水晶(水)':[2,800],'污染的精靈水晶(火)':[2,9600],'污染的精靈水晶(地)':[2,4100],'污染的精靈水晶(風)':[2,800],'邪惡蜥蜴之鱗':[2,700],'神秘魔力恢復藥水':[2,7500],'神秘慎重藥水':[2,6200],'思克巴女皇的神祕魔杖':[2,6500],'說話之島的回憶':[2,6800],'遺忘之島的回憶':[2,2100],'回憶蠟燭':[4,30000],'凱莉紗的記憶水晶':[2,6600],'加速符咒':[2,1100],'消耗品袋子':[2,2400],'福袋':[2,900],'紅包':[2,7700],'老舊獵人的箭桶':[2,900],'老舊皮革的箭桶':[2,8700],'變鈍的武器':[2,3100]};
+(function(){
+  for(var _rid in ITEM_RARITY_PRICE){
+    if(!ITEM_DEF[_rid]) continue;
+    var _rp=ITEM_RARITY_PRICE[_rid];
+    ITEM_DEF[_rid].rarity=_rp[0];
+    ITEM_DEF[_rid].price=_rp[1];
+  }
+})();
+
 
 const SHOPS={
   雜貨店:['紅色藥水','橙色藥水','白色藥水','藍色藥水','翡翠藥水','自我加速藥水','勇敢藥水','惡魔之血','精靈餅乾','變形卷軸','瞬間移動卷軸','返回卷軸','復活卷軸','鑑定卷軸','解除詛咒的卷軸','對武器施法的卷軸','對盔甲施法的卷軸','燈','燈籠','燈油','蠟燭','肉'],
@@ -4738,7 +5135,7 @@ function updateCam(){ const gx=(player.x+player.w/2)/TS, gy=(player.y+player.h/2
 
 /* ============ 輸入 ============ */
 const keys={};
-let moveTarget=null, attackTarget=null, lockTarget=null, mouseDown=false, curSlot=-1, chatSize=1;
+let moveTarget=null, attackTarget=null, lockTarget=null, mouseDown=false, curSlot=-1, chatSize=1, pvpTarget=null, fpIdentifyMode=false;
 
 /* ---- 滑鼠 ---- */
 function ptWorld(e){ const r=cv.getBoundingClientRect();
@@ -4757,13 +5154,27 @@ function partyAt(wx,wy){                                   // 找出點擊位置
 }
 function commandAt(e, initial){
   const {wx,wy}=ptWorld(e);
-  if(ctrlHeld){ const _hn=npcAt(wx,wy); if(_hn && typeof NPC_HARVEST!=='undefined' && NPC_HARVEST[_hn.name]){ harvestTarget=_hn; attackTarget=null; moveTarget=null; return; } }
+  if(fpIdentifyMode){                                             // 鑑定模式：這一下點擊優先拿來鑑定，不做移動/攻擊
+    const _fp=(typeof fakePlayerAt==='function')?fakePlayerAt(wx,wy):null;
+    fpIdentifyMode=false;
+    if(_fp){ removeItem('鑑定卷軸',1); openFpIdentify(_fp); refreshInv(); }
+    else sysMsg('鑑定取消。');
+    return;
+  }
+  if(ctrlHeld){
+    const _fp=(typeof fakePlayerAt==='function')?fakePlayerAt(wx,wy):null;
+    if(_fp){
+      if(inVillage(player.x,player.y)){ sysMsg('村莊是安全區域，不能在這裡攻擊其他玩家。'); return; }   // 安全區域：禁止PVP
+      pvpTarget=_fp; attackTarget=null; harvestTarget=null; moveTarget=null; return;   // PVP：CTRL+點擊假玩家 → 強制攻擊
+    }
+    const _hn=npcAt(wx,wy); if(_hn && typeof NPC_HARVEST!=='undefined' && NPC_HARVEST[_hn.name]){ harvestTarget=_hn; attackTarget=null; moveTarget=null; return; }
+  }
   const m=mobAt(wx,wy);
-  if(m){ attackTarget=m; lockTarget=m; moveTarget=null; return; }          // ② 點怪物→攻擊（同時設為施法鎖定目標，優先於自動鎖定）
+  if(m){ attackTarget=m; lockTarget=m; moveTarget=null; pvpTarget=null; return; }          // ② 點怪物→攻擊（同時設為施法鎖定目標，優先於自動鎖定）
   if(initial){ const _pm=partyAt(wx,wy);                                   // 點村莊內駐守的隊友→開啟交易
     if(_pm){ if(Math.hypot(player.x-_pm.x,player.y-_pm.y)<TS*2.6){ openTrade(_pm); } else { sysMsg('離「'+_pm.name+'」太遠了，走近一點再點一次。'); } return; } }
   if(initial){ const n=npcAt(wx,wy); if(n && Math.hypot(player.x-n.x,player.y-n.y)<TS*2.2){ talkNpc(n); return; } }
-  moveTarget={x:wx-player.w/2, y:wy-player.h/2}; attackTarget=null; // ① 點地面→移動
+  moveTarget={x:wx-player.w/2, y:wy-player.h/2}; attackTarget=null; pvpTarget=null; // ① 點地面→移動
 }
 cv.addEventListener('mousedown', e=>{ if(paused)return; mouseDown=true; commandAt(e,true); });
 // 觸控／觸控筆：手指點/拖畫面→移動角色（滑鼠走 mouse 事件，觸控走 pointer，避免重複）
@@ -4773,7 +5184,7 @@ cv.addEventListener('pointermove', e=>{ if(e.pointerType==='mouse')return; if(mo
 cv.addEventListener('pointerup',   e=>{ if(e.pointerType==='mouse')return; mouseDown=false; });
 cv.addEventListener('pointercancel', ()=>{ mouseDown=false; });
 cv.style.touchAction='none';
-function exitAt(wx,wy){ if(typeof curMap==='undefined'||!curMap||!curMap.exits) return false; const tx=Math.floor(wx/TS), ty=Math.floor(wy/TS), ex=curMap.exits; if(ex.n && ty<=1 && Math.abs(tx-ex.n.col)<=1) return true; if(ex.s && ty>=MAPH-2 && Math.abs(tx-ex.s.col)<=1) return true; if(ex.w && tx<=1 && Math.abs(ty-ex.w.row)<=1) return true; if(ex.e && tx>=MAPW-2 && Math.abs(ty-ex.e.row)<=1) return true; return false; } const CUR_SWORD="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4IiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiPiA8ZyBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSI+IDxwb2x5Z29uIHBvaW50cz0iMiwyIDYsMiAyMiwxOCAxOCwyMiIvPiA8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSI2IiBoZWlnaHQ9IjQiLz4gPHJlY3QgeD0iMTYiIHk9IjE4IiB3aWR0aD0iNCIgaGVpZ2h0PSI2Ii8+IDxyZWN0IHg9IjI0IiB5PSIyMyIgd2lkdGg9IjMiIGhlaWdodD0iMyIvPiA8L2c+PC9zdmc+') 2 2, crosshair"; const CUR_ARROW="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4IiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiPiA8ZyBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSI+IDxsaW5lIHgxPSI0IiB5MT0iNCIgeDI9IjI0IiB5Mj0iMjQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+IDxsaW5lIHgxPSI0IiB5MT0iNCIgeDI9IjI0IiB5Mj0iMjQiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxIi8+IDxwb2x5Z29uIHBvaW50cz0iMiwyIDExLDUgNSwxMSIvPiA8cG9seWdvbiBwb2ludHM9IjIwLDI2IDI2LDIwIDI2LDI2Ii8+IDwvZz48L3N2Zz4=') 2 2, crosshair"; const CUR_MOUTH="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4Ij4gPGcgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjEuNCI+IDxwYXRoIGQ9Ik00IDEyIFExNCA2IDI0IDEyIFExNCAyNiA0IDEyIFoiLz4gPHBhdGggZD0iTTYgMTIgUTE0IDEwIDIyIDEyIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMSIvPiA8L2c+PC9zdmc+') 14 14, pointer"; const CUR_FOOT="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4Ij4gPGcgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjAuOSI+IDxlbGxpcHNlIGN4PSI5IiBjeT0iMTYiIHJ4PSI0IiByeT0iNiIvPiA8Y2lyY2xlIGN4PSI2IiBjeT0iOSIgcj0iMS42Ii8+PGNpcmNsZSBjeD0iOSIgY3k9IjgiIHI9IjEuOCIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iOSIgcj0iMS42Ii8+IDxlbGxpcHNlIGN4PSIxOSIgY3k9IjIwIiByeD0iNCIgcnk9IjYiLz4gPGNpcmNsZSBjeD0iMTYiIGN5PSIxMyIgcj0iMS42Ii8+PGNpcmNsZSBjeD0iMTkiIGN5PSIxMiIgcj0iMS44Ii8+PGNpcmNsZSBjeD0iMjIiIGN5PSIxMyIgcj0iMS42Ii8+IDwvZz48L3N2Zz4=') 14 18, pointer"; function pickCursor(wx,wy,m,n){ if(ctrlHeld && n && typeof NPC_HARVEST!=='undefined' && NPC_HARVEST[n.name]){ return (equippedWeaponKind()==='bow')?CUR_ARROW:CUR_SWORD; } if(m){ return (equippedWeaponKind()==='bow')?CUR_ARROW:CUR_SWORD; } if(n){ return CUR_MOUTH; } if(exitAt(wx,wy)) return CUR_FOOT; return 'default'; } cv.addEventListener('mousemove', e=>{ const {wx,wy}=ptWorld(e);
+function exitAt(wx,wy){ if(typeof curMap==='undefined'||!curMap||!curMap.exits) return false; const tx=Math.floor(wx/TS), ty=Math.floor(wy/TS), ex=curMap.exits; if(ex.n && ty<=1 && Math.abs(tx-ex.n.col)<=1) return true; if(ex.s && ty>=MAPH-2 && Math.abs(tx-ex.s.col)<=1) return true; if(ex.w && tx<=1 && Math.abs(ty-ex.w.row)<=1) return true; if(ex.e && tx>=MAPW-2 && Math.abs(ty-ex.e.row)<=1) return true; return false; } const CUR_SWORD="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4IiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiPiA8ZyBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSI+IDxwb2x5Z29uIHBvaW50cz0iMiwyIDYsMiAyMiwxOCAxOCwyMiIvPiA8cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSI2IiBoZWlnaHQ9IjQiLz4gPHJlY3QgeD0iMTYiIHk9IjE4IiB3aWR0aD0iNCIgaGVpZ2h0PSI2Ii8+IDxyZWN0IHg9IjI0IiB5PSIyMyIgd2lkdGg9IjMiIGhlaWdodD0iMyIvPiA8L2c+PC9zdmc+') 2 2, crosshair"; const CUR_ARROW="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4IiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiPiA8ZyBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSI+IDxsaW5lIHgxPSI0IiB5MT0iNCIgeDI9IjI0IiB5Mj0iMjQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+IDxsaW5lIHgxPSI0IiB5MT0iNCIgeDI9IjI0IiB5Mj0iMjQiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxIi8+IDxwb2x5Z29uIHBvaW50cz0iMiwyIDExLDUgNSwxMSIvPiA8cG9seWdvbiBwb2ludHM9IjIwLDI2IDI2LDIwIDI2LDI2Ii8+IDwvZz48L3N2Zz4=') 2 2, crosshair"; const CUR_MOUTH="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4Ij4gPGcgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjEuNCI+IDxwYXRoIGQ9Ik00IDEyIFExNCA2IDI0IDEyIFExNCAyNiA0IDEyIFoiLz4gPHBhdGggZD0iTTYgMTIgUTE0IDEwIDIyIDEyIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMSIvPiA8L2c+PC9zdmc+') 14 14, pointer"; const CUR_FOOT="url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyOCIgdmlld0JveD0iMCAwIDI4IDI4Ij4gPGcgZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjAuOSI+IDxlbGxpcHNlIGN4PSI5IiBjeT0iMTYiIHJ4PSI0IiByeT0iNiIvPiA8Y2lyY2xlIGN4PSI2IiBjeT0iOSIgcj0iMS42Ii8+PGNpcmNsZSBjeD0iOSIgY3k9IjgiIHI9IjEuOCIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iOSIgcj0iMS42Ii8+IDxlbGxpcHNlIGN4PSIxOSIgY3k9IjIwIiByeD0iNCIgcnk9IjYiLz4gPGNpcmNsZSBjeD0iMTYiIGN5PSIxMyIgcj0iMS42Ii8+PGNpcmNsZSBjeD0iMTkiIGN5PSIxMiIgcj0iMS44Ii8+PGNpcmNsZSBjeD0iMjIiIGN5PSIxMyIgcj0iMS42Ii8+IDwvZz48L3N2Zz4=') 14 18, pointer"; function pickCursor(wx,wy,m,n){ if(ctrlHeld){ const _fp=(typeof fakePlayerAt==='function')?fakePlayerAt(wx,wy):null; if(_fp && !inVillage(player.x,player.y)) return (equippedWeaponKind()==='bow')?CUR_ARROW:CUR_SWORD; if(n && typeof NPC_HARVEST!=='undefined' && NPC_HARVEST[n.name]){ return (equippedWeaponKind()==='bow')?CUR_ARROW:CUR_SWORD; } } if(m){ return (equippedWeaponKind()==='bow')?CUR_ARROW:CUR_SWORD; } if(n){ return CUR_MOUTH; } if(exitAt(wx,wy)) return CUR_FOOT; return 'default'; } cv.addEventListener('mousemove', e=>{ const {wx,wy}=ptWorld(e);
   _hoverWX=wx; _hoverWY=wy;
   const m=mobAt(wx,wy), n=!m&&npcAt(wx,wy);
   cv.style.cursor = pickCursor(wx,wy,m,n);
@@ -5235,6 +5646,29 @@ function update(dt){
       if(d>range+8){ stepToward(harvestTarget.x+8,harvestTarget.y+8); }
       else if(player.atkCd<=0){ player.atkCd=curWpn().cd/hasteMult(); player.atkFlash=140; harvestNpc(harvestTarget); }
     }
+  } else if(pvpTarget){
+    if(typeof FAKE_PLAYERS==='undefined' || FAKE_PLAYERS.indexOf(pvpTarget)<0 || pvpTarget.hp<=0 || inVillage(player.x,player.y)){ pvpTarget=null; }   // 走進村莊安全區域：立刻中止PVP，不能繼續攻擊也不會被反擊
+    else{
+      const d=Math.hypot((pvpTarget.x+16)-(player.x+player.w/2),(pvpTarget.y+16)-(player.y+player.h/2));
+      faceTo(pvpTarget.x,pvpTarget.y);
+      const range=weaponRange();
+      if(d>range-4){ stepToward(pvpTarget.x+8,pvpTarget.y+8); }
+      else if(player.atkCd<=0){ doAttackFakePlayer(pvpTarget); }
+      if(pvpTarget){
+        const fpRange=(typeof fpAttackRange==='function')?fpAttackRange(pvpTarget):range;   // 假玩家用自己的武器射程判斷，不是玩家的射程
+        if(d>fpRange-6){                                            // 不在自己的攻擊範圍內：主動貼近玩家，近戰武器要追到貼身(約1格)才反擊得到，跟怪物AI一樣；拿弓/法師拿魔杖的射程本來就遠，不用追
+          if(typeof fpMoveToward==='function') fpMoveToward(pvpTarget, player.x+player.w/2-16, player.y+player.h/2-16, 0.55*dt/16);
+        } else {                                                     // 假玩家反擊：獨立的攻擊冷卻，跟玩家自己的攻速無關
+          pvpTarget.pvpAtkCd=(pvpTarget.pvpAtkCd||0)-dt;
+          if(pvpTarget.pvpAtkCd<=0){
+            pvpTarget.pvpAtkCd=750+Math.random()*500;
+            const back=(typeof fpAttackPower==='function')?fpAttackPower(pvpTarget):(4+Math.floor(Math.random()*10));
+            pvpTarget.atkFlash=140;                                  // 反擊視覺效果保留，頻道文字改為不顯示
+            hurtPlayer(back);
+          }
+        }
+      }
+    }
   } else if(attackTarget){
     if(mobs.indexOf(attackTarget)<0){ attackTarget=null; }
     else{
@@ -5348,7 +5782,7 @@ function update(dt){
     var _inDungeon=(typeof curMap!=='undefined'&&curMap&&curMap.dungeon);
     var _nStart=2/3, _nLen=1/3, _fade=_nLen*0.15, _tod=S.tod, _f=0;
     if(_tod>=_nStart){ var _t=_tod-_nStart; _f=(_t<_fade)?(_t/_fade):(_t>_nLen-_fade)?((_nLen-_t)/_fade):1; }
-    S.nightF=_inDungeon?1:(_nightOn?_f:0);   // 0=全白天 ~ 1=全黑夜的連續係數，供 drawNight() 做漸變透明度
+    S.nightF=_nightOn?(_inDungeon?1:_f):0;   // 永晝(SETTINGS.night=false)時無論在不在地牢一律強制白天；只有選「夜間」模式時，地牢才維持固定黑夜、地面才照正常日夜曲線走
     S.night=S.nightF>0.5; }                  // 布林值供索敵/UI圖示等既有邏輯沿用「已入夜」門檻
   if(S.candle>0) S.candle=Math.max(0,S.candle-dt);
   resolveActorOverlap();   // 玩家/隊友/寵物/召喚獸/假玩家這一影格都移動完了，最後統一做一次去重疊
@@ -5706,6 +6140,89 @@ function killMob(m){ const t=MOBS[m.type];
 }
 // PvP：擊殺其他玩家會大幅降低性向（變邪惡）。假玩家系統加入後呼叫此函式
 function killPlayerAlign(){ S.align=Math.max(-32768, S.align-100); sysMsg('你擊殺了其他玩家，性向大幅下降（趨向邪惡）！'); refreshUI(); }
+function fpArmorAC(fp){                                          // 假玩家的簡易AC：基礎10，加總全身所有防具部位的def與強化程度(愈負愈強，跟玩家AC同邏輯)
+  let ac=10;
+  if(!fp.equip) return ac;
+  for(const slot in fp.equip){
+    if(slot==='weapon') continue;
+    const id=fp.equip[slot]; const d=id&&ITEM_DEF[id];
+    if(d){ ac += (d.def||0); ac -= ((d._en||0)*1); }
+  }
+  return ac;
+}
+function atkPowerVsFakePlayer(fp){                                // 玩家攻擊假玩家的傷害計算，比照atkPower但改讀假玩家的等級/AC而非MOBS資料
+  const wd=S.equip.weapon&&ITEM_DEF[S.equip.weapon];
+  const ranged=equippedWeaponKind()==='bow';
+  const fpAc=fpArmorAC(fp);
+  const hitB=((wd&&wd.hit)||0)+Math.max(0,Math.floor(((ranged?S.dex:S.str)-12)/3))+(S.hitAll||0)+(ranged?(S.hitRanged||0):(S.hitMelee||0));
+  let hv=S.lv+hitB-(fp.lv||1)+fpAc;
+  hv=Math.max(1,Math.min(19,hv));
+  const r=1+Math.floor(Math.random()*20);
+  if(r===1) return 0;
+  const crit=(r===20);
+  if(!crit && hv<r) return 0;
+  const attr=ranged?getDexRangedDmg(S.dex):getStrMeleeDmg(S.str);
+  let die=6; if(wd){ die=wd.atk||wd.dmgL||4; }
+  const en=(wd&&wd._en)||0;
+  let wpart=1+Math.floor(Math.random()*Math.max(1,die))+en;
+  if(en>10) wpart=Math.round(wpart*(WPN_EN_FINALMULT[Math.min(en,20)]||1));
+  let dmg=wpart+attr+Math.floor(S.lv/2)+(ranged?(S.dmgRanged||0):(S.dmgMelee||0));
+  if(crit) dmg=Math.round(dmg*1.5);
+  if(typeof stActive==='function'&&stActive('broken')) dmg=Math.max(1,Math.round(dmg*0.5));
+  return dmg;
+}
+function fpAttackRange(fp){                                       // 假玩家的攻擊距離：依裝備武器種類決定，劍/鈍器/魔杖近戰，矛2格，弓遠距；法師拿魔杖時才額外有遠距魔法攻擊
+  const wd=fp.equip && fp.equip.weapon && ITEM_DEF[fp.equip.weapon];
+  const kind=wd?(wd.kind||'dagger'):'dagger';
+  const base=(typeof WKIND!=='undefined' && WKIND[kind])?WKIND[kind].range:34;
+  if(fp.job==='魔法師' && kind==='staff' && typeof WKIND!=='undefined') return Math.max(base, WKIND.bow.range);   // 只有實際拿著魔杖的法師才有遠距魔法攻擊，拿其他武器就只是近戰
+  return base;
+}
+function fpAttackPower(fp){                                       // 假玩家反擊的傷害：依自己的武器強化值與等級計算，裝備愈強、等級愈高打愈痛
+  const wd=fp.equip && fp.equip.weapon && ITEM_DEF[fp.equip.weapon];
+  const en=(wd&&wd._en)||0;
+  const die=wd?(wd.atk||wd.dmgL||4):3;
+  const wpart=1+Math.floor(Math.random()*Math.max(1,die))+en;
+  const lvBonus=Math.floor((fp.lv||1)/2);
+  return Math.max(1, wpart+lvBonus);
+}
+function doAttackFakePlayer(fp){ if(!S||S.hp<=0) return; if(typeof stStop==='function'&&stStop()) return; const w=curWpn();
+  if(typeof hasLineOfSight==='function' && !hasLineOfSight(player.x+player.w/2,player.y+player.h/2,fp.x+16,fp.y+16)) return;
+  if(w.kind==='ranged' && !consumeArrow()) return;
+  player.atkCd=w.cd/hasteMult(); player.atkFlash=140;
+  S.pvpFlagUntil=Date.now()+15000;                              // 攻擊假玩家期間名字暫時變粉紅，15秒沒再攻擊才恢復性向對應色
+  const dmg=atkPowerVsFakePlayer(fp);
+  if(dmg>0){ fp.hp=Math.max(0,fp.hp-dmg); }
+  if(fp.hp<=0) killFakePlayer(fp);
+}
+function killFakePlayer(fp){
+  const wasLawfulOrNeutral = (fp.align||0) >= 0;                 // >500正義、0~500中立 → 一律視為「殺害良善方」；<0邪惡 → 殺惡不罰反賞
+  if(wasLawfulOrNeutral){
+    const pen=15000+Math.floor(Math.random()*5001);              // 15000~20000
+    S.align=Math.max(-32768, S.align-pen);
+  } else {
+    const gain=Math.round(5000*(0.9+Math.random()*0.2));         // 約4500~5500
+    S.align=Math.min(32767, S.align+gain);
+  }
+  const idx=FAKE_PLAYERS.indexOf(fp);
+  if(idx>=0){ releaseFakePlayerName(fp.name); FAKE_PLAYERS.splice(idx,1); }
+  if(pvpTarget===fp) pvpTarget=null;
+  refreshUI();
+  const _mid=curMapId, _wasWild=!!(curMap&&curMap.wild);         // 一段時間後在原地圖補一位新的假玩家，維持人口密度(比照怪物補位機制)
+  setTimeout(()=>{
+    if(curMapId!==_mid || !curMap) return;
+    const fp2=fpNewBase(genFakePlayerName());
+    if(_wasWild){ fp2.mode='hunt'; fp2.atkCd=0; fp2.wc=0; fp2.rx=0; fp2.ry=0; fp2.wanderT=0; fp2.targetMob=null;
+      const spot=findNearestWalkable(MAP, 2+Math.floor(Math.random()*(MAPW-4)), 2+Math.floor(Math.random()*(MAPH-4)));
+      fp2.x=spot.x*TS; fp2.y=spot.y*TS; }
+    else { const list=(typeof curNpcs==='function')?curNpcs():[]; const shopSpots=list.filter(n=>n.shop && SHOPS[n.shop] && SHOPS[n.shop].length);
+      if(!shopSpots.length) return;
+      const spot=shopSpots[Math.floor(Math.random()*shopSpots.length)];
+      fp2.mode='village'; fp2.shopSpots=shopSpots; fp2.state='walk'; fp2.wc=0; fp2.targetSpot=null;
+      fp2.x=spot.x+(Math.random()*64-32); fp2.y=spot.y+56+Math.random()*32; }
+    FAKE_PLAYERS.push(fp2);
+  }, 30000);
+}
 function hurtPlayer(dmg){ const real=Math.max(1,dmg-Math.floor((10-S.ac)/3)-(S.dmgReduce||0)); S.hp=Math.max(0,S.hp-real);
   if(S.ats&&S.ats.on&&S.ats.hunt&&S.ats.hunt.on&&S.atsProf) S.atsProf.dmg+=real;
   refreshUI(); if(S.hp<=0) playerDown(); }
@@ -5834,15 +6351,15 @@ function render(){
   ctx.fillStyle='#243c18'; ctx.fillRect(0,0,VW,VH);   // 邊界外底色（深草綠）
 
   // 1) 地面層（依深度 tx+ty 由遠到近）
-  const FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS]);
+  const FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS,T_SAND]);
   { const _dLo=Math.floor((-HW-4-originX)/HW)-1, _dHi=Math.ceil((VW+HW+4-originX)/HW)+1;   // 可視範圍：tx-ty
     const _sLo=Math.floor((-HH-4-originY)/HH)-2, _sHi=Math.ceil((VH+HH+4-originY)/HH)+1;   // 可視範圍：tx+ty
   for(let ty=0;ty<MAPH;ty++){ const _a=Math.max(0, ty+_dLo, _sLo-ty), _b=Math.min(MAPW-1, ty+_dHi, _sHi-ty);
   for(let tx=_a;tx<=_b;tx++){
     const t=MAP[ty][tx]; const s=tileCenter(tx,ty);
     if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) continue;
-    const under = t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (FLOOR.has(t)?t:T_GRASS);   // 城門下鋪石板；薄石牆下鋪泥土(地牢地板)；魔法陣下鋪該地圖原本的地面
-    drawIsoFloor(under, s.x, s.y);
+    const under = t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_STAIRUP ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (FLOOR.has(t)?t:T_GRASS);   // 城門下鋪石板；薄石牆/立體石階下鋪泥土(地牢地板)；魔法陣下鋪該地圖原本的地面
+    drawIsoFloor(under, s.x, s.y, tx, ty);
   } } }
 
   // 1b) 惡魔召喚魔法陣（王座之間入口）：整張圖畫在2x2區塊的正中央。
@@ -5870,7 +6387,7 @@ function render(){
 
   // 3) 立體物件 + 實體，統一依深度排序
   const talls=[];
-  const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE,T_STONEWALL]);
+  const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE,T_STONEWALL,T_STAIRUP]);
   /* 遮擋透明化：先收集玩家與隊友的格子座標(不含怪物)，等一下畫立體牆時，
      如果這面牆會擋住其中某一個就改用半透明繪製，避免角色被牆完全遮住、看起來像卡在牆裡或穿牆。
      等角投影下，同一條深度線(tx+ty)上、深度較大的物件會畫在後面(蓋住前面的)，
@@ -5912,7 +6429,11 @@ function render(){
   mobs.forEach(m=>{ const gx=(m.x+16)/TS, gy=(m.y+16)/TS;
     talls.push({d:gx+gy+0.1, f:()=>drawMobIso(m)}); });
   if(typeof FAKE_PLAYERS!=='undefined') FAKE_PLAYERS.forEach(fp=>{ const gx=(fp.x+16)/TS, gy=(fp.y+16)/TS;
-    talls.push({d:gx+gy+0.11, f:()=>drawNpcIso(fp)}); });
+    talls.push({d:gx+gy+0.11, f:()=>{ drawNpcIso(fp);
+      if(fp.hp<fp.maxhp && fp.hp>0){ const gs=groundScreen(fp.x+16,fp.y+28), bw=26, by=gs.y-72;   // 血條：只有交戰過(掉血)才顯示，平常不冒出來
+        ctx.fillStyle='#000'; ctx.fillRect(gs.x-bw/2,by,bw,4);
+        ctx.fillStyle='#e0453a'; ctx.fillRect(gs.x-bw/2,by,bw*(fp.hp/fp.maxhp),4); }
+    }}); });
   { const gx=(player.x+player.w/2)/TS, gy=(player.y+player.h/2)/TS;
     talls.push({d:gx+gy+0.15, f:drawPlayerIso}); }
   party.forEach(p=>{ if(p._hidden) return; const gx=(p.x+12)/TS, gy=(p.y+18)/TS;
@@ -5927,7 +6448,17 @@ function render(){
     if(_rs) _rs.forEach(r=>{ const gx=ARENA_X0+r.prog, gy=ARENA_Y0+r.lane*ARENA_LANE_H;
       talls.push({d:gx+gy+0.08, f:()=>drawArenaRunner(r)}); });
   }
-  houses.forEach(h=>{ talls.push({d:(h.x+h.w/2)+(h.y+h.d/2), f:()=>drawHouse(h)}); });
+  function _houseOccludes(h){                                   // 房子是單張固定視角的貼圖，沒有畫背面牆，只有玩家站在房子「北側/背面」時，單靠深度排序沒辦法判斷該不該擋住人物；前面、側面已經用footprint後角當深度鍵正確處理了，不需要再套用半透明，只在背面才觸發
+    for(let i=0;i<_occActors.length;i++){
+      const ax=_occActors[i][0], ay=_occActors[i][1];
+      if(ay>=h.y) continue;                                     // 不是在背面(北側)：跳過，前面/側面交給正常深度排序
+      if(h.y-ay>2.5) continue;                                  // 離太遠，擋不到
+      if(ax<h.x-1.5 || ax>h.x+h.w+1.5) continue;                // 橫向沒對齊房子範圍
+      return true;
+    }
+    return false;
+  }
+  houses.forEach(h=>{ const _hf=_houseOccludes(h); talls.push({d:h.x+h.y, f:()=>{ if(_hf){ ctx.save(); ctx.globalAlpha=0.4; drawHouse(h); ctx.restore(); } else drawHouse(h); } }); });
   talls.sort((a,b)=>a.d-b.d).forEach(o=>{ try{ o.f(); }catch(e){ if(!window.__de){ window.__de=1; console.error('draw error:',e); } } });
 
   if(typeof drawBubbles==='function') drawBubbles();   // 聊天氣泡：畫在所有角色之上
@@ -6615,10 +7146,20 @@ function drawNpcIso(n){
     if(npcHovered(n)) nameTagJob(n.name, n.job, gs.x, topY-2, '#ffe0a0');
     if(n.quest && !S.questRewarded){ ctx.fillStyle='#ffd54a'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center'; ctx.fillText('!', gs.x+20, topY-2); }
   } else if(n.psheet){ const img=sheetReady(n.psheet.cls, n.psheet.gender);
+    const _col=(n.align!==undefined && typeof alignNameColor==='function')?alignNameColor(n.align):'#ffe0a0';   // 假玩家(有align欄位)依性向值變色，一般NPC維持原本淡金色
     if(img){ const gs=groundScreen(n.x+16,n.y+28); actorShadow(ctx,gs.x,gs.y,15,5);
       const topY=drawSheetFrame(ctx,img,gs.x,gs.y,1.5,(DIR8_FRAME[n.dir8||'down']??0));
-      if(npcHovered(n)) nameTagJob(n.name, n.job, gs.x, topY-2, '#ffe0a0');   // 名字平常不顯示，滑鼠移上去才浮現
-    } else drawEntityIso(n.art, n.x, n.y, npcHovered(n)?n.name:'', '#ffe0a0', false, false);
+      if(n.equip && n.equip.weapon && ITEM_DEF[n.equip.weapon]){                 // 假玩家依裝備的武器種類，手上畫出對應的武器
+        const _wk=ITEM_DEF[n.equip.weapon].kind||'dagger';
+        const _vis=_wk==='bow'?'bow':_wk==='spear'?'spear':_wk==='staff'?'spear':'sword';
+        drawWeaponInHand(_vis, gs.x, gs.y-32, n.dir8==='left'||n.dir8==='right'||n.dir8==='up'?n.dir8:'down', 4);
+      }
+      if(n.atkFlash>0){                                                          // PVP反擊時的揮擊閃光，讓反擊不是只有頻道文字
+        const dv8={down:[0,1],up:[0,-1],left:[-1,0],right:[1,0],downleft:[-1,1],downright:[1,1],upleft:[-1,-1],upright:[1,-1]}[n.dir8||'down']||[0,1];
+        ctx.fillStyle='rgba(255,255,200,.5)'; ctx.fillRect(gs.x-8+dv8[0]*22, gs.y-34+dv8[1]*14, 16,16);
+      }
+      if(npcHovered(n)) nameTagJob(n.name, n.job, gs.x, topY-2, _col);   // 名字平常不顯示，滑鼠移上去才浮現；不顯示等級，要用鑑定卷軸才看得到
+    } else drawEntityIso(n.art, n.x, n.y, npcHovered(n)?n.name:'', _col, false, false);
   } else { const _g=drawEntityIso(n.art, n.x, n.y, '', '#ffe0a0', !!n.quest && !S.questRewarded, false);
     if(npcHovered(n)) nameTagJob(n.name, n.job, _g.x, _g.topY-2, '#ffe0a0'); }
 }
@@ -6783,7 +7324,7 @@ function drawPlayerIso(){ const g=groundScreen(player.x+player.w/2, player.y+pla
   const bw=30,ratio=S.hp/S.maxhp, by=topY-6;
   ctx.fillStyle='#000'; ctx.fillRect(g.x-bw/2,by,bw,5);
   ctx.fillStyle='#e0453a'; ctx.fillRect(g.x-bw/2,by,bw*ratio,5);
-  if(npcHovered(player)) nameTag(S.name||'冒險者', g.x, by-2, alignNameColor(S.align)); }   // 名字平常不顯示，滑鼠移到自己身上才浮現；血條(玩家例外)一律顯示
+  if(npcHovered(player)) nameTag(S.name||'冒險者', g.x, by-2, ((S.pvpFlagUntil||0)>Date.now())?'#ff5fd4':alignNameColor(S.align)); }   // 名字平常不顯示，滑鼠移到自己身上才浮現；血條(玩家例外)一律顯示；PVP攻擊假玩家中(含15秒緩衝)名字暫時變粉紅
 function nameTag(t,cx,cy,col){ ctx.font='bold 20px "Microsoft JhengHei",monospace'; ctx.textAlign='center';
   ctx.lineWidth=3; ctx.lineJoin='round'; ctx.strokeStyle='#000'; ctx.strokeText(t,cx,cy-1);
   ctx.fillStyle=col; ctx.fillText(t,cx,cy-1); }
@@ -6859,11 +7400,11 @@ function npcHovered(n){
   return Math.hypot((n.x+16)-_hoverWX,(n.y+16)-_hoverWY)<30;
 }
 function nameTagJob(name,job,cx,cy,col){
-  // 比照原版天堂：名字＝白色、職稱＝淡青色，皆為黑邊描邊
-  if(!job){ nameTag(name,cx,cy,'#ffffff'); return; }
+  // 比照原版天堂：名字＝白色(或呼叫端指定的顏色)、職稱＝淡青色，皆為黑邊描邊
+  if(!job){ nameTag(name,cx,cy,col||'#ffffff'); return; }
   ctx.textAlign='center'; ctx.lineWidth=3; ctx.lineJoin='round'; ctx.strokeStyle='#000';
   ctx.font='bold 20px "Microsoft JhengHei",monospace';
-  ctx.strokeText(name,cx,cy-19); ctx.fillStyle='#ffffff'; ctx.fillText(name,cx,cy-19);
+  ctx.strokeText(name,cx,cy-19); ctx.fillStyle=col||'#ffffff'; ctx.fillText(name,cx,cy-19);
   ctx.font='bold 17px "Microsoft JhengHei",monospace';
   ctx.strokeText('【'+job+'】',cx,cy-1); ctx.fillStyle='#cdfcff'; ctx.fillText('【'+job+'】',cx,cy-1);   // 職稱＝淡青色(取樣自原版畫面)
 }
@@ -7105,6 +7646,11 @@ function useItem(id){ invMove=null;
   if(id==='項圈'){                                                // 一隻寵物一個項圈：點擊項圈開啟寵物管理
     if(typeof openSocial==='function'){ openSocial(); if(typeof socialTab==='function') socialTab('pet'); }
     else sysMsg('這是馴養寵物的項圈，可在社交視窗的「寵物」書籤管理。');
+    return;
+  }
+  if(id==='鑑定卷軸'){                                            // 進入鑑定模式：接著點擊一位假玩家即可查看基本資訊(名字/等級/裝備)，不看個人數值
+    fpIdentifyMode=true;
+    sysMsg('請點擊要鑑定的對象（假玩家）。');
     return;
   }
   if(id==='哨子'){                                                // 把散開的寵物召回身邊
@@ -7887,6 +8433,22 @@ function whConfirm(){ let moved=0;
   renderWarehouse(); }
 function openPetWarehouse(){ document.getElementById('petwhw').classList.add('on'); renderPetWarehouse(); if(typeof navBuildPanel==='function')navBuildPanel('petwhw'); }
 function closePetWarehouse(){ document.getElementById('petwhw').classList.remove('on'); if(typeof navClear==='function')navClear(); }
+function openFpIdentify(fp){                                     // 鑑定結果視窗：只顯示名字/等級/職業/裝備，不看HP等個人數值
+  const SLOT_LABEL={weapon:'武器',body:'盔甲',helmet:'頭盔',tshirt:'內衣',cloak:'斗篷',boots:'長靴',gloves:'手套',shield:'盾牌',necklace:'項鍊',ring:'戒指',ring2:'戒指',belt:'腰帶'};
+  const ORDER=['weapon','body','helmet','tshirt','cloak','gloves','boots','shield','necklace','ring','ring2','belt'];
+  let h='';
+  h+='<div class="frow"><span class="flbl">姓名</span><span class="fval">'+fp.name+'</span></div>';
+  h+='<div class="frow"><span class="flbl">職業</span><span class="fval">'+(fp.job||'')+'</span></div>';
+  h+='<div class="frow"><span class="flbl">等級</span><span class="fval">Lv.'+(fp.lv||1)+'</span></div>';
+  ORDER.forEach(function(slot){
+    const id=fp.equip && fp.equip[slot]; const d=id&&ITEM_DEF[id];
+    h+='<div class="frow"><span class="flbl">'+SLOT_LABEL[slot]+'</span><span class="fval">'+(d?d.n:'（未裝備）')+'</span></div>';
+  });
+  document.getElementById('fpIdentBody').innerHTML=h;
+  document.getElementById('fpIdentW').classList.add('on');
+  if(typeof navBuildPanel==='function') navBuildPanel('fpIdentW');
+}
+function closeFpIdent(){ document.getElementById('fpIdentW').classList.remove('on'); if(typeof navClear==='function')navClear(); }
 function petWhThumbHTML(id){
   const b64=(typeof MOB_SHEETS!=='undefined')?MOB_SHEETS[id]:null;
   if(b64) return '<div style="width:100%;height:100%;background-image:url(data:image/png;base64,'+b64+');background-position:0 0;background-size:auto 40px;background-repeat:no-repeat;image-rendering:pixelated;"></div>';
@@ -8020,7 +8582,7 @@ function drawMiniMap(){ const c=document.getElementById('mmcv'), x=c.getContext(
   for(let y=0;y<MAPH;y++)for(let gx=0;gx<MAPW;gx++){ const t=MAP[y][gx];
     x.fillStyle = t===T_WATER?'#3a7ac0': t===T_TREE?'#2a6a2a': (t===T_ROOF||t===T_WALL)?'#a0402a':
       t===T_STONEWALL?'#6a6a72': t===T_BOSSPORTAL?'#ff3a6a': t===T_MAGICCIRCLE?'#9a5aff': t===T_ALTAR?'#7a4aaa': t===T_STAIRS?'#c8a0ff':
-      t===T_TOWNWALL?'#8a5a2a': t===T_GATE?'#b83a24': t===T_PATH?'#a89878': t===T_DIRT?'#b89060':
+      t===T_TOWNWALL?'#8a5a2a': t===T_GATE?'#b83a24': t===T_PATH?'#a89878': t===T_DIRT?'#b89060': t===T_SAND?'#dcc48c':
       (inVillage(gx*TS,y*TS)?'#5aa04a':'#4a8a30');
     x.fillRect(gx*sx,y*sy,Math.ceil(sx),Math.ceil(sy)); }
   mobs.forEach(m=>{ x.fillStyle='#e04040'; x.fillRect(m.x/TS*sx-1,m.y/TS*sy-1,3,3); });
@@ -9513,6 +10075,21 @@ let adminCat='shop', magicSub='royal';
   function txtField(scope,id,f,label,val){ const dc=(_stat[scope+':'+id+':'+f]!==undefined)?' adirty':'';
     return '<div class="aed-field wide"><label>'+label+'</label><input type="text" value="'+attr(val)+'" class="aei'+dc+'" oninput="editorSetStat(\''+scope+'\',\''+esc(id)+'\',\''+f+'\',this.value,this)"></div>'; }
   function selField(kind,id,cur,opts){ return '<select class="aed-sel" onchange="editorSetCat(\''+kind+'\',\''+esc(id)+'\',this.value)" title="調整分類書籤">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'; }
+  const RARITY_OPTS=[[1,'①尋常(商店)'],[2,'②怪物掉落'],[3,'③製作取得'],[4,'④高等怪掉落'],[5,'⑤試煉/稀有'],[6,'⑥BOSS/超稀有']];
+  function rarField(id,cur){
+    const c=cur||1;
+    return '<div class="aed-field wide"><label>稀有度</label><span style="display:flex;gap:6px;align-items:center;flex:1"><select class="aei" style="flex:1" onchange="editorSetStat(\'item\',\''+esc(id)+'\',\'rarity\',this.value,this)">'
+      +RARITY_OPTS.map(o=>'<option value="'+o[0]+'"'+(Number(c)===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')
+      +'</select><button class="aed-reset" style="font-size:13px;padding:4px 8px;white-space:nowrap" onclick="editorRerollPrice(\''+esc(id)+'\')" title="依目前稀有度重新隨機一個售價">🎲重擲售價</button></span></div>';
+  }
+  window.editorRerollPrice=function(id){
+    const d=ITEM_DEF[id]; if(!d||!d.rarity) return;
+    const ranges=[[200,10],[100,100],[100,1000],[500,1000],[100,10000],[50,100000]];   // [倍率上限, 進位單位]，跟原始批次產生規則一致
+    const r=ranges[d.rarity-1];
+    const p=(1+Math.floor(Math.random()*r[0]))*r[1];
+    editorSetStat('item',id,'price',p);
+    renderAdminCurrent();
+  };
   function subbar(list,cur,fn,cls){ return '<div class="aed-subbar'+(cls?' '+cls:'')+'">'+list.map(x=>'<button class="aed-sub'+(cls==='sub2'?' sm':'')+(x[0]===cur?' on':'')+'" onclick="'+fn+'(\''+esc(x[0])+'\')">'+x[1]+'</button>').join('')+'</div>'; }
 
   /* ---- 分頁切換 ---- */
@@ -9636,7 +10213,7 @@ let adminCat='shop', magicSub='royal';
       if(cat==='weapon')sel=selField('wkind',id,(WPN_KINDS[cur]&&d.kind==='dagger')?'sword':(d.kind||cur),WPN_SUBS);
       else if(cat==='armor')sel=selField('aslot',id,d.slot||cur,ARM_SUBS);
       else sel=selField('icat',id,(d.cat==='potion'||d.cat==='scroll')?d.cat:'tool',ITEM_SUBS);
-      let fields='<div class="aed-field"><label>售價</label><input type="number" step="any" value="'+(d.price==null?'':d.price)+'" class="aei'+(_stat['item:'+id+':price']!==undefined?' adirty':'')+'" oninput="editorSetStat(\'item\',\''+esc(id)+'\',\'price\',this.value,this)"></div>';
+      let fields='<div class="aed-field"><label>售價</label><input type="number" step="any" value="'+(d.price==null?'':d.price)+'" class="aei'+(_stat['item:'+id+':price']!==undefined?' adirty':'')+'" oninput="editorSetStat(\'item\',\''+esc(id)+'\',\'price\',this.value,this)"></div>'+rarField(id,d.rarity);
       if(cat==='weapon'){
         // 依 PDF 欄位固定顯示：小/大怪傷害、重量、掉落% + 職業/材質/強化/損傷/裝備效果
         fields+=numField('item',id,'dmgS','小怪傷害',d.dmgS);
@@ -9667,7 +10244,7 @@ let adminCat='shop', magicSub='royal';
         // 道具（工具/食物/雜項）：顯示 效果/說明 文字 + 既有數值欄位
         fields+=txtField('item',id,'eff','效果',d.eff);
         fields+=txtField('item',id,'desc','說明',d.desc);
-        const skip={n:1,cat:1,kind:1,slot:1,price:1,eff:1,desc:1,note:1,spell:1,spellCls:1,spellLv:1,learn:1,permanent:1};
+        const skip={n:1,cat:1,kind:1,slot:1,price:1,eff:1,desc:1,note:1,spell:1,spellCls:1,spellLv:1,learn:1,permanent:1,rarity:1};
         for(const f in d){ if(skip[f])continue; if(typeof d[f]==='number')fields+=numField('item',id,f,FLABEL[f]||f,d[f]); }
       }
       var _ico=(typeof itemIcon==='function')?itemIcon(id):'';
