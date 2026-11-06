@@ -6950,11 +6950,14 @@ MOB_SCALE['巴辛']=1.5; MOB_SCALE['稻草人']=0.75;   // 稻草人圖片本身
 MOB_SCALE['克特']=2.0; MOB_SCALE['巴風特']=2.0; MOB_SCALE['克特二段']=2.0; MOB_SCALE['巴風特二段']=2.0;   // 獨立王座之間的世界王，體型放大到2倍，更有BOSS的存在感
 const DIR8_FRAME={down:0,'down-right':1,right:2,'up-right':3,up:4,'up-left':5,left:6,'down-left':7};
 const DIR8_ROT={ 'down':'down-left','down-right':'down','right':'down-right','up-right':'right','up':'up-right','up-left':'up','left':'up-left','down-left':'left' };
-function dir8of(dx,dy){ if(!dx&&!dy)return null; const ax=Math.sign(dx),ay=Math.sign(dy);
-  let d;                                    // 先算世界座標方向
-  if(ax<0&&ay>0)d='down-left'; else if(ax>0&&ay>0)d='down-right';
-  else if(ax<0&&ay<0)d='up-left'; else if(ax>0&&ay<0)d='up-right';
-  else if(ay>0)d='down'; else if(ay<0)d='up'; else if(ax<0)d='left'; else d='right';
+const WORLD_DIR8_BY_ANGLE=['right','down-right','down','down-left','left','up-left','up','up-right'];
+function dir8of(dx,dy){ if(!dx&&!dy)return null;
+  // 先用實際角度(atan2)找出最接近的世界座標8方向之一，而不是只看dx/dy的正負號——
+  // 原本只看正負號時，只要dx、dy同時非0(幾乎每次斜向移動都會這樣)就會被直接歸類成斜角，
+  // 導致旋轉後幾乎只會落在螢幕的上下左右4個方向，螢幕斜角(例如右下)幾乎永遠出不來。
+  let ang=Math.atan2(dy,dx); if(ang<0) ang+=Math.PI*2;
+  const idx=Math.round(ang/(Math.PI/4))%8;
+  const d=WORLD_DIR8_BY_ANGLE[idx];
   return DIR8_ROT[d]||d;                    // 再順時針旋轉45°→等角螢幕方向
 }
 function sheetReady(art,gender){ const im=SHEET_IMG[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
