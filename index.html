@@ -989,6 +989,15 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>天堂．像素版</title>
+<!-- PWA：可安裝到桌面/手機主畫面，獨立視窗啟動(無瀏覽器網址列)，並支援離線快取 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12121c">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="天堂像素版">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
   input,textarea{user-select:text;-webkit-user-select:text;}   /* 輸入框內文字仍可正常選取/編輯 */
@@ -1789,6 +1798,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
       <div class="setRow" id="setPcLockRow" style="display:none"><div class="setLbl">自動鎖定怪物(PC)</div><div class="setBtns"><button id="setpclock_on" class="setbtn2" onclick="setPcAutoLock(true)">開啟</button><button id="setpclock_off" class="setbtn2" onclick="setPcAutoLock(false)">關閉</button></div></div>
       <div class="setRow"><div class="setLbl">擊殺經驗倍率</div><div class="setSpin"><button class="spinb" onclick="adjMult('exp',-1)">▼</button><input id="setExp" type="number" min="0" step="1" value="1" onchange="setMult('exp',this.value)"><button class="spinb" onclick="adjMult('exp',1)">▲</button></div></div>
       <div class="setRow"><div class="setLbl">金幣獲得倍率</div><div class="setSpin"><button class="spinb" onclick="adjMult('gold',-1)">▼</button><input id="setGold" type="number" min="0" step="1" value="1" onchange="setMult('gold',this.value)"><button class="spinb" onclick="adjMult('gold',1)">▲</button></div></div>
+      <div class="setRow"><div class="setLbl">安裝App</div><div class="setBtns"><button id="pwaInstallBtn" class="setbtn2" style="display:none" onclick="pwaInstall()">安裝到桌面</button></div></div>
     </div>
   </div>
   <div class="ui panel" id="statAllocW">
@@ -10604,6 +10614,27 @@ function drawSlotFigure(x,data){ x.clearRect(0,0,200,200);
   else drawActor(x, CLASS_ART[data.cls]||'knight', cx, base, 5, false);
 }
 function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
+
+/* ============ PWA 安裝支援 ============ */
+// 註冊 Service Worker：啟用「安裝到桌面/主畫面」能力，並提供離線快取(圖片載入過一次後，離線也能玩)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(err){ console.warn('[PWA] SW 註冊失敗:', err); });
+  });
+}
+// 瀏覽器原生的「安裝」提示：攔截預設小工具列，改成自己畫一顆「安裝到桌面」按鈕(設定選單裡)，
+// 使用者點了才真的跳出安裝視窗；沒有安裝資格(例如已安裝過、或該瀏覽器不支援)時按鈕自動隱藏
+let _pwaInstallEvt=null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); _pwaInstallEvt=e;
+  const btn=document.getElementById('pwaInstallBtn'); if(btn) btn.style.display='block';
+});
+function pwaInstall(){
+  if(!_pwaInstallEvt){ sysMsg('目前瀏覽器不支援一鍵安裝，或已經安裝過了。'); return; }
+  _pwaInstallEvt.prompt();
+  _pwaInstallEvt.userChoice.finally(function(){ _pwaInstallEvt=null; const btn=document.getElementById('pwaInstallBtn'); if(btn) btn.style.display='none'; });
+}
+window.addEventListener('appinstalled', function(){ sysMsg('已成功安裝到桌面／主畫面！下次可以直接從圖示開啟。'); });
 
 /* ============ 啟動 ============ */
 loadMap('village'); buildHotbar();
