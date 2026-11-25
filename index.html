@@ -7441,9 +7441,11 @@ for(const c in SHEETS) for(const g in SHEETS[c]){ const w=new Image(); w.onerror
   const a=new Image(); a.onerror=()=>{ delete ATK_IMG[c+"_"+g]; }; a.src=SHEETS[c][g].replace('.png','_attack.png'); ATK_IMG[c+"_"+g]=a; }
 const HURT_IMG={}, DIE_IMG={}, CAST_IMG={};   // 受傷(2格)、死亡(4格)、施法(8格)；沒有圖的職業照舊
 for(const c in SHEETS) for(const g in SHEETS[c]){ [['_hurt',HURT_IMG],['_die',DIE_IMG],['_cast',CAST_IMG]].forEach(function(t){ const k=c+"_"+g, im=new Image(); im.onerror=function(){ delete t[1][k]; }; im.src=SHEETS[c][g].replace('.png',t[0]+'.png'); t[1][k]=im; }); }
+/* 空手版(沒裝武器時顯示)：同樣的圖加 _bare；沒有這組圖的職業照舊 */
+for(const c in SHEETS) for(const g in SHEETS[c]){ [[SHEET_IMG,'_bare'],[WALK_IMG,'_bare_walk'],[ATK_IMG,'_bare_attack'],[HURT_IMG,'_bare_hurt']].forEach(function(t){ const k=c+"_"+g+"_bare", im=new Image(); im.onerror=function(){ delete t[0][k]; }; im.src=SHEETS[c][g].replace('.png',t[1]+'.png'); t[0][k]=im; }); }
 const HURT_MS=90, DIE_MS=130, CAST_MS=70;
 const ANIM_C=192, ANIM_FOOT=156, ANIM_CX=96, ANIM_HEAD=36, WALK_MS=85, ATK_MS=55;
-function animReady(map,art,gender){ const im=map[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
+function animReady(map,art,gender){ let im=map[art+"_"+(gender||'male')]; if((!im||!im.complete||!im.naturalWidth)&&/_bare$/.test(gender||'')) im=map[art+"_"+gender.replace('_bare','')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 /* 畫一格動畫：frame=欄、dir=列；回傳頭頂Y(給名字/血條用) */
 function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=false; const sc=scale*HI_SCALE;
   g.drawImage(img,frame*ANIM_C,dir*ANIM_C,ANIM_C,ANIM_C,Math.round(cx-ANIM_CX*sc),Math.round(fy-ANIM_FOOT*sc),ANIM_C*sc,ANIM_C*sc);
@@ -7535,7 +7537,7 @@ function drawPlayerSprite(gx,gy){
         return drawSheetFrame(ctx,timg,gx,gy+bob2,sc2,(DIR8_FRAME[player.dir8||'down']??0),S.transformInto); }
     }catch(_e){ S.transformInto=null; }   // 變身繪製發生問題時安全退回原本外觀，避免每幀重複拋錯拖慢畫面
   }
-  const art=CLASS_ART[S.cls]||'royal'; const img=sheetReady(art,S.gender); if(!img)return null;
+  const art=CLASS_ART[S.cls]||'royal'; const _bare=(!(S.equip&&S.equip.weapon)&&sheetReady(art,S.gender+'_bare'))?'_bare':''; const _gk=S.gender+_bare; const img=sheetReady(art,_gk); if(!img)return null;
   actorShadow(ctx,gx,gy,15,5); const bob=Math.round(Math.sin(Date.now()/380));
   const _invis=!!(S.buffs&&S.buffs['隱身術']&&S.buffs['隱身術'].until>Date.now());
   if(_invis){ ctx.save(); ctx.globalAlpha=0.32; }
@@ -7544,7 +7546,7 @@ function drawPlayerSprite(gx,gy){
   const _am=Math.max(28,Math.min(ATK_MS,Math.floor((curWpn().cd/hasteMult())/9))); player._atkMs=_am;   // 出手越快，動畫越快，才跟得上
   if(player.atkFlash>0 && !(player._atkT0 && _now-player._atkT0<_am*9)) player._atkT0=_now;
   const _fr=(DIR8_FRAME[player.dir8||'down']??0);
-  const _hs=drawHiState(ctx,art,S.gender,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<_am*9)?player._atkT0:0, atkMs:_am, hurtT0:player._hurtT0||0, castT0:player._castT0||0, dieT0:(S.hp<=0)?(player._dieT0||0):0});
+  const _hs=drawHiState(ctx,art,_gk,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<_am*9)?player._atkT0:0, atkMs:_am, hurtT0:player._hurtT0||0, castT0:player._castT0||0, dieT0:(S.hp<=0)?(player._dieT0||0):0});
   const _ry=(_hs!=null)?_hs:drawSheetFrame(ctx,img,gx,gy+bob,1.5,_fr);
   if(_invis) ctx.restore();
   return _ry; }
@@ -11195,7 +11197,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-16';
+const GAME_VER='v80.36-17';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
