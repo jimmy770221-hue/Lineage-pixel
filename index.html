@@ -7441,11 +7441,11 @@ for(const c in SHEETS) for(const g in SHEETS[c]){ const w=new Image(); w.onerror
   const a=new Image(); a.onerror=()=>{ delete ATK_IMG[c+"_"+g]; }; a.src=SHEETS[c][g].replace('.png','_attack.png'); ATK_IMG[c+"_"+g]=a; }
 const HURT_IMG={}, DIE_IMG={}, CAST_IMG={};   // 受傷(2格)、死亡(4格)、施法(8格)；沒有圖的職業照舊
 for(const c in SHEETS) for(const g in SHEETS[c]){ [['_hurt',HURT_IMG],['_die',DIE_IMG],['_cast',CAST_IMG]].forEach(function(t){ const k=c+"_"+g, im=new Image(); im.onerror=function(){ delete t[1][k]; }; im.src=SHEETS[c][g].replace('.png',t[0]+'.png'); t[1][k]=im; }); }
-/* 空手版(沒裝武器時顯示)：同樣的圖加 _bare；沒有這組圖的職業照舊 */
-for(const c in SHEETS) for(const g in SHEETS[c]){ [[SHEET_IMG,'_bare'],[WALK_IMG,'_bare_walk'],[ATK_IMG,'_bare_attack'],[HURT_IMG,'_bare_hurt']].forEach(function(t){ const k=c+"_"+g+"_bare", im=new Image(); im.onerror=function(){ delete t[0][k]; }; im.src=SHEETS[c][g].replace('.png',t[1]+'.png'); t[0][k]=im; }); }
+/* 依裝備武器切換的姿勢版：_bare空手、_bow弓、_blade刀、_spear長槍（同樣的圖加字尾）；沒有這組圖的職業照舊 */
+for(const c in SHEETS) for(const g in SHEETS[c]) ['_bare','_bow','_blade','_spear'].forEach(function(v){ [[SHEET_IMG,''],[WALK_IMG,'_walk'],[ATK_IMG,'_attack'],[HURT_IMG,'_hurt']].forEach(function(t){ const k=c+"_"+g+v, im=new Image(); im.onerror=function(){ delete t[0][k]; }; im.src=SHEETS[c][g].replace('.png',v+t[1]+'.png'); t[0][k]=im; }); });
 const HURT_MS=90, DIE_MS=130, CAST_MS=70;
 const ANIM_C=192, ANIM_FOOT=156, ANIM_CX=96, ANIM_HEAD=36, WALK_MS=85, ATK_MS=55;
-function animReady(map,art,gender){ let im=map[art+"_"+(gender||'male')]; if((!im||!im.complete||!im.naturalWidth)&&/_bare$/.test(gender||'')) im=map[art+"_"+gender.replace('_bare','')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
+function animReady(map,art,gender){ let im=map[art+"_"+(gender||'male')]; if((!im||!im.complete||!im.naturalWidth)&&/_(bare|bow|blade|spear)$/.test(gender||'')) im=map[art+"_"+gender.replace(/_(bare|bow|blade|spear)$/,'')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 /* 畫一格動畫：frame=欄、dir=列；回傳頭頂Y(給名字/血條用) */
 function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=false; const sc=scale*HI_SCALE;
   g.drawImage(img,frame*ANIM_C,dir*ANIM_C,ANIM_C,ANIM_C,Math.round(cx-ANIM_CX*sc),Math.round(fy-ANIM_FOOT*sc),ANIM_C*sc,ANIM_C*sc);
@@ -7519,6 +7519,8 @@ function dir8of(dx,dy){ if(!dx&&!dy)return null;
   const d=WORLD_DIR8_BY_ANGLE[idx];
   return DIR8_ROT[d]||d;                    // 再順時針旋轉45°→等角螢幕方向
 }
+/* 目前裝備對應的姿勢：沒裝武器=空手，弓=_bow，矛/長槍=_spear，名字含「刀」=_blade，其餘(劍、短劍…)=持劍原圖 */
+function weaponPose(){ const w=S.equip&&S.equip.weapon; if(!w) return '_bare'; const d=ITEM_DEF[w]; if(!d) return ''; if(d.kind==='bow') return '_bow'; if(/刀/.test(w)) return '_blade'; if(d.kind==='spear') return '_spear'; return ''; }
 function sheetReady(art,gender){ const im=SHEET_IMG[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 function drawSheetFrame(g,img,cx,fy,scale,frame,type){ g.imageSmoothingEnabled=false;
   // 武俠高解析角色圖(8方向各128x128，共1024x128)：格子大小、腳底、頭頂位置與舊的64格不同，縮放比例也要換算成同樣的畫面大小
@@ -7537,7 +7539,7 @@ function drawPlayerSprite(gx,gy){
         return drawSheetFrame(ctx,timg,gx,gy+bob2,sc2,(DIR8_FRAME[player.dir8||'down']??0),S.transformInto); }
     }catch(_e){ S.transformInto=null; }   // 變身繪製發生問題時安全退回原本外觀，避免每幀重複拋錯拖慢畫面
   }
-  const art=CLASS_ART[S.cls]||'royal'; const _bare=(!(S.equip&&S.equip.weapon)&&sheetReady(art,S.gender+'_bare'))?'_bare':''; const _gk=S.gender+_bare; const img=sheetReady(art,_gk); if(!img)return null;
+  const art=CLASS_ART[S.cls]||'royal'; let _bare=weaponPose(); if(_bare&&!sheetReady(art,S.gender+_bare)) _bare=''; const _gk=S.gender+_bare; const img=sheetReady(art,_gk); if(!img)return null;
   actorShadow(ctx,gx,gy,15,5); const bob=Math.round(Math.sin(Date.now()/380));
   const _invis=!!(S.buffs&&S.buffs['隱身術']&&S.buffs['隱身術'].until>Date.now());
   if(_invis){ ctx.save(); ctx.globalAlpha=0.32; }
@@ -11197,7 +11199,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-18';
+const GAME_VER='v80.36-19';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
