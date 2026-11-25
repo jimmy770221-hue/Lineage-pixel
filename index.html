@@ -2410,7 +2410,7 @@ const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 // 村莊範圍（圍牆內）與四個村口
 const VX0=28,VX1=52,VY0=24,VY1=48;
 const GATE_NX=[39,40], GATE_SX=[39,40], GATE_WY=[35,36], GATE_EY=[35,36];
-function inVillage(px,py){ return curMap ? !curMap.wild : true; }
+function inVillage(px,py){ if(!curMap) return true; if(curMap.world && px!=null){ const R=worldRegionAt(Math.floor(px/TS),Math.floor(py/TS)); return R?!R.wild:true; } return !curMap.wild; }
 const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20,T_STAIRUP=22,T_SAND=23;   // T_STAIRUP：立體的「往上/入口」石階結構(用於冒險洞穴入口、2樓落點)，T_STAIRS則是平面的「往下地窖」樣式；T_SAND：沙灘(可走)，由beachify()在陸地緊鄰海水處自動鋪設
 const T_BOSSPORTAL=21;              // 惡魔召喚魔法陣（進入王座之間）：一律以 2x2 共4格為一組
 const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL]);   // T_STAIRUP改為可走(不在此清單)：它本身就是真正的樓梯出入口，玩家要能踩上去
@@ -2637,7 +2637,7 @@ function placeBossCircle(grid,mapId,targetX,targetY,bossRoomId,spawnX,spawnY){
     }
     if(!found){ ax=Math.max(1,Math.min(W-3,p.x)); ay=Math.max(1,Math.min(H-3,p.y)); }
   }
-  MAP_WARPS[mapId]=(MAP_WARPS[mapId]||[]).filter(function(w){ return w.toMap!==bossRoomId; });
+  MAP_WARPS[mapId]=(MAP_WARPS[mapId]||[]).filter(function(w){ return w.toMap!==bossRoomId || (mapId==='world' && (Math.abs(w.x-ax)>4||Math.abs(w.y-ay)>4)); });   // 大地圖裡北邊/東邊港口各有一座，只換掉同一座，不能把另一座的傳送清掉
   for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++){
     grid[ay+dy][ax+dx]=T_BOSSPORTAL;                                        // 2x2 共4格都是魔法陣
     MAP_WARPS[mapId].push({x:ax+dx,y:ay+dy,kind:'map',toMap:bossRoomId,toX:spawnX,toY:spawnY});   // 踩到任一格都會傳送
@@ -2723,6 +2723,210 @@ function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
   gapN(g,cx,ex,'cross_n'); gapS(g,cx,ex,'cross_s'); gapW(g,cy,ex,'cross_w'); gapE(g,cy,ex,'cross_e');
   vLane(g,cx,1,VY0); vLane(g,cx,VY1,H-2); hLane(g,cy,1,VX0); hLane(g,cy,VX1,W-2);   // 門外連到地圖邊
   return {name:'說話之島村',id:'village',wild:false,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
+}
+/* =====================================================================
+   說話之島 · 大地圖（半開放世界）
+   把村莊、四個岔路、兩個港口、北島、稻草人修練場、三個狩獵場合成「同一張」大地圖。
+   區域之間沒有邊界牆也不用切換畫面，走過去就到了；區域邊界、海岸線、村莊圍牆全部是不規則曲線。
+   洞穴、王座之間、妖精森林、銀騎士村莊、史萊姆競技場仍然是獨立地圖。
+   玩法邏輯沿用原本的「地圖代號」：玩家走到哪個區域，curMapId 就會跟著變成該區域的代號
+   （village / cross_n / port_n …），所以怪物出沒設定、安全區判斷、擊殺計數等都不用改。
+   ===================================================================== */
+const WORLD_DEF=[
+  {id:'village',      name:'說話之島村',       wild:false, cx:108,cy:96, r:33, lc:[27,24], tree:0.72, scat:0.012},
+  {id:'cross_n',      name:'北方岔路',         wild:true,  cx:108,cy:48, r:25, lc:[19,16], tree:0.68, scat:0.018},
+  {id:'port_n',       name:'說話之島北邊港口', wild:true,  cx:108,cy:8,  r:25, lc:[20,17], tree:0.72, scat:0.012, dock:'n'},
+  {id:'north_island', name:'北島',             wild:true,  cx:62, cy:52, r:25, lc:[20,17], tree:0.68, scat:0.018, ponds:[[-3,3,6.5]]},
+  {id:'cross_w',      name:'西方岔路',         wild:true,  cx:62, cy:96, r:25, lc:[19,16], tree:0.68, scat:0.018},
+  {id:'scarecrow',    name:'稻草人修練場',     wild:true,  cx:20, cy:96, r:24, lc:[20,17], tree:0.80, scat:0.006},
+  {id:'cross_e',      name:'東方岔路',         wild:true,  cx:156,cy:96, r:25, lc:[19,16], tree:0.68, scat:0.018, ponds:[[9,-8,4.5]]},
+  {id:'port_e',       name:'說話之島東邊港口', wild:true,  cx:198,cy:96, r:24, lc:[20,17], tree:0.72, scat:0.012, dock:'e'},
+  {id:'cross_s',      name:'南方岔路',         wild:true,  cx:108,cy:146,r:25, lc:[19,16], tree:0.68, scat:0.018},
+  {id:'hunt_w',       name:'西邊狩獵場',       wild:true,  cx:64, cy:148,r:25, lc:[20,17], tree:0.62, scat:0.026},
+  {id:'hunt_s',       name:'南邊狩獵場',       wild:true,  cx:108,cy:192,r:25, lc:[20,17], tree:0.60, scat:0.026, ponds:[[-10,5,5]]},
+  {id:'hunt_e',       name:'東邊狩獵場',       wild:true,  cx:154,cy:146,r:25, lc:[20,17], tree:0.62, scat:0.026},
+];
+const WORLD_LINKS=[['village','cross_n'],['village','cross_w'],['village','cross_s'],['village','cross_e'],
+  ['cross_n','port_n'],['cross_n','north_island'],['cross_w','north_island'],['cross_w','scarecrow'],
+  ['cross_s','hunt_w'],['cross_s','hunt_s'],['cross_s','hunt_e'],['cross_e','port_e'],['cross_e','hunt_e']];
+const WORLD_REGION_IDS={}; WORLD_DEF.forEach(function(d){ WORLD_REGION_IDS[d.id]=1; });
+let WORLD=null;
+let mapSerial=0;                                              // 每次 loadMap 加 1：計時器用它判斷「玩家是不是還在同一次載入的地圖」(區域代號會隨走動改變，不能再拿來比)
+/* 原本村莊的 NPC／隊友站位是用「村莊自己的座標」寫的；拼進大地圖後整批平移。只記一次原始座標，重複建圖也不會越移越遠 */
+let _villageBase=null;
+function worldShiftVillageData(vx0,vy0){
+  if(!_villageBase){
+    _villageBase={ npcs:npcs.map(function(n){ return {x:n.x,y:n.y}; }), spots:VILLAGE_PARTY_SPOTS.map(function(p){ return [p[0],p[1]]; }) };
+  }
+  npcs.forEach(function(n,i){ n.x=_villageBase.npcs[i].x+vx0*TS; n.y=_villageBase.npcs[i].y+vy0*TS; });
+  VILLAGE_PARTY_SPOTS.forEach(function(p,i){ p[0]=_villageBase.spots[i][0]+vx0; p[1]=_villageBase.spots[i][1]+vy0; });
+}
+function worldRegionAt(tx,ty){
+  if(!WORLD) return null;
+  if(tx<0) tx=0; else if(tx>=WORLD.W) tx=WORLD.W-1;
+  if(ty<0) ty=0; else if(ty>=WORLD.H) ty=WORLD.H-1;
+  return WORLD.regions[WORLD.rid[ty*WORLD.W+tx]];
+}
+/* 玩家走到另一個區域時：更新目前地圖代號/名稱/安全區旗標。進入村莊(安全區)時補滿血魔 */
+function updateRegion(force){
+  if(!curMap || !curMap.world || !WORLD) return;
+  const R=worldRegionAt(Math.floor((player.x+player.w/2)/TS), Math.floor((player.y+player.h/2)/TS));
+  if(!R || (!force && R.id===curMapId)) return;
+  const wasSafe=!curMap.wild;
+  curMapId=R.id; curMap.wild=R.wild; curMap.name=R.name; if(S) S.mapId=R.id;
+  const mn=document.getElementById('mapName'); if(mn) mn.textContent=R.name;
+  if(typeof renderKillCounter==='function') renderKillCounter();
+  if(!R.wild && !wasSafe){ try{ restInVillage(); }catch(e){} }          // 從野外走進村莊(安全區)：血魔回滿
+}
+function worldEntryPx(id,side){
+  const R=WORLD.byId[id]; if(!R) return null;
+  const e=WORLD.entries[id]&&WORLD.entries[id][side];
+  if(e) return {x:e[0]*TS,y:e[1]*TS};
+  return {x:R.cx*TS,y:R.cy*TS};
+}
+function buildWorld(){
+  const MARGIN=14;
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  WORLD_DEF.forEach(function(d){ const e=d.r*1.25; minX=Math.min(minX,d.cx-e); minY=Math.min(minY,d.cy-e); maxX=Math.max(maxX,d.cx+e); maxY=Math.max(maxY,d.cy+e); });
+  const SX=Math.round(MARGIN-minX), SY=Math.round(MARGIN-minY);
+  const W=Math.ceil(maxX+SX+MARGIN), H=Math.ceil(maxY+SY+MARGIN);
+  const regions=WORLD_DEF.map(function(d,i){ return {idx:i,id:d.id,name:d.name,wild:d.wild,cx:d.cx+SX,cy:d.cy+SY,r:d.r,lc:d.lc,def:d}; });
+  const byId={}; regions.forEach(function(r){ byId[r.id]=r; r.ox=r.cx-r.lc[0]; r.oy=r.cy-r.lc[1]; });
+  const g=NG(W,H), rid=new Uint8Array(W*H), land=new Uint8Array(W*H);
+  const N=function(x,y,s){ return tbNoise(x,y,s); };
+  MAP_WARPS['world']=[];
+  const links=WORLD_LINKS.map(function(l){ return [byId[l[0]],byId[l[1]]]; });
+  const segDist=function(x,y,A,B){ const vx=B.cx-A.cx, vy=B.cy-A.cy, t=Math.max(0,Math.min(1,((x-A.cx)*vx+(y-A.cy)*vy)/(vx*vx+vy*vy))); return Math.hypot(x-(A.cx+vx*t), y-(A.cy+vy*t)); };
+  /* 1) 領地(各區域不規則的勢力範圍)與陸地遮罩(不規則的海岸線) */
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const wx=x+7*(2*N(x*0.045,y*0.045,1)-1), wy=y+7*(2*N(x*0.045+50,y*0.045+50,2)-1);
+    let best=1e9, bi=0;
+    for(let i=0;i<regions.length;i++){ const R=regions[i], d=Math.hypot(wx-R.cx,wy-R.cy)/R.r; if(d<best){ best=d; bi=i; } }
+    rid[y*W+x]=bi;
+    const coast=best+0.20*(2*N(x*0.07,y*0.07,3)-1)+0.07*(2*N(x*0.19,y*0.19,4)-1);
+    let isLand=coast<1.0;
+    if(!isLand){ for(let k=0;k<links.length;k++){ if(segDist(x,y,links[k][0],links[k][1])<5.5+2*N(x*0.1,y*0.1,5)){ isLand=true; break; } } }
+    land[y*W+x]=isLand?1:0;
+  }
+  /* 2) 村莊的不規則外形（原本是方方正正的圍牆）：用「圓角方形＋起伏」做出外形，再保證所有房屋都在裡面 */
+  const V=byId.village, vx0=V.cx-27, vy0=V.cy-24;
+  const hsList=[[8,8,7,4,true],[17,8,5,3,false],[34,8,5,3,false],[43,8,7,4,true],[8,38,7,4,true],[17,40,5,3,false],[34,40,5,3,false],[43,38,7,4,true],[9,19,5,3,false],[43,26,5,3,false],[9,29,5,3,false],[43,16,5,3,false]];
+  const houseRects=hsList.map(function(a){ const x=a[0],y=a[1],w=a[2],d=a[3],big=a[4]; const cx2=x+w/2, cy2=y+d/2, nw=big?4:3, nd=big?3:2; return {x:Math.round(cx2-nw/2), y:Math.round(cy2-nd/2), w:nw, d:nd, big:big}; });
+  const VLOBES=[1.10,0.86,1.14,0.90,1.16,0.84,1.12,0.88,1.08,0.92,1.14,0.86];
+  const inside=new Uint8Array(W*H);
+  const forceHouses=function(){ houseRects.forEach(function(h){ for(let y=h.y-2;y<h.y+h.d+2;y++)for(let x=h.x-2;x<h.x+h.w+2;x++){ const wx=vx0+x, wy=vy0+y; if(wx>=0&&wy>=0&&wx<W&&wy<H) inside[wy*W+wx]=1; } }); };
+  for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){
+    const wx=vx0+lx, wy=vy0+ly; if(wx<1||wy<1||wx>=W-1||wy>=H-1) continue;
+    const nx=(lx-27)/26.5, ny=(ly-24)/23.5, sq=Math.pow(Math.pow(Math.abs(nx),2.3)+Math.pow(Math.abs(ny),2.3),1/2.3), ang=Math.atan2(ny,nx);
+    const ap=(ang+Math.PI)/(2*Math.PI)*VLOBES.length, ai=Math.floor(ap)%VLOBES.length, af=ap-Math.floor(ap), aj=(ai+1)%VLOBES.length, fe=(1-Math.cos(af*Math.PI))/2;
+    const lim=VLOBES[ai]*(1-fe)+VLOBES[aj]*fe+0.10*(2*N(wx*0.09,wy*0.09,21)-1);          // 圍牆半徑：沿著一圈高低起伏的「凸出/凹進」，再疊上細小的曲折
+    inside[wy*W+wx]=(sq<lim)?1:0;
+  }
+  forceHouses();
+  for(let pass=0;pass<2;pass++){                                         // 多數決平滑：去掉鋸齒小突起
+    const cp=inside.slice();
+    for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ let c=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) c+=cp[(y+dy)*W+x+dx]; inside[y*W+x]=(c>=5)?1:0; }
+  }
+  forceHouses();
+  const CW=byId.cross_w, caveX=CW.cx+4, caveY=CW.cy+13;                    // 冒險洞穴入口位置：確保是陸地、周圍沒有樹
+  const nearV=new Uint8Array(W*H);                                        // 圍牆外再擴3格：保證是陸地、沒有樹
+  for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){ if(Math.hypot(dx,dy)<=5.5){ const xx=caveX+dx, yy=caveY+dy; nearV[yy*W+xx]=1; land[yy*W+xx]=1; } }
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ if(!inside[y*W+x]) continue;
+    for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){ const xx=x+dx, yy=y+dy; if(xx>0&&yy>0&&xx<W-1&&yy<H-1){ nearV[yy*W+xx]=1; land[yy*W+xx]=1; } } }
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){                               // 安全區＝圍牆裡面＋牆外3格；圍牆內一律算村莊，牆外多出來的領地讓給鄰近的野外區域
+    const i=y*W+x;
+    if(inside[i]) rid[i]=V.idx;
+    else if(rid[i]===V.idx && !nearV[i]){ let bd=1e9, bj=0; for(let j=0;j<regions.length;j++){ if(j===V.idx) continue; const d=Math.hypot(x-regions[j].cx,y-regions[j].cy)/regions[j].r; if(d<bd){ bd=d; bj=j; } } rid[i]=bj; } }
+  /* 3) 基本地貌：草地/海、成片的樹林(不是平均亂撒)、池塘 */
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=y*W+x;
+    if(!land[i]){ g[y][x]=T_WATER; continue; }
+    g[y][x]=T_GRASS;
+    if(nearV[i]) continue;
+    const R=regions[rid[i]], d=R.def;
+    const n=N(x*0.10,y*0.10,7)*0.7+N(x*0.31,y*0.31,8)*0.3;
+    if(n>d.tree && tileRand(x,y,41)<0.72) g[y][x]=T_TREE;
+    else if(tileRand(x,y,42)<d.scat) g[y][x]=T_TREE;
+  }
+  regions.forEach(function(R){ (R.def.ponds||[]).forEach(function(p){
+    const px=R.cx+p[0], py=R.cy+p[1], rr=p[2];
+    for(let y=Math.floor(py-rr*1.6);y<=Math.ceil(py+rr*1.6);y++)for(let x=Math.floor(px-rr*1.6);x<=Math.ceil(px+rr*1.6);x++){
+      if(x<1||y<1||x>=W-1||y>=H-1||nearV[y*W+x]||!land[y*W+x]) continue;
+      if(Math.hypot(x-px,y-py)<rr*(0.7+0.55*N(x*0.2,y*0.2,9))) g[y][x]=T_WATER; } }); });
+  /* 4) 村莊本體：廣場、十字大道、房屋、水井、大樹，最後圍上不規則的城牆與四個城門 */
+  const wset=function(lx,ly,t){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1) g[y][x]=t; };
+  const wget=function(lx,ly){ const x=vx0+lx, y=vy0+ly; return (x>0&&y>0&&x<W-1&&y<H-1)?g[y][x]:T_WATER; };
+  for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1&&inside[y*W+x]) g[y][x]=T_GRASS; }
+  for(let ly=18;ly<=31;ly++)for(let lx=20;lx<=36;lx++){                  // 中央廣場：橢圓形泥地
+    const ex=(lx-27.5)/5.6, ey=(ly-24.5)/3.7; if(ex*ex+ey*ey<1+0.35*(2*N((vx0+lx)*0.3,(vy0+ly)*0.3,22)-1) && inside[(vy0+ly)*W+vx0+lx]) wset(lx,ly,T_DIRT); }
+  for(let ly=-4;ly<=52;ly++){ if(!inside[(vy0+ly)*W+vx0+27]) continue; wset(27,ly,T_PATH); wset(28,ly,T_PATH); }      // 南北大道
+  for(let lx=-4;lx<=58;lx++){ if(!inside[(vy0+24)*W+vx0+lx]) continue; wset(lx,24,T_PATH); wset(lx,25,T_PATH); }      // 東西大道
+  const houses=[];
+  houseRects.forEach(function(h){ houses.push({x:vx0+h.x,y:vy0+h.y,w:h.w,d:h.d,big:h.big}); for(let j=0;j<h.d;j++)for(let i2=0;i2<h.w;i2++) wset(h.x+i2,h.y+j,T_HOUSE); });
+  wset(40,26,T_WELL); wset(40,21,T_BIGTREE); wset(26,23,T_BIGTREE);
+  [[19,15],[45,15],[19,35],[45,35]].forEach(function(p){ if(wget(p[0],p[1])===T_GRASS) wset(p[0],p[1],T_FLOWER); });
+  /* 城牆：圍牆內側與外側相鄰的格子(八方向)＝牆，這樣斜角也不會留縫 */
+  const isIn=function(x,y){ return x>=0&&y>=0&&x<W&&y<H&&inside[y*W+x]===1; };
+  const wallTiles=[];
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ if(!inside[y*W+x]) continue;
+    let edge=false; for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){ if(!isIn(x+dx,y+dy)){ edge=true; break; } }
+    if(edge) wallTiles.push([x,y]); }
+  const gates={};
+  wallTiles.forEach(function(p){ const x=p[0], y=p[1], lx=x-vx0, ly=y-vy0; let t=T_TOWNWALL;
+    if((lx===27||lx===28) && Math.abs(ly-24)>14){ t=(lx===27)?T_GATE:T_PATH; if(lx===27){ if(ly<24){ if(!gates.n||y<gates.n.y) gates.n={x:x,y:y}; } else { if(!gates.s||y>gates.s.y) gates.s={x:x,y:y}; } } }
+    else if((ly===24||ly===25) && Math.abs(lx-27)>14){ t=(ly===24)?T_GATE:T_PATH; if(ly===24){ if(lx<27){ if(!gates.w||x<gates.w.x) gates.w={x:x,y:y}; } else { if(!gates.e||x>gates.e.x) gates.e={x:x,y:y}; } } }
+    g[y][x]=t; });
+  /* 5) 道路：從四個城門出發，用蜿蜒的小路連到各區域的中心；各區域中心鋪一塊不規則的泥地廣場 */
+  const brush=function(px,py,rad){
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){ if(Math.hypot(dx,dy)>rad) continue;
+      const x=Math.round(px)+dx, y=Math.round(py)+dy; if(x<1||y<1||x>=W-1||y>=H-1) continue;
+      const t=g[y][x]; if(t===T_HOUSE||t===T_WELL||t===T_TOWNWALL||t===T_GATE||t===T_WATER||t===T_BIGTREE||t===T_SAND||inside[y*W+x]) continue;
+      g[y][x]=T_PATH; } };
+  const carve=function(ax,ay,bx,by,seed){
+    const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len, steps=Math.ceil(len*2);
+    for(let s=0;s<=steps;s++){ const t=s/steps, wob=(N(t*len*0.055,seed,11)-0.5)*2*6*Math.sin(Math.PI*t);
+      brush(ax+dx*t+nx*wob, ay+dy*t+ny*wob, 1.2); } };
+  const gateOut={ n:[gates.n.x+0.5,gates.n.y-1.5], s:[gates.s.x+0.5,gates.s.y+2.5], w:[gates.w.x-1.5,gates.w.y+0.5], e:[gates.e.x+2.5,gates.e.y+0.5] };
+  const sideOf={cross_n:'n',cross_s:'s',cross_w:'w',cross_e:'e'};
+  links.forEach(function(l,k){ const A=l[0], B=l[1];
+    if(A.id==='village'){ const o=gateOut[sideOf[B.id]]; carve(o[0],o[1],B.cx,B.cy,100+k); }
+    else carve(A.cx,A.cy,B.cx,B.cy,100+k); });
+  regions.forEach(function(R){                                            // 岔路口廣場：不規則泥地
+    if(R.id==='village') return;
+    const rr=(/^cross_/.test(R.id))?4.2:3.2;
+    for(let y=Math.floor(R.cy-rr*1.5);y<=Math.ceil(R.cy+rr*1.5);y++)for(let x=Math.floor(R.cx-rr*1.5);x<=Math.ceil(R.cx+rr*1.5);x++){
+      if(x<1||y<1||x>=W-1||y>=H-1) continue; const t=g[y][x]; if(t===T_WATER||t===T_HOUSE||t===T_TOWNWALL) continue;
+      if(Math.hypot(x-R.cx,y-R.cy)<rr*(0.75+0.45*N(x*0.3,y*0.3,23))) g[y][x]=T_DIRT; } });
+  /* 6) 碼頭（沿著海邊伸進海裡的一小段泥地）與稻草人修練場空地 */
+  regions.forEach(function(R){ const dk=R.def.dock; if(!dk) return;
+    const sx=(dk==='e')?1:0, sy=(dk==='n')?-1:0; let x=R.cx, y=R.cy, guard=0;
+    while(guard++<80 && x>2&&y>2&&x<W-3&&y<H-3 && g[y][x]!==T_WATER){ x+=sx; y+=sy; }
+    for(let k=-3;k<=9;k++)for(let w=-1;w<=1;w++){ const xx=x+sx*k+(sy?w:0), yy=y+sy*k+(sx?w:0); if(xx>0&&yy>0&&xx<W-1&&yy<H-1&&g[yy][xx]!==T_HOUSE) g[yy][xx]=T_DIRT; }
+    R.dockPt=[x-sx*4, y-sy*4];                                            // 碼頭登岸處：從港口中心鋪一條路過去
+    carve(R.cx,R.cy,x-sx*4,y-sy*4,300+R.idx); });
+  const SC=byId.scarecrow;
+  for(let y=SC.cy-12;y<=SC.cy+12;y++)for(let x=SC.cx-12;x<=SC.cx+12;x++){ if(x>0&&y>0&&x<W-1&&y<H-1&&g[y][x]!==T_WATER&&g[y][x]!==T_PATH) g[y][x]=T_GRASS; }   // 稻草人 6x6 陣列要用的空地
+  beachify(g,W,H);                                                         // 水岸自動鋪沙灘
+  /* 7) 冒險洞穴入口（原本在西方岔路南邊的出口）：改成一座看得見的階梯 */
+  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){ const x=caveX+dx, y=caveY+dy; if(Math.hypot(dx,dy)<=2.7 && g[y][x]!==T_WATER && g[y][x]!==T_HOUSE) g[y][x]=T_DIRT; }
+  carve(CW.cx,CW.cy,caveX,caveY-1,400);
+  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){ const x=caveX+dx, y=caveY+dy; if(Math.hypot(dx,dy)<=2.7 && g[y][x]!==T_WATER && g[y][x]!==T_HOUSE) g[y][x]=T_DIRT; }
+  g[caveY][caveX]=T_STAIRS;
+  MAP_WARPS['world'].push({x:caveX,y:caveY,kind:'map',toMap:'cave',toSide:'n'});
+  /* 8) 殺敵數滿100後出現的魔法陣：北邊/東邊港口各一座(跟原本一樣，兩邊共用同一個擊殺數) */
+  if((S.ketaBossKills||0)>=100){ ['port_n','port_e'].forEach(function(id){ const R=byId[id]; placeBossCircle(g,'world',R.cx,R.cy+4,'keta_room',19,26); }); }
+  /* 9) 可出生怪物的格子：從村莊中心開始能走到的格子才算(避免怪物被關在樹林圍成的死角裡) */
+  const reach=new Uint8Array(W*H), q=[]; { const sx=V.cx, sy=V.cy; reach[sy*W+sx]=1; q.push(sx,sy); }
+  for(let qi=0;qi<q.length;qi+=2){ const x=q[qi], y=q[qi+1];
+    for(let d=0;d<4;d++){ const nx=x+(d===0?1:d===1?-1:0), ny=y+(d===2?1:d===3?-1:0); if(nx<1||ny<1||nx>=W-1||ny>=H-1) continue; const ni=ny*W+nx;
+      if(reach[ni]||T_SOLID.has(g[ny][nx])) continue; reach[ni]=1; q.push(nx,ny); } }
+  const spawnTiles=regions.map(function(){ return []; });
+  for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){ const i=y*W+x; if(reach[i] && !inside[i]) spawnTiles[rid[i]].push(i); }
+  /* 10) 村莊裡的 NPC／隊友站位平移到大地圖上的村莊位置 */
+  worldShiftVillageData(vx0,vy0);
+  const entries={ village:{ n:[gates.n.x+0.5,gates.n.y-2] }, cross_w:{ s:[caveX,caveY+2] } };
+  WORLD={W:W,H:H,rid:rid,regions:regions,byId:byId,spawnTiles:spawnTiles,entries:entries,gates:gates,vx0:vx0,vy0:vy0,inside:inside};
+  return {name:V.name,id:'world',world:true,wild:false,grid:g,houses:houses,exits:{},px:V.cx*TS,py:V.cy*TS,W:W,H:H};
 }
 function buildCross(name,id,sides){ const W=40,H=34,g=NG(W,H),ex={},houses=[], cx=19,cy=16;
   border(g);
@@ -2825,6 +3029,7 @@ function saveDungeonLayouts(){ try{ localStorage.setItem(DUNGEON_LAYOUT_KEY, JSO
 let DUNGEON_LAYOUTS=loadDungeonLayouts();
 function resetDungeonLayout(mapId){ delete DUNGEON_LAYOUTS[mapId]; saveDungeonLayouts(); }
 const MAP_BUILDERS = {
+  world: buildWorld,                                              // 說話之島大地圖(村莊+岔路+港口+北島+稻草人場+狩獵場合併)
   village: buildVillage,
   cross_n: ()=>buildCross('北方岔路','cross_n',{n:'port_n', w:'north_island', s:'village'}),
   cross_w: ()=>buildCross('西方岔路','cross_w',{s:'cave', w:'scarecrow', n:'north_island', e:'village'}),
@@ -3024,12 +3229,26 @@ function restInVillage(){
   }
 }
 function loadMap(id, entrySide, explicitSpawn){
+  /* 大地圖：村莊/岔路/港口/北島/稻草人場/狩獵場的代號全部導向同一張「world」大地圖，
+     再依代號算出該區域在大地圖上的位置。已經在大地圖裡的話不重建地圖、不重生怪物，只是把人移過去。*/
+  let _regionId=null, _stay=false;
+  if(WORLD_REGION_IDS[id]){ _regionId=id; id='world'; _stay=!!(curMap && curMap.world && WORLD); }
   const b=MAP_BUILDERS[id]; if(!b){ sysMsg('地圖尚未開放：'+id); return; }
+  mapSerial++;
+  if(!_stay){
   portalAnchors=[];                      // 換地圖：先清空，再由建圖流程中的placeBossCircle()重新登記
   if(typeof bubbles!=='undefined') bubbles=[];   // 換地圖：清空聊天氣泡，避免舊地圖(例如史萊姆競技場賭客閒聊)的氣泡殘留、延遲消失、甚至疊在新地圖錯的座標上
   curMap=b(); curMapId=id; MAP=curMap.grid; MAPW=curMap.W; MAPH=curMap.H; houses=curMap.houses;
+  }
   let px=curMap.px, py=curMap.py; const ex=curMap.exits;
-  if(explicitSpawn){ px=explicitSpawn.x; py=explicitSpawn.y; }
+  if(curMap.world){
+    const _rid=_regionId||curMapId;
+    if(explicitSpawn){
+      px=explicitSpawn.x; py=explicitSpawn.y;
+      if(!explicitSpawn.world){ const _R=WORLD.byId[_rid]; if(_R){ px+=_R.ox*TS; py+=_R.oy*TS; } }   // 舊座標(各區域自己的座標)換算成大地圖座標
+    } else { const _e=worldEntryPx(_rid, entrySide); if(_e){ px=_e.x; py=_e.y; } }
+  }
+  else if(explicitSpawn){ px=explicitSpawn.x; py=explicitSpawn.y; }
   else if(entrySide==='n'&&ex.n){ px=ex.n.col*TS; py=2*TS; }
   else if(entrySide==='s'&&ex.s){ px=ex.s.col*TS; py=(MAPH-3)*TS; }
   else if(entrySide==='w'&&ex.w){ px=2*TS; py=ex.w.row*TS; }
@@ -3041,9 +3260,12 @@ function loadMap(id, entrySide, explicitSpawn){
       px=w.x*TS; py=w.y*TS;
     } }
   player.x=px; player.y=py; moveTarget=null; attackTarget=null;
-  if(S) S.mapId=id;
+  if(S) S.mapId=curMapId;
+  if(curMap.world) updateRegion(true);                           // 大地圖：依落點決定目前所在區域(地圖名稱/安全區/怪物設定)
+  if(!_stay){
   spawnMobs();
   if(typeof spawnFakePlayers==='function') spawnFakePlayers();   // 假玩家：村莊模擬買賣、野外模擬狩獵
+  }
   regroupParty();                                            // 隊友一併集合到玩家身邊的可站立格，不會被留在牆裡
   const mn=document.getElementById('mapName'); if(mn) mn.textContent=curMap.name;
   if(typeof renderKillCounter==='function') renderKillCounter();   // 一進圖就立刻顯示目前計數
@@ -3148,15 +3370,16 @@ function makePet(type,lv,stats){
 }
 
 function checkWarps(){
-  if(!curMap || !MAP_WARPS[curMapId]) return;
+  const _wk=(curMap&&curMap.world)?'world':curMapId;
+  if(!curMap || !MAP_WARPS[_wk]) return;
   if(S.warpCooldownUntil && Date.now()<S.warpCooldownUntil) return;
   const cxT=Math.floor((player.x+player.w/2)/TS), cyT=Math.floor((player.y+player.h/2)/TS);
-  const list=MAP_WARPS[curMapId];
+  const list=MAP_WARPS[_wk];
   for(let i=0;i<list.length;i++){ const w=list[i];
     if(w.x===cxT && w.y===cyT){
       S.warpCooldownUntil=Date.now()+900;                    // 短暫冷卻，避免傳送過去後立刻又觸發回程暗道
       if(w.kind==='same'){ player.x=w.tx*TS; player.y=w.ty*TS; moveTarget=null; attackTarget=null; regroupParty(); playTeleportFx(); }
-      else if(w.kind==='map'){ loadMap(w.toMap, null, {x:w.toX*TS, y:w.toY*TS}); playTeleportFx(); }
+      else if(w.kind==='map'){ if(w.toSide) loadMap(w.toMap, w.toSide); else loadMap(w.toMap, null, {x:w.toX*TS, y:w.toY*TS}); playTeleportFx(); }
       return;
     }
   }
@@ -3195,26 +3418,30 @@ function hasLineOfSight(x1,y1,x2,y2){
 /* 格子座標BFS找路：從(sx,sy)走到(tx,ty)，回傳沿路的格子座標陣列(不含起點，含終點)；
    若怎麼走都到不了(理論上迷宮應該全連通，但保險起見)回傳null。40×34的地圖規模，
    BFS最差情況也只需要掃過約1300多格，效能上很夠用。*/
+let _bfsStamp=null,_bfsPar=null,_bfsQ=null,_bfsGen=0,_bfsSize=0;
 function bfsPath(sx,sy,tx,ty){
   // 起點/終點若因座標誤差剛好落在牆上，先吸附到最近的可走格再開始找路(迷宮保證全連通，這樣幾乎不會再找不到路)
   if(sx<0||sy<0||sx>=MAPW||sy>=MAPH||T_SOLID.has(MAP[sy][sx])){ const w=findNearestWalkable(MAP,sx,sy); sx=w.x; sy=w.y; }
   if(tx<0||ty<0||tx>=MAPW||ty>=MAPH||T_SOLID.has(MAP[ty][tx])){ const w=findNearestWalkable(MAP,tx,ty); tx=w.x; ty=w.y; }
   if(sx===tx&&sy===ty) return [];
-  const visited=new Set(); const key=(x,y)=>x*1000+y;
-  visited.add(key(sx,sy));
-  const queue=[[sx,sy]]; const cameFrom={}; cameFrom[key(sx,sy)]=null;
-  let qi=0, found=false;
-  const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
-  while(qi<queue.length){
-    const [cx,cy]=queue[qi++];
-    if(cx===tx&&cy===ty){ found=true; break; }
-    for(let d=0;d<4;d++){ const nx=cx+DIRS[d][0], ny=cy+DIRS[d][1], nk=key(nx,ny);
-      if(visited.has(nk)||nx<0||ny<0||nx>=MAPW||ny>=MAPH||T_SOLID.has(MAP[ny][nx])) continue;
-      visited.add(nk); cameFrom[nk]=key(cx,cy); queue.push([nx,ny]); }
+  const N=MAPW*MAPH;                                              // 用重複使用的陣列取代Set/物件：大地圖上同時有很多人在找路，原本的寫法太吃效能
+  if(!_bfsStamp||_bfsSize!==N){ _bfsStamp=new Int32Array(N); _bfsPar=new Int32Array(N); _bfsQ=new Int32Array(N); _bfsSize=N; _bfsGen=0; }
+  const gen=++_bfsGen, world=!!(curMap&&curMap.world);
+  const x0=world?Math.max(0,Math.min(sx,tx)-24):0, x1=world?Math.min(MAPW-1,Math.max(sx,tx)+24):MAPW-1;   // 大地圖：只在起點與終點周圍的範圍內找
+  const y0=world?Math.max(0,Math.min(sy,ty)-24):0, y1=world?Math.min(MAPH-1,Math.max(sy,ty)+24):MAPH-1;
+  const si=sy*MAPW+sx, ti=ty*MAPW+tx; let qh=0, qt=0, found=false;
+  _bfsStamp[si]=gen; _bfsPar[si]=-1; _bfsQ[qt++]=si;
+  while(qh<qt){
+    const ci=_bfsQ[qh++]; if(ci===ti){ found=true; break; }
+    const cx=ci%MAPW, cy=(ci-cx)/MAPW;
+    for(let d=0;d<4;d++){ const nx=cx+(d===0?1:d===1?-1:0), ny=cy+(d===2?1:d===3?-1:0);
+      if(nx<x0||ny<y0||nx>x1||ny>y1) continue;
+      const ni=ny*MAPW+nx; if(_bfsStamp[ni]===gen||T_SOLID.has(MAP[ny][nx])) continue;
+      _bfsStamp[ni]=gen; _bfsPar[ni]=ci; _bfsQ[qt++]=ni; }
   }
   if(!found) return null;
-  const path=[]; let ck=key(tx,ty);
-  while(ck!==null){ path.push([Math.floor(ck/1000), ((ck%1000)+1000)%1000]); ck=cameFrom[ck]; }
+  const path=[]; let ck=ti;
+  while(ck!==-1){ path.push([ck%MAPW, Math.floor(ck/MAPW)]); ck=_bfsPar[ck]; }
   path.reverse(); path.shift();   // 去掉起點自己，只保留要走的格子
   return path;
 }
@@ -3816,7 +4043,7 @@ const ELF_NPCS=[
   {name:'里迪', job:'道具製作', mob:'里迪', art:'mage', x:19*TS, y:33*TS, craft:'npc_ridi', lines:['里迪：「精靈餅乾的製作找我。願精靈守護你。」']},
   {name:'迷幻森林之母', mob:'', art:'mage', x:28*TS, y:24*TS, nodraw:true, motherTrial:true, reach:46, lines:['迷幻森林之母：「年輕的妖精啊，帶來受詛咒的精靈書，我將為你淨化它。」']}
 ];
-function curNpcs(){ return curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:(curMapId==='slime_arena'?ARENA_NPCS:(curMapId==='narupa_cave'?NARUPA_NPCS:[])))); }
+function curNpcs(){ return (curMap&&curMap.world)?npcs:curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:(curMapId==='slime_arena'?ARENA_NPCS:(curMapId==='narupa_cave'?NARUPA_NPCS:[])))); }
 /* ===================== 史萊姆競技場（賭場） =====================
    5 條賽道、賽道長 30 格。常駐 12 隻史萊姆選手，每場隨機抽 5 隻出賽，每 30 分鐘一場。
    一張票 200 金幣，可一次買多張；賠率由勝率換算（勝率越低賠率越高）。*/
@@ -4364,7 +4591,39 @@ function spawnBossRandom(type,room){ const m=MOBS[type]; if(!m) return; let trie
     if(room) obj.confine={x0:room.x0,y0:room.y0,x1:room.x1,y1:room.y1};   // 王房禁足：這隻怪只能在房間範圍內移動
     mobs.push(obj); return; }
 }
-function spawnMobs(){ mobs=[]; if(!curMap || !curMap.wild) return;
+/* 大地圖用：取得某個區域內一個「真的走得到」的隨機格子(不給區域就挑一個野外區域) */
+function randMobTile(rid){
+  if(curMap && curMap.world && WORLD){
+    let R=rid?WORLD.byId[rid]:null;
+    if(!R || !R.wild){ const ws=WORLD.regions.filter(r=>r.wild); R=ws[Math.floor(Math.random()*ws.length)]; }
+    const arr=WORLD.spawnTiles[R.idx];
+    if(arr && arr.length){ const i=arr[Math.floor(Math.random()*arr.length)]; return {x:i%WORLD.W, y:Math.floor(i/WORLD.W), rid:R.id}; }
+  }
+  let gx,gy,tr=0;
+  do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tr++; }
+  while(tr<30 && (inVillage(gx*TS,gy*TS) || T_SOLID.has(MAP[gy][gx])));
+  return {x:gx,y:gy,rid:curMapId};
+}
+const WORLD_MOBS_PER_REGION=24;
+function spawnWorldMobs(){
+  mobs=[];
+  WORLD.regions.forEach(function(R){
+    if(!R.wild) return;
+    if(R.id==='scarecrow'){ const _sm=MOBS['稻草人']; const g0x=R.cx-10, g0y=R.cy-10;      // 訓練場：只有稻草人(6×6=36隻)，固定佈局
+      for(let r=0;r<6;r++)for(let c=0;c<6;c++){ const gx=g0x+c*4, gy=g0y+r*4;
+        if(MAP[gy]&&MAP[gy][gx]!=null&&T_SOLID.has(MAP[gy][gx])) MAP[gy][gx]=T_GRASS;
+        mobs.push({type:'稻草人',name:_sm.name,x:gx*TS,y:gy*TS,hp:_sm.hp,maxhp:_sm.hp,cd:0,wc:0,vx:0,vy:0,rid:R.id}); }
+      return; }
+    const types=(MOB_ENABLED[R.id]||[]).filter(t=>MOBS[t] && !MOBS[t].boss);
+    if(!types.length) return;
+    const arr=WORLD.spawnTiles[R.idx]; if(!arr||!arr.length) return;
+    for(let n=0;n<WORLD_MOBS_PER_REGION;n++){
+      const i=arr[Math.floor(Math.random()*arr.length)], gx=i%WORLD.W, gy=Math.floor(i/WORLD.W);
+      const type=types[Math.floor(Math.random()*types.length)], m=MOBS[type];
+      mobs.push({type,name:m.name,x:gx*TS,y:gy*TS,hp:m.hp,maxhp:m.hp,cd:0,wc:0,vx:0,vy:0,rid:R.id}); }
+  });
+}
+function spawnMobs(){ mobs=[]; if(curMap && curMap.world){ spawnWorldMobs(); return; } if(!curMap || !curMap.wild) return;
   if(curMapId==='scarecrow'){ const _sm=MOBS['稻草人']; const g0x=Math.floor(MAPW/2)-10, g0y=Math.floor(MAPH/2)-10;
     for(let r=0;r<6;r++)for(let c=0;c<6;c++){ const gx=g0x+c*4, gy=g0y+r*4;
       if(MAP[gy]&&MAP[gy][gx]!=null&&T_SOLID.has(MAP[gy][gx])) MAP[gy][gx]=T_GRASS;
@@ -4522,6 +4781,7 @@ function clearFakePlayers(){ FAKE_PLAYERS.forEach(f=>releaseFakePlayerName(f.nam
 function spawnFakePlayers(){
   clearFakePlayers();
   if(!curMap) return;
+  if(curMap.world){ spawnVillageFakePlayers(); const _ws=WORLD.regions.filter(r=>r.wild&&r.id!=='scarecrow').sort(()=>Math.random()-0.5).slice(0,7); _ws.forEach(r=>spawnWildFakePlayers(r.id,2+Math.floor(Math.random()*2))); return; }
   if(!curMap.wild && (curMapId==='village'||curMapId==='elf_forest'||curMapId==='silver_knight')) spawnVillageFakePlayers();
   else if(curMap.wild && curMapId!=='scarecrow' && curMapId!=='keta_room' && curMapId!=='bapho_room') spawnWildFakePlayers();
 }
@@ -4538,13 +4798,13 @@ function spawnVillageFakePlayers(){                            // 村莊：4~6�
     FAKE_PLAYERS.push(fp);
   }
 }
-function spawnWildFakePlayers(){                                // 野外/地牢：3~6位，部分組成2-4人小隊
-  const enabled=(MOB_ENABLED[curMapId]||[]).filter(t=>MOBS[t]&&!MOBS[t].boss);
+function spawnWildFakePlayers(rid,nFixed){                      // 野外/地牢：3~6位，部分組成2-4人小隊(大地圖：每個區域2~3位)
+  const enabled=(MOB_ENABLED[rid||curMapId]||[]).filter(t=>MOBS[t]&&!MOBS[t].boss);
   if(!enabled.length) return;
-  const N=3+Math.floor(Math.random()*4), MAXTRY=200;
+  const N=nFixed||(3+Math.floor(Math.random()*4)), MAXTRY=200;
   let made=0, pid=0, tries=0;
   while(made<N && tries++<MAXTRY){
-    const gx=2+Math.floor(Math.random()*(MAPW-4)), gy=2+Math.floor(Math.random()*(MAPH-4));
+    let gx,gy; if(curMap.world){ const _t=randMobTile(rid); gx=_t.x; gy=_t.y; } else { gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); }
     if(T_SOLID.has(MAP[gy][gx])) continue;
     pid++;
     const groupSize=(Math.random()<0.45)?Math.min(N-made, 2+Math.floor(Math.random()*3)):1;   // 45%機率組成2-4人小隊
@@ -4625,16 +4885,14 @@ function fpHuntTick(fp,dt){
       const idx=mobs.indexOf(m); if(idx>=0) mobs.splice(idx,1);
       fp.targetMob=null;
       if(typeof sayBubble==='function' && Math.random()<0.4) sayBubble(fp, '擊敗了'+(MOBS[m.type]?MOBS[m.type].name:m.type)+'！', 1800);
-      const _mid=curMapId;
+      const _mid=m.rid||curMapId, _ser=mapSerial;
       setTimeout(()=>{                                          // 補位邏輯跟killMob()的野外自然補怪一致，維持生態密度
-        if(curMapId!==_mid || !curMap || !curMap.wild) return;
+        if(mapSerial!==_ser || !curMap || (!curMap.wild && !curMap.world)) return;
         const types=((typeof MOB_ENABLED!=='undefined'&&MOB_ENABLED[_mid])||[]).filter(t=>MOBS[t]&&!MOBS[t].boss);
         if(!types.length) return;
         const type=types[Math.floor(Math.random()*types.length)], mm=MOBS[type];
-        let gx,gy,tr=0;
-        do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tr++; }
-        while(tr<30 && (inVillage(gx*TS,gy*TS) || T_SOLID.has(MAP[gy][gx])));
-        mobs.push({type,name:mm.name,x:gx*TS,y:gy*TS,hp:mm.hp,maxhp:mm.hp,cd:0,wc:0});
+        const _tt=randMobTile(_mid), gx=_tt.x, gy=_tt.y;
+        mobs.push({type,name:mm.name,x:gx*TS,y:gy*TS,hp:mm.hp,maxhp:mm.hp,cd:0,wc:0,rid:_tt.rid});
       },6000);
     }
   }
@@ -5709,6 +5967,7 @@ function update(dt){
       if(Math.abs(rdx)>Math.abs(rdy)) player.dir=rdx<0?'left':'right';
       else player.dir=rdy<0?'up':'down';
       const d8=dir8of(rdx,rdy); if(d8)player.dir8=d8; } }
+  updateRegion();       // 大地圖：走到另一個區域就更新目前區域(地圖名稱、安全區、怪物設定都跟著換)
   checkEdge();          // 走到出口邊界 → 切換地圖
   checkWarps();         // 踩到暗道/內部樓梯 → 觸發傳送
   if(player.atkCd>0)player.atkCd-=dt;
@@ -5739,7 +5998,9 @@ function update(dt){
       // 迷宮/地牢通道窄又轉彎多，直線衝向目標很容易卡牆撞不過去。改用moveTowardWithPathfinding()：
       // 視線暢通時效果等同原本的直線移動(效能不變)，視線被牆擋住時會沿bfsPath()算出的路徑繞過去。
       const sp=t.spd*dt/16;
+      const _ox=m.x, _oy=m.y, _wasIn=(curMap.world&&inVillage(m.x+16,m.y+16));
       if(typeof moveTowardWithPathfinding==='function') moveTowardWithPathfinding(m, tcx, tcy, sp);
+      if(curMap.world && !_wasIn && inVillage(m.x+16,m.y+16)){ m.x=_ox; m.y=_oy; }   // 大地圖：怪物追到村莊邊界就停下，不會衝進安全區
       const d8=dir8of(tcx-mcx,tcy-mcy); if(d8) m.dir8=d8;
     } else {
       if(_chasing){ if(d>_ar-6){ vx=(tcx-mcx)/d; vy=(tcy-mcy)/d; } }
@@ -5753,10 +6014,12 @@ function update(dt){
         const nx=m.x+dx;
         let _okX=!solidAt(nx+16,m.y+24)&&!solidAt(nx+16,m.y+8);
         if(m.confine && (nx<m.confine.x0||nx>m.confine.x1-32)) _okX=false;   // 王房禁足：不能移動出房間範圍(巴風特專用)
+        if(_okX && curMap.world && inVillage(nx+16,m.y+16) && !inVillage(m.x+16,m.y+16)) _okX=false;   // 大地圖：怪物不會走進村莊(安全區)
         if(_okX) m.x=nx;
         const ny=m.y+dy;
         let _okY=!solidAt(m.x+16,ny+24)&&!solidAt(m.x+16,ny+8);   // 用「上面X軸判定完成後」的最新m.x，跟玩家movePlayer()做法一致：X先提交、Y再用最新x檢查，避免斜角切角穿過牆角(薄牆下這個bug特別容易被利用)
         if(m.confine && (ny<m.confine.y0||ny>m.confine.y1-32)) _okY=false;
+        if(_okY && curMap.world && inVillage(m.x+16,ny+16) && !inVillage(m.x+16,m.y+16)) _okY=false;   // 大地圖：怪物不會走進村莊(安全區)
         if(_okY) m.y=ny;
       }
     }
@@ -5861,9 +6124,9 @@ function executeBossPattern(m,t,st,applyDmg){                           // 招�
     bossProjectiles.push({x:m.x+16,y:m.y+16,dirX:st.dirX,dirY:st.dirY,speed:cfg.speed,life:1400,owner:m,dmgMult:cfg.dmgMult,ttype:st.ttype,tref:st.tref});
   } else if(st.name==='meteor'){
     if(mobFx.length<40) mobFx.push({kind:'lockon', x:st.tx, y:st.ty, life:cfg.delay});
-    const _mapId=curMapId;
+    const _mapId=mapSerial;
     setTimeout(function(){
-      if(curMapId!==_mapId || !mobs.includes(m) || m.hp<=0) return;      // 期間離開地圖或BOSS已死：取消傷害判定
+      if(mapSerial!==_mapId || !mobs.includes(m) || m.hp<=0) return;      // 期間離開地圖或BOSS已死：取消傷害判定
       if(mobFx.length<40) mobFx.push({kind:'meteor', x:st.tx, y:st.ty, life:750});
       const px2=st.ttype==='party'&&st.tref?st.tref.x+16:player.x+player.w/2;
       const py2=st.ttype==='party'&&st.tref?st.tref.y+16:player.y+player.h/2;
@@ -6125,8 +6388,9 @@ function killMob(m){ const t=MOBS[m.type];
   if((curMapId==='port_n'||curMapId==='port_e') && !t.boss){
     S.ketaBossKills=(S.ketaBossKills||0)+1;
     if(S.ketaBossKills===100){
-      const _p=curMapId==='port_n'?{x:20,y:20}:{x:15,y:15};
-      placeBossCircle(MAP,curMapId,_p.x,_p.y,'keta_room',19,26);
+      if(curMap.world){ const _R=WORLD.byId[curMapId]; placeBossCircle(MAP,'world',_R.cx,_R.cy+4,'keta_room',19,26); }
+      else { const _p=curMapId==='port_n'?{x:20,y:20}:{x:15,y:15};
+      placeBossCircle(MAP,curMapId,_p.x,_p.y,'keta_room',19,26); }
       sysMsg('殺敵數已達100人，地上出現了一個散發著詭異光芒的魔法陣…');
     }
   }
@@ -6140,15 +6404,14 @@ function killMob(m){ const t=MOBS[m.type];
   }
   refreshUI();
   // 重生：在這張地圖目前勾選的怪物種類中隨機挑一種、隨機找位置補位（野外隨機處，避開村莊）
-  var _respawnMapId=curMapId;
-  setTimeout(()=>{ if(curMapId!==_respawnMapId || !curMap || !curMap.wild) return;   // 期間已離開原地圖（例如傳送回村莊）：不補位
+  var _respawnMapId=mapSerial, _rrid=m.rid||curMapId;
+  setTimeout(()=>{ if(mapSerial!==_respawnMapId || !curMap || (!curMap.wild && !curMap.world)) return;   // 期間已離開原地圖（例如傳送回村莊）：不補位
     var _cap=(curMap.dungeon)?90:24;   // 跟spawnMobs()的目標數一致，才不會補到一半就停在舊的數字
-    if(mobs.length<_cap){ const types=((typeof MOB_ENABLED!=='undefined'&&MOB_ENABLED[curMapId])||[]).filter(t=>MOBS[t] && !MOBS[t].boss);
+    var _cnt=curMap.world?mobs.filter(o=>o.rid===_rrid).length:mobs.length;   // 大地圖：每個區域各自維持24隻
+    if(_cnt<_cap){ const types=((typeof MOB_ENABLED!=='undefined'&&MOB_ENABLED[_rrid])||[]).filter(t=>MOBS[t] && !MOBS[t].boss);
       if(!types.length) return; const type=types[Math.floor(Math.random()*types.length)];
-      const mm=MOBS[type]; let gx,gy,tries=0;
-      do{ gx=2+Math.floor(Math.random()*(MAPW-4)); gy=2+Math.floor(Math.random()*(MAPH-4)); tries++; }
-      while(tries<30 && (inVillage(gx*TS,gy*TS) || T_SOLID.has(MAP[gy][gx])));
-      mobs.push({type,name:mm.name,x:gx*TS,y:gy*TS,hp:mm.hp,maxhp:mm.hp,cd:0,wc:0}); } }, 6000);
+      const mm=MOBS[type]; const _tt=randMobTile(_rrid), gx=_tt.x, gy=_tt.y;
+      mobs.push({type,name:mm.name,x:gx*TS,y:gy*TS,hp:mm.hp,maxhp:mm.hp,cd:0,wc:0,rid:_tt.rid}); } }, 6000);
 }
 // PvP：擊殺其他玩家會大幅降低性向（變邪惡）。假玩家系統加入後呼叫此函式
 function killPlayerAlign(){ S.align=Math.max(-32768, S.align-100); sysMsg('你擊殺了其他玩家，性向大幅下降（趨向邪惡）！'); refreshUI(); }
@@ -6220,12 +6483,12 @@ function killFakePlayer(fp){
   if(idx>=0){ releaseFakePlayerName(fp.name); FAKE_PLAYERS.splice(idx,1); }
   if(pvpTarget===fp) pvpTarget=null;
   refreshUI();
-  const _mid=curMapId, _wasWild=!!(curMap&&curMap.wild);         // 一段時間後在原地圖補一位新的假玩家，維持人口密度(比照怪物補位機制)
+  const _mid=mapSerial, _wasWild=!!(curMap&&curMap.world?(fp.mode==='hunt'):(curMap&&curMap.wild));         // 一段時間後在原地圖補一位新的假玩家，維持人口密度(比照怪物補位機制)
   setTimeout(()=>{
-    if(curMapId!==_mid || !curMap) return;
+    if(mapSerial!==_mid || !curMap) return;
     const fp2=fpNewBase(genFakePlayerName());
     if(_wasWild){ fp2.mode='hunt'; fp2.atkCd=0; fp2.wc=0; fp2.rx=0; fp2.ry=0; fp2.wanderT=0; fp2.targetMob=null;
-      const spot=findNearestWalkable(MAP, 2+Math.floor(Math.random()*(MAPW-4)), 2+Math.floor(Math.random()*(MAPH-4)));
+      const spot=curMap.world?randMobTile():findNearestWalkable(MAP, 2+Math.floor(Math.random()*(MAPW-4)), 2+Math.floor(Math.random()*(MAPH-4)));
       fp2.x=spot.x*TS; fp2.y=spot.y*TS; }
     else { const list=(typeof curNpcs==='function')?curNpcs():[]; const shopSpots=list.filter(n=>n.shop && SHOPS[n.shop] && SHOPS[n.shop].length);
       if(!shopSpots.length) return;
@@ -6376,31 +6639,39 @@ function tbNoise(x,y,s){ const ix=Math.floor(x), iy=Math.floor(y), fx=x-ix, fy=y
   return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v; }
 function tbTexData(img){ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight;
   const x=c.getContext('2d'); x.drawImage(img,0,0); return x.getImageData(0,0,c.width,c.height); }
-function tbMapKey(){ let h=0; for(let y=0;y<MAPH;y++){ const r=MAP[y]; for(let x=0;x<MAPW;x++) h=(Math.imul(h,31)+r[x]+1)|0; } return curMapId+'|'+MAPW+'x'+MAPH+'|'+h; }
+function tbMapKey(){ let h=0; for(let y=0;y<MAPH;y++){ const r=MAP[y]; for(let x=0;x<MAPW;x++) h=(Math.imul(h,31)+r[x]+1)|0; } return ((curMap&&curMap.id)||curMapId)+'|'+MAPW+'x'+MAPH+'|'+h; }
 const TB_ROW=[0,1,2,3,3], TB_SALT=[11,12,13,14,14];             // 地形類別→圖集列(草/沙/泥/(路不用)/水)與隨機鹽值，跟drawIsoFloor原本一致
-function tbBake(){
-  const W=MAPW, H=MAPH, bw=(W+H)*HW+HW*2, bh=(W+H)*HH+HH*2+6, offX=H*HW+HW, offY=HH+3;
-  const cvb=document.createElement('canvas'); cvb.width=bw; cvb.height=bh;
-  const bx=cvb.getContext('2d'); bx.imageSmoothingEnabled=false;
-  const cls=new Int8Array(W*H), floors=new Uint8Array(W*H), dyn=[];
-  const mainCtx=ctx; ctx=bx;
-  try{
-    for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){
-      const f=tbFloorOf(MAP[ty][tx]); floors[ty*W+tx]=f; cls[ty*W+tx]=tbClassOf(f);
-      drawIsoFloor(f,(tx-ty)*HW+offX,(tx+ty+1)*HH+offY,tx,ty);
-      if(TB_DYN.has(f)) dyn.push({tx,ty,f});
-    }
-  } finally { ctx=mainCtx; }
-  // 找出交界格(八鄰域內有不同地形)
-  const isB=new Uint8Array(W*H);
+/* 分塊烘焙：大地圖整張烘焙會超過手機畫布上限，所以切成 16x16 格的小塊，只烘焙看得到的區塊，用過的區塊留在快取裡(超過上限就丟最久沒用的) */
+const TB_CHUNK=16, TB_MAX_CHUNKS=40;
+let _tbT=null, _tbTex=null, _tbCheckAt=0;
+function tbPrepare(){
+  const W=MAPW, H=MAPH, cls=new Int8Array(W*H), floors=new Uint8Array(W*H), dyn=[];
+  for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){ const f=tbFloorOf(MAP[ty][tx]); floors[ty*W+tx]=f; cls[ty*W+tx]=tbClassOf(f); if(TB_DYN.has(f)) dyn.push({tx,ty,f}); }
+  const isB=new Uint8Array(W*H);                                  // 交界格(八鄰域內有不同地形)
   for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){ const c=cls[ty*W+tx]; if(c<0) continue;
     for(let dy=-1;dy<=1&&!isB[ty*W+tx];dy++)for(let dx=-1;dx<=1;dx++){ const nx=tx+dx, ny=ty+dy; if(nx<0||ny<0||nx>=W||ny>=H) continue;
       const nc=cls[ny*W+nx]; if(nc>=0&&nc!==c){ isB[ty*W+tx]=1; break; } } }
-  const gimg=tbTexData(GROUND_TEX), rimg=tbTexData(ROAD_TEX);   // 若圖片被判定跨域，這裡會丟例外→外層退回舊畫法
+  if(!_tbTex) _tbTex={ g:tbTexData(GROUND_TEX), r:tbTexData(ROAD_TEX) };   // 若圖片被判定跨域，這裡會丟例外→外層退回舊畫法
+  return {key:tbMapKey(), mapRef:MAP, W:W, H:H, cls:cls, floors:floors, isB:isB, dyn:dyn, chunks:new Map()};
+}
+function tbBakeChunk(T,ccx,ccy){
+  const W=T.W, H=T.H, cls=T.cls, floors=T.floors, isB=T.isB;
+  const tx0=ccx*TB_CHUNK, ty0=ccy*TB_CHUNK, tx1=Math.min(W,tx0+TB_CHUNK), ty1=Math.min(H,ty0+TB_CHUNK);
+  const xmin=(tx0-(ty1-1))*HW-HW-2, xmax=((tx1-1)-ty0)*HW+HW+2, ymin=(tx0+ty0)*HH-2, ymax=((tx1-1)+(ty1-1)+2)*HH+2;
+  const bw=xmax-xmin, bh=ymax-ymin, offX=-xmin, offY=-ymin;
+  const cvb=document.createElement('canvas'); cvb.width=bw; cvb.height=bh;
+  const bx=cvb.getContext('2d'); bx.imageSmoothingEnabled=false;
+  const mainCtx=ctx; ctx=bx;
+  try{
+    for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++) drawIsoFloor(floors[ty*W+tx],(tx-ty)*HW+offX,(tx+ty+1)*HH+offY,tx,ty);
+  } finally { ctx=mainCtx; }
+  const gimg=_tbTex.g, rimg=_tbTex.r;
+  let any=false; for(let ty=ty0;ty<ty1&&!any;ty++)for(let tx=tx0;tx<tx1;tx++){ if(isB[ty*W+tx]){ any=true; break; } }
+  if(any){
   const ID=bx.getImageData(0,0,bw,bh), D=ID.data;
   const BIAS=[0.030,0.010,0.015,0,0];                             // 草地稍微往外侵蝕泥地/沙地/道路邊緣；水沙之間對稱
-  const A1=0.30, A2=0.10, votes=[0,0,0,0,0], vcol=[0,0,0,0,0];
-  for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){
+  const A1=0.30, A2=0.10, votes=[0,0,0,0,0];
+  for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++){
     if(!isB[ty*W+tx]) continue;
     const home=cls[ty*W+tx], cx=(tx-ty)*HW+offX, cy=(tx+ty+1)*HH+offY;
     const vc=[-1,-1,-1,-1,-1];                                    // 這一格各類地形的圖集欄位(每格每類只算一次)
@@ -6429,20 +6700,43 @@ function tbBake(){
     }
   }
   bx.putImageData(ID,0,0);
-  return {key:tbMapKey(), canvas:cvb, offX, offY, dyn, bw, bh};
+  }
+  return {canvas:cvb, xmin:xmin, ymin:ymin, bw:bw, bh:bh, used:0};
 }
+let _tbFrame=0;
 function tbDraw(){
   if(_tbFailed || !curMap || curMap.dungeon) return false;
   if(!(GROUND_TEX.complete&&GROUND_TEX.naturalWidth&&ROAD_TEX.complete&&ROAD_TEX.naturalWidth)) return false;
-  const key=tbMapKey();
-  if(!_tbCache || _tbCache.key!==key){
-    try{ _tbCache=tbBake(); }
-    catch(e){ _tbFailed=true; _tbCache=null; console.warn('[地形柔化] 烘焙失敗，退回舊畫法：',e); return false; }
+  _tbFrame++;
+  const nowT=performance.now();
+  if(!_tbT || _tbT.mapRef!==MAP || nowT>_tbCheckAt){                // 換圖立刻檢查；同一張圖(例如魔法陣出現)每0.8秒檢查一次有沒有被改動
+    _tbCheckAt=nowT+800;
+    try{
+      if(!_tbT || _tbT.mapRef!==MAP || _tbT.key!==tbMapKey()) _tbT=tbPrepare();
+    }catch(e){ _tbFailed=true; _tbT=null; console.warn('[地形柔化] 烘焙失敗，退回舊畫法：',e); return false; }
   }
-  const c=_tbCache, ox=Math.round(originX-c.offX), oy=Math.round(originY-c.offY);
-  const sx0=Math.max(0,-ox), sy0=Math.max(0,-oy), sx1=Math.min(c.bw,VW-ox), sy1=Math.min(c.bh,VH-oy);
-  if(sx1>sx0&&sy1>sy0) ctx.drawImage(c.canvas,sx0,sy0,sx1-sx0,sy1-sy0,ox+sx0,oy+sy0,sx1-sx0,sy1-sy0);
-  c.dyn.forEach(function(d){ const s=tileCenter(d.tx,d.ty); if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) return; drawIsoFloor(d.f,s.x,s.y,d.tx,d.ty); });
+  const T=_tbT, W=T.W, H=T.H;
+  const ncx=Math.ceil(W/TB_CHUNK), ncy=Math.ceil(H/TB_CHUNK);
+  let budget=2;                                                      // 每影格最多烘焙2個新區塊，其餘暫時用舊畫法畫，避免一次卡頓
+  const fb=[];
+  for(let ccy=0;ccy<ncy;ccy++)for(let ccx=0;ccx<ncx;ccx++){
+    const tx0=ccx*TB_CHUNK, ty0=ccy*TB_CHUNK, tx1=Math.min(W,tx0+TB_CHUNK), ty1=Math.min(H,ty0+TB_CHUNK);
+    const sx0=(tx0-(ty1-1))*HW-HW-2+originX, sx1=((tx1-1)-ty0)*HW+HW+2+originX, sy0=(tx0+ty0)*HH-2+originY, sy1=((tx1-1)+(ty1-1)+2)*HH+2+originY;
+    if(sx1<0||sx0>VW||sy1<0||sy0>VH) continue;                        // 不在畫面內
+    const key=ccy*4096+ccx; let ch=T.chunks.get(key);
+    if(!ch){
+      if(budget>0){ budget--;
+        try{ ch=tbBakeChunk(T,ccx,ccy); }catch(e){ _tbFailed=true; _tbT=null; console.warn('[地形柔化] 烘焙失敗，退回舊畫法：',e); return false; }
+        T.chunks.set(key,ch);
+        if(T.chunks.size>TB_MAX_CHUNKS){ let oldK=null, oldU=Infinity; T.chunks.forEach(function(v,k){ if(v.used<oldU && k!==key){ oldU=v.used; oldK=k; } }); if(oldK!==null) T.chunks.delete(oldK); }
+      } else { fb.push([tx0,ty0,tx1,ty1]); continue; }
+    }
+    ch.used=_tbFrame;
+    const ox=Math.round(originX+ch.xmin), oy=Math.round(originY+ch.ymin);
+    ctx.drawImage(ch.canvas,ox,oy);
+  }
+  fb.forEach(function(r){ for(let ty=r[1];ty<r[3];ty++)for(let tx=r[0];tx<r[2];tx++){ const s=tileCenter(tx,ty); if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) continue; drawIsoFloor(T.floors[ty*W+tx],s.x,s.y,tx,ty); } });
+  T.dyn.forEach(function(d){ const s=tileCenter(d.tx,d.ty); if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) return; drawIsoFloor(d.f,s.x,s.y,d.tx,d.ty); });
   return true;
 }
 
@@ -8673,6 +8967,19 @@ function drawNight(){
     ctx.fillStyle=w; ctx.fillRect(0,0,VW,VH); }
 }
 function drawMiniMap(){ const c=document.getElementById('mmcv'), x=c.getContext('2d');
+  if(curMap && curMap.world){                                       // 大地圖：只畫玩家周圍 80x60 格，隨著玩家移動
+    const VWT=80, VHT=60, sx=c.width/VWT, sy=c.height/VHT;
+    const gx0=Math.floor((player.x+16)/TS-VWT/2), gy0=Math.floor((player.y+16)/TS-VHT/2);
+    x.fillStyle='#10200c'; x.fillRect(0,0,c.width,c.height);
+    for(let j=0;j<VHT;j++){ const y=gy0+j; if(y<0||y>=MAPH) continue; const row=MAP[y];
+      for(let i=0;i<VWT;i++){ const gx=gx0+i; if(gx<0||gx>=MAPW) continue; const t=row[gx];
+        x.fillStyle = t===T_WATER?'#3a7ac0': (t===T_TREE||t===T_BIGTREE)?'#2a6a2a': (t===T_ROOF||t===T_WALL||t===T_HOUSE)?'#a0402a':
+          t===T_BOSSPORTAL?'#ff3a6a': t===T_STAIRS?'#c8a0ff': t===T_TOWNWALL?'#8a5a2a': t===T_GATE?'#b83a24': t===T_PATH?'#a89878': t===T_DIRT?'#b89060': t===T_SAND?'#dcc48c':'#4a8a30';
+        x.fillRect(i*sx,j*sy,Math.ceil(sx),Math.ceil(sy)); } }
+    mobs.forEach(m=>{ const i=m.x/TS-gx0, j=m.y/TS-gy0; if(i<0||j<0||i>=VWT||j>=VHT) return; x.fillStyle='#e04040'; x.fillRect(i*sx-1,j*sy-1,3,3); });
+    curNpcs().forEach(n=>{ const i=n.x/TS-gx0, j=n.y/TS-gy0; if(i<0||j<0||i>=VWT||j>=VHT) return; x.fillStyle='#e0e040'; x.fillRect(i*sx-1,j*sy-1,3,3); });
+    x.fillStyle='#ff2020'; x.beginPath(); x.arc((player.x/TS-gx0)*sx+sx/2, (player.y/TS-gy0)*sy+sy/2, 3, 0, Math.PI*2); x.fill();
+    x.strokeStyle='#fff'; x.lineWidth=0.6; x.stroke(); return; }
   const sx=c.width/MAPW, sy=c.height/MAPH;
   for(let y=0;y<MAPH;y++)for(let gx=0;gx<MAPW;gx++){ const t=MAP[y][gx];
     x.fillStyle = t===T_WATER?'#3a7ac0': t===T_TREE?'#2a6a2a': (t===T_ROOF||t===T_WALL)?'#a0402a':
@@ -9739,7 +10046,7 @@ function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; 
   el.innerHTML=h; }
 function snapshot(){ return { name:S.name,cls:S.cls,gender:S.gender,acDexBase:S.acDexBase,align:S.align,lv:S.lv,exp:S.exp,
   str:S.str,dex:S.dex,con:S.con,int:S.int,wis:S.wis,cha:S.cha,
-  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),px:player.x,py:player.y,ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,elfAttr:S.elfAttr||null,ketaBossKills:S.ketaBossKills||0,baphoBossKills:S.baphoBossKills||0,pets:(typeof pets!=='undefined'?pets.map(function(p){return {type:p.type,name:p.name,lv:p.lv,exp:p.exp,hp:p.hp,maxhp:p.maxhp,str:p.str,con:p.con,dex:p.dex,align:p.align};}):[]),petWarehouse:(typeof petWarehouse!=='undefined'?petWarehouse.slice():[]),pyxMs:S.pyxMs||0,pyxFeatherMs:S.pyxFeatherMs||0,arenaBets:(typeof arenaBets!=='undefined'?arenaBets.slice():[]),arenaBetPid:(typeof arenaBetPid!=='undefined'?arenaBetPid:null),
+  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),wv:1,px:player.x,py:player.y,ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,elfAttr:S.elfAttr||null,ketaBossKills:S.ketaBossKills||0,baphoBossKills:S.baphoBossKills||0,pets:(typeof pets!=='undefined'?pets.map(function(p){return {type:p.type,name:p.name,lv:p.lv,exp:p.exp,hp:p.hp,maxhp:p.maxhp,str:p.str,con:p.con,dex:p.dex,align:p.align};}):[]),petWarehouse:(typeof petWarehouse!=='undefined'?petWarehouse.slice():[]),pyxMs:S.pyxMs||0,pyxFeatherMs:S.pyxFeatherMs||0,arenaBets:(typeof arenaBets!=='undefined'?arenaBets.slice():[]),arenaBetPid:(typeof arenaBetPid!=='undefined'?arenaBetPid:null),
   equip:Object.assign({},S.equip),inv:Object.assign({},S.inv),invOrder:(S.invOrder||[]).slice(),warehouse:Object.assign({},S.warehouse),
   hotbar:hotbar.map(p=>p.slice()), spells:(S.spells||[]).map(s=>({name:s.name,desc:s.desc||'',icon:s.icon||'📖'})), ats:(S.ats?JSON.parse(JSON.stringify(S.ats)):null), atsProf:(S.atsProf?JSON.parse(JSON.stringify(S.atsProf)):null), trial50:(S.trial50||null), redKnight:!!S.redKnight, seen:Date.now(),
   buffs:(S.buffs?JSON.parse(JSON.stringify(S.buffs)):null),   // 魔法buff：連同絕對到期時間戳一起存，讀檔時依剩餘時間繼續倒數
@@ -10655,7 +10962,7 @@ function loadCharacter(data){
   deriveStats(); S.hp=((data.hp||0)>0)?data.hp:Math.max(1,Math.floor(S.maxhp*0.1)); S.mp=data.mp||S.maxmp; S.food=(data.food!=null?data.food:100); S.kills=data.kills||0; S.mapId=((data.hp||0)>0)?(data.mapId||'village'):'village'; S.ketaKilledAt=data.ketaKilledAt||0; S.baphoKilledAt=data.baphoKilledAt||0; S.elfAttr=data.elfAttr||null; S.ketaBossKills=data.ketaBossKills||0; S.baphoBossKills=data.baphoBossKills||0;
   // 精確座標還原：只有存檔當時所在的地圖跟這次真正要進入的地圖一致時才套用(避免因死亡被送回村莊、卻用了舊地圖的座標)，
   // 否則沿用該地圖原本的預設出生點；找不到座標(例如舊存檔沒有px/py欄位)也一樣走預設出生點。
-  _pendingSpawn=(data.mapId===S.mapId && data.px!=null && data.py!=null)?{x:data.px,y:data.py}:null;
+  _pendingSpawn=(data.mapId===S.mapId && data.px!=null && data.py!=null)?{x:data.px,y:data.py,world:(data.wv===1)}:null;   // wv=1：座標已是大地圖座標；舊存檔(沒有wv)的座標是各區域自己的，進圖時自動換算
   arenaBets=(data.arenaBets||[]).map(function(b){ return {racerId:b.racerId, tickets:b.tickets}; });
   arenaBetPid=(data.arenaBetPid!=null)?data.arenaBetPid:null;
   if(arenaBets.length && arenaBetPid!==arenaPeriodId()) arenaBetPid=arenaPeriodId();   // 讀檔時把注單接到目前這一場，避免因為關閉遊戲/改版而讓已買的票平白消失
