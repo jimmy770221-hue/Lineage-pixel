@@ -6637,7 +6637,7 @@ function killFakePlayer(fp){
     FAKE_PLAYERS.push(fp2);
   }, 30000);
 }
-function hurtPlayer(dmg){ const real=Math.max(1,dmg-Math.floor((10-S.ac)/3)-(S.dmgReduce||0)); S.hp=Math.max(0,S.hp-real); if(S.hp>0) player._hurtT0=Date.now();
+function hurtPlayer(dmg){ const real=Math.max(1,dmg-Math.floor((10-S.ac)/3)-(S.dmgReduce||0)); S.hp=Math.max(0,S.hp-real); if(S.hp>0 && Date.now()-(player._hurtT0||0)>700) player._hurtT0=Date.now();
   if(S.ats&&S.ats.on&&S.ats.hunt&&S.ats.hunt.on&&S.atsProf) S.atsProf.dmg+=real;
   refreshUI(); if(S.hp<=0) playerDown(); }
 /* 隊友受傷：套用被動技能(防禦系)簡化減傷，HP歸零時「被擊倒」，暫停戰鬥與移動，過一段時間自動起身(回滿血比例的一部分) */
@@ -7451,10 +7451,10 @@ function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=fal
 /* 依狀態挑出走路/攻擊的畫面：st={moving,atkT0}；回傳頭頂Y，沒有對應動畫圖回傳null讓呼叫端畫原本的靜態圖 */
 function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
   if(st.dieT0){ const im=animReady(DIE_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.min(3,Math.floor((now-st.dieT0)/DIE_MS))); }   // 死亡：播到第4格後停住
-  if(st.hurtT0 && now-st.hurtT0<HURT_MS*2){ const im=animReady(HURT_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.hurtT0)/HURT_MS)); }
-  if(st.castT0 && now-st.castT0<CAST_MS*8){ const im=animReady(CAST_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.castT0)/CAST_MS)); }
-  if(st.atkT0){ const k=Math.floor((now-st.atkT0)/ATK_MS); const im=animReady(ATK_IMG,art,gender);
+  if(st.atkT0){ const ms=st.atkMs||ATK_MS, k=Math.floor((now-st.atkT0)/ms); const im=animReady(ATK_IMG,art,gender);   // 攻擊優先於受傷，打怪被打也看得到揮劍
     if(im&&k<9) return drawAnimFrame(g,im,cx,fy,scale,dir,k); }
+  if(st.castT0 && now-st.castT0<CAST_MS*8){ const im=animReady(CAST_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.castT0)/CAST_MS)); }
+  if(st.hurtT0 && now-st.hurtT0<HURT_MS*2){ const im=animReady(HURT_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.hurtT0)/HURT_MS)); }
   if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%8); }
   return null; }
 const CREATE_PORTRAIT={"宗主":{male:"assets/portraits/royal_male.png",female:"assets/portraits/royal_female.png"},"武將":{male:"assets/portraits/knight_male.png",female:"assets/portraits/knight_female.png"},"獵戶":{male:"assets/portraits/elf_male.png",female:"assets/portraits/elf_female.png"},"修士":{male:"assets/portraits/mage_male.png",female:"assets/portraits/mage_female.png"}};
@@ -7541,9 +7541,10 @@ function drawPlayerSprite(gx,gy){
   if(_invis){ ctx.save(); ctx.globalAlpha=0.32; }
   /* 走路/攻擊動畫：位置有變動就算走路；atkFlash被設定(剛出手)就開始播攻擊 */
   const _now=Date.now(); if(player._lsx!==player.step){ player._lsx=player.step; player._mvT=_now; }
-  if(player.atkFlash>0 && !(player._atkT0 && _now-player._atkT0<500)) player._atkT0=_now;
+  const _am=Math.max(28,Math.min(ATK_MS,Math.floor((curWpn().cd/hasteMult())/9))); player._atkMs=_am;   // 出手越快，動畫越快，才跟得上
+  if(player.atkFlash>0 && !(player._atkT0 && _now-player._atkT0<_am*9)) player._atkT0=_now;
   const _fr=(DIR8_FRAME[player.dir8||'down']??0);
-  const _hs=drawHiState(ctx,art,S.gender,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<500)?player._atkT0:0, hurtT0:player._hurtT0||0, castT0:player._castT0||0, dieT0:(S.hp<=0)?(player._dieT0||0):0});
+  const _hs=drawHiState(ctx,art,S.gender,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<_am*9)?player._atkT0:0, atkMs:_am, hurtT0:player._hurtT0||0, castT0:player._castT0||0, dieT0:(S.hp<=0)?(player._dieT0||0):0});
   const _ry=(_hs!=null)?_hs:drawSheetFrame(ctx,img,gx,gy+bob,1.5,_fr);
   if(_invis) ctx.restore();
   return _ry; }
@@ -11194,7 +11195,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-15';
+const GAME_VER='v80.36-16';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
