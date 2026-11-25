@@ -7336,6 +7336,7 @@ function npcPortraitReady(name){ const im=NPC_PORTRAIT_IMG[name]; return (im&&im
 const NPC_PORTRAIT_SCALE={"瑞奇":1.15,"高特":2.9};  // 依各圖實際像素比例校正，讓顯示高度統一貼近玩家角色
 const MOB_SCALE={"潘朵拉":1.5,"吉倫":1.5,"妖魔商人":1.5,goblinG:2.2,"人形殭屍":1.5,"石頭高崙":2.5,"克特":2,"侏儒":1.5,"長老":1.5,"夏洛柏":2.5,"黑騎士":1.5,"骷髏":1.5,"飄浮之眼":1,"史萊姆":1,"地靈":1.5,"狼":1,"狼人":1.5,"牧羊犬":1,"杜賓犬":1,"野豬":1,"那翰":1.5,"娜魯帕":1.5,"精靈":1.5,"精靈女皇":1.5,"安特":1.5,"潘":1.5,"芮克妬":1.5,"布拉伯":1.5,"艾爾":1.5,"琳達":1.5,"艾利溫":1.5,"里迪":1.5,"骷髏弓箭手":1.5,"骷髏斧手":1.5,"骷髏槍兵":1.5,"史巴托":1.5,"巴風特":2,"食人妖精":0.85};
 const SPR_F=64, SPR_FOOT=56, SPR_CX=32, SPR_HEAD=16;
+const HI_SCALE=0.4;   // 128格高解析角色相對舊64格的縮放(1.5x舊角色→0.6x新角色，畫面上高度約72px)
 /* 腳底校正：程式原本假設每張sprite的腳底都畫在畫格的 y=56，但各張美術圖的實際內容底部不同，
    底部偏高的角色就會看起來浮在空中(例如潘朵拉差9px，放大後更明顯)。
    下面是用程式實際掃描每張圖8個方向後量出來的差值，繪製時據此把角色往下貼齊地面。*/
@@ -7357,10 +7358,13 @@ function dir8of(dx,dy){ if(!dx&&!dy)return null;
 }
 function sheetReady(art,gender){ const im=SHEET_IMG[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 function drawSheetFrame(g,img,cx,fy,scale,frame,type){ g.imageSmoothingEnabled=false;
-  const foot=SPR_FOOT-(type?footAdj(type):0);                    // 依該角色的實際腳底位置校正，讓腳確實踩在地上
-  const dl=Math.round(cx-SPR_CX*scale), dt=Math.round(fy-foot*scale);
-  g.drawImage(img,(frame||0)*SPR_F,0,SPR_F,SPR_F,dl,dt,SPR_F*scale,SPR_F*scale);
-  return Math.round(fy-foot*scale+SPR_HEAD*scale); }
+  // 武俠高解析角色圖(8方向各128x128，共1024x128)：格子大小、腳底、頭頂位置與舊的64格不同，縮放比例也要換算成同樣的畫面大小
+  const hi=(img.naturalHeight===128&&img.naturalWidth===1024);
+  const F=hi?128:SPR_F, FT=hi?124:SPR_FOOT, CX=hi?64:SPR_CX, HD=hi?4:SPR_HEAD, sc=hi?scale*HI_SCALE:scale;
+  const foot=FT-(type?footAdj(type):0);                    // 依該角色的實際腳底位置校正，讓腳確實踩在地上
+  const dl=Math.round(cx-CX*sc), dt=Math.round(fy-foot*sc);
+  g.drawImage(img,(frame||0)*F,0,F,F,dl,dt,F*sc,F*sc);
+  return Math.round(fy-foot*sc+HD*sc); }
 function drawPlayerSprite(gx,gy){
   if(S && S.transformInto && typeof mobSheetReady==='function'){
     try{
