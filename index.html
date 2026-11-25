@@ -7296,6 +7296,22 @@ function actorShadow(g,cx,fy,rx,ry){ g.fillStyle='rgba(0,0,0,.28)'; g.beginPath(
 const SHEETS={royal:{male:"assets/characters/royal_male.png",female:"assets/characters/royal_female.png"},knight:{male:"assets/characters/knight_male.png",female:"assets/characters/knight_female.png"},elf:{male:"assets/characters/elf_male.png",female:"assets/characters/elf_female.png"},mage:{male:"assets/characters/mage_male.png",female:"assets/characters/mage_female.png"}};
 const SHEET_IMG={};
 for(const c in SHEETS) for(const g in SHEETS[c]){ const im=new Image(); im.src=SHEETS[c][g]; SHEET_IMG[c+"_"+g]=im; }
+/* 武俠高解析角色的走路(8格)、攻擊(9格)動畫圖：每格192x192，8列依方向(南/東南/東/東北/北/西北/西/西南)；沒有這張圖的職業就維持原本靜態轉身 */
+const WALK_IMG={}, ATK_IMG={};
+for(const c in SHEETS) for(const g in SHEETS[c]){ const w=new Image(); w.onerror=()=>{ delete WALK_IMG[c+"_"+g]; }; w.src=SHEETS[c][g].replace('.png','_walk.png'); WALK_IMG[c+"_"+g]=w;
+  const a=new Image(); a.onerror=()=>{ delete ATK_IMG[c+"_"+g]; }; a.src=SHEETS[c][g].replace('.png','_attack.png'); ATK_IMG[c+"_"+g]=a; }
+const ANIM_C=192, ANIM_FOOT=156, ANIM_CX=96, ANIM_HEAD=36, WALK_MS=85, ATK_MS=55;
+function animReady(map,art,gender){ const im=map[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
+/* 畫一格動畫：frame=欄、dir=列；回傳頭頂Y(給名字/血條用) */
+function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=false; const sc=scale*HI_SCALE;
+  g.drawImage(img,frame*ANIM_C,dir*ANIM_C,ANIM_C,ANIM_C,Math.round(cx-ANIM_CX*sc),Math.round(fy-ANIM_FOOT*sc),ANIM_C*sc,ANIM_C*sc);
+  return Math.round(fy-ANIM_FOOT*sc+ANIM_HEAD*sc); }
+/* 依狀態挑出走路/攻擊的畫面：st={moving,atkT0}；回傳頭頂Y，沒有對應動畫圖回傳null讓呼叫端畫原本的靜態圖 */
+function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
+  if(st.atkT0){ const k=Math.floor((now-st.atkT0)/ATK_MS); const im=animReady(ATK_IMG,art,gender);
+    if(im&&k<9) return drawAnimFrame(g,im,cx,fy,scale,dir,k); }
+  if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%8); }
+  return null; }
 const CREATE_PORTRAIT={"王族":{male:"assets/portraits/royal_male.png",female:"assets/portraits/royal_female.png"},"劍客":{male:"assets/portraits/knight_male.png",female:"assets/portraits/knight_female.png"},"獵戶":{male:"assets/portraits/elf_male.png",female:"assets/portraits/elf_female.png"},"修仙":{male:"assets/portraits/mage_male.png",female:"assets/portraits/mage_female.png"}};
 const PARTY_HEAD={"王族_male":"assets/portraits/party_head_royal_male.png","王族_female":"assets/portraits/party_head_royal_female.png","劍客_male":"assets/portraits/party_head_knight_male.png","劍客_female":"assets/portraits/party_head_knight_female.png","獵戶_male":"assets/portraits/party_head_elf_male.png","獵戶_female":"assets/portraits/party_head_elf_female.png","修仙_male":"assets/portraits/party_head_mage_male.png","修仙_female":"assets/portraits/party_head_mage_female.png"};
 const CREATE_PORTRAIT_IMG={};
@@ -7378,7 +7394,12 @@ function drawPlayerSprite(gx,gy){
   actorShadow(ctx,gx,gy,15,5); const bob=Math.round(Math.sin(Date.now()/380));
   const _invis=!!(S.buffs&&S.buffs['隱身術']&&S.buffs['隱身術'].until>Date.now());
   if(_invis){ ctx.save(); ctx.globalAlpha=0.32; }
-  const _ry=drawSheetFrame(ctx,img,gx,gy+bob,1.5,(DIR8_FRAME[player.dir8||'down']??0));
+  /* 走路/攻擊動畫：位置有變動就算走路；atkFlash被設定(剛出手)就開始播攻擊 */
+  const _now=Date.now(); if(player._lsx!==player.step){ player._lsx=player.step; player._mvT=_now; }
+  if(player.atkFlash>0 && !(player._atkT0 && _now-player._atkT0<500)) player._atkT0=_now;
+  const _fr=(DIR8_FRAME[player.dir8||'down']??0);
+  const _hs=drawHiState(ctx,art,S.gender,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<500)?player._atkT0:0});
+  const _ry=(_hs!=null)?_hs:drawSheetFrame(ctx,img,gx,gy+bob,1.5,_fr);
   if(_invis) ctx.restore();
   return _ry; }
 function drawHumanoid(g,P,cx,fy,s,moving){
