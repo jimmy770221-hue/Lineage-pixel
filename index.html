@@ -1594,6 +1594,10 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   .loginBox .lbtn{padding:9px;background:linear-gradient(#7a5626,#4a3410);color:#f2d489;border:1px solid #a97e34;
     border-radius:4px;font-size:19px;font-weight:bold;cursor:pointer;font-family:inherit;letter-spacing:2px;}
   .loginBox .lbtn:hover{background:linear-gradient(#9a6e36,#5a4418);}
+  .updBox{margin-top:10px;padding-top:8px;border-top:1px solid #5a4a2a;text-align:center;font-size:15px;color:#9a8;}
+  #updMsg{margin-top:5px;min-height:20px;color:#e8c060;font-size:15px;}
+  #updMsg.new{color:#ff8a70;font-weight:bold;}
+  #updBtn.hasnew{background:linear-gradient(#a03a20,#6a2010);color:#fff;border-color:#e8805a;animation:sblink 1.2s infinite;}
   .loginBox .lbtn.exit{background:linear-gradient(#5a2418,#33140c);color:#e8b0a0;border-color:#8a4a30;}
 
   /* 選角 / 存檔 */
@@ -2150,6 +2154,11 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
         <button class="lbtn exit" onclick="quitGame()">退　出</button>
       </div>
       <div style="text-align:center;margin-top:6px"><button class="lbtn" style="font-size:16px;padding:4px 14px" onclick="openAdmin()">🛠️ 後台編輯器</button></div>
+      <div class="updBox">
+        <div id="updVer">目前版本：</div>
+        <button class="lbtn" id="updBtn" style="font-size:16px;padding:4px 14px" onclick="checkUpdate(true)">🔄 檢查更新</button>
+        <div id="updMsg"></div>
+      </div>
     </div>
   </div>
 
@@ -11040,6 +11049,40 @@ function drawSlotFigure(x,data){ x.clearRect(0,0,200,200);
   else drawActor(x, CLASS_ART[data.cls]||'knight', cx, base, 5, false);
 }
 function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
+
+/* ============ 更新系統（登入首頁） ============ */
+// 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
+const GAME_VER='v80.36-9';
+let _updNew=null;
+async function checkUpdate(manual){
+  const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
+  if(!msg) return;
+  // 已發現新版，再按一次就是「立即更新」
+  if(_updNew){ return applyUpdate(); }
+  if(manual){ msg.className=''; msg.textContent='檢查中…'; }
+  try{
+    const r=await fetch('index.html?_='+Date.now(),{cache:'no-store'});
+    const t=await r.text();
+    const m=t.match(/const GAME_VER='([^']+)'/);
+    if(!m){ if(manual) msg.textContent='無法判斷版本，請稍後再試。'; return; }
+    if(m[1]!==GAME_VER){
+      _updNew=m[1]; msg.className='new'; msg.textContent='發現新版本 '+m[1]+'！按下方按鈕立即更新（存檔不會消失）';
+      btn.classList.add('hasnew'); btn.textContent='⬇️ 立即更新';
+    } else if(manual){ msg.className=''; msg.textContent='✔ 已是最新版本'; }
+  }catch(e){ if(manual){ msg.className=''; msg.textContent='目前連不上網路，無法檢查更新。'; } }
+}
+async function applyUpdate(){
+  const msg=document.getElementById('updMsg'); msg.textContent='更新中，請稍候…';
+  try{
+    if('serviceWorker' in navigator){ const rs=await navigator.serviceWorker.getRegistrations(); for(const r of rs) await r.unregister(); }
+    if(window.caches){ const ks=await caches.keys(); for(const k of ks) await caches.delete(k); }
+  }catch(e){}
+  location.reload();   // 只清程式快取，角色存檔放在 localStorage，不受影響
+}
+(function(){
+  const v=document.getElementById('updVer'); if(v) v.textContent='目前版本：'+GAME_VER;
+  setTimeout(function(){ checkUpdate(false); },1500);   // 進首頁自動檢查一次，有新版會亮紅色提示
+})();
 
 /* ============ PWA 安裝支援 ============ */
 // 註冊 Service Worker：啟用「安裝到桌面/主畫面」能力，並提供離線快取(圖片載入過一次後，離線也能玩)
