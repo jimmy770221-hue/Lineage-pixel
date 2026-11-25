@@ -2,7 +2,7 @@
 // 讓遊戲可以「安裝到桌面/主畫面」成為獨立App，並提供離線快取(圖片/音效載入過一次後，
 // 離線或網路不穩時也能照常遊玩；index.html本身每次都優先抓最新版，確保更新後玩家能立刻拿到新內容)。
 
-const CACHE_VERSION = 'v80.36-2';           // 每次正式更新版本號時手動遞增，瀏覽器才會清掉舊快取換新的
+const CACHE_VERSION = 'v80.36-3';           // 每次正式更新版本號時手動遞增，瀏覽器才會清掉舊快取換新的
 const SHELL_CACHE = 'lineage-pixel-shell-' + CACHE_VERSION;
 const ASSET_CACHE  = 'lineage-pixel-assets-' + CACHE_VERSION;
 

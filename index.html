@@ -1011,8 +1011,10 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   #splashw .mbtn.mb{background:#1f3f8a;}
   #splashw .mbtn:hover{filter:brightness(1.2);border-color:#fff2b0;}
   #splashw .mbtn:active{transform:translateY(1px);}
-  #vpadL{left:0;width:156px;}
-  #vpadR{right:0;width:168px;}
+  #vpadL{left:0;width:calc(156px + env(safe-area-inset-left,0px));padding-left:calc(4px + env(safe-area-inset-left,0px));}
+  #vpadR{right:0;width:calc(168px + env(safe-area-inset-right,0px));padding-right:calc(4px + env(safe-area-inset-right,0px));}
+  /* 動態島／瀏覽器邊緣的額外保險：左右至少再讓出一點 */
+  @media (orientation:landscape){ #vpadL{padding-left:max(calc(4px + env(safe-area-inset-left,0px)),14px);} #vpadR{padding-right:max(calc(4px + env(safe-area-inset-right,0px)),14px);} }
   .vbtn{background:rgba(42,47,60,.92);color:#dfe6f2;border:1px solid #6a7690;border-radius:8px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1;white-space:nowrap;}
   .vbtn:active{background:#3a6a2a;color:#fff;border-color:#8fd06a;}
   .vmenus{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%;}
