@@ -1600,6 +1600,47 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   #updBtn.hasnew{background:linear-gradient(#a03a20,#6a2010);color:#fff;border-color:#e8805a;animation:sblink 1.2s infinite;}
   .loginBox .lbtn.exit{background:linear-gradient(#5a2418,#33140c);color:#e8b0a0;border-color:#8a4a30;}
 
+
+  /* ===== 武俠風登入首頁（背景大圖可由 GPT 製作後放到 assets/ui/login_bg.jpg，沒有圖時自動用下方水墨山景） ===== */
+  #titlew{font-family:"標楷體","DFKai-SB","KaiTi","Noto Serif TC","PMingLiU",serif;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 18%,#3a4a52 0%,#1c262c 38%,#0a0f13 100%);}
+  #titlew .wxBg{position:absolute;inset:0;background:url(assets/ui/login_bg.jpg) center/cover no-repeat;pointer-events:none;}
+  #titlew .wxMoon{position:absolute;left:50%;top:17%;width:130px;height:130px;margin-left:-65px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 42% 40%,#fffbe8,#f0e6bd 60%,#d8c88e);box-shadow:0 0 60px 20px rgba(255,244,200,.35),0 0 140px 60px rgba(255,244,200,.12);}
+  #titlew .wxMtn{position:absolute;left:0;bottom:0;width:100%;height:62%;pointer-events:none;}
+  #titlew .wxMist{position:absolute;left:-10%;bottom:8%;width:120%;height:30%;pointer-events:none;
+    background:radial-gradient(ellipse at 30% 60%,rgba(200,215,220,.22),transparent 60%),radial-gradient(ellipse at 75% 50%,rgba(200,215,220,.18),transparent 60%);animation:wxMist 22s ease-in-out infinite alternate;}
+  @keyframes wxMist{from{transform:translateX(-3%)}to{transform:translateX(3%)}}
+  #titlew .wxPetal{position:absolute;top:-20px;width:9px;height:6px;border-radius:80% 0 80% 0;background:#f2b6bd;opacity:.8;pointer-events:none;animation:wxFall linear infinite;}
+  @keyframes wxFall{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(60px,50vh) rotate(180deg)}100%{transform:translate(-30px,105vh) rotate(380deg)}}
+  @media (prefers-reduced-motion:reduce){#titlew .wxPetal,#titlew .wxMist{animation:none}}
+
+  #titleLogo{top:22px;font-size:46px;letter-spacing:14px;color:#f4e6b8;font-weight:bold;z-index:3;
+    text-shadow:0 0 14px rgba(255,224,140,.45),0 3px 0 #5a1a10,0 6px 14px #000;}
+  #titleLogo small{display:block;margin-top:2px;font-size:16px;letter-spacing:10px;color:#e6d39a;font-weight:normal;text-shadow:0 1px 3px #000,0 2px 8px #000;}
+  #titleLogo .seal{display:inline-block;vertical-align:middle;margin-left:18px;width:42px;height:42px;line-height:42px;font-size:24px;letter-spacing:0;
+    background:#b3261e;color:#ffe9d0;border-radius:4px;transform:rotate(-6deg);box-shadow:0 0 0 2px #7a1812 inset,0 2px 8px #000;text-shadow:none;}
+
+  #titlew .noticeScroll,#titlew .loginBox{position:relative;z-index:2;margin-top:70px;}
+  #titlew .noticeScroll{background:linear-gradient(90deg,rgba(120,90,40,.18),transparent 8%,transparent 92%,rgba(120,90,40,.18)),linear-gradient(#f3e8c9,#e6d5a8);
+    border:none;border-radius:2px;color:#2b2014;box-shadow:0 8px 24px #000,0 0 0 1px #9c7a3e;}
+  #titlew .noticeScroll::before,#titlew .noticeScroll::after{content:"";position:sticky;display:block;left:-14px;height:0;}
+  #titlew .noticeScroll h3{font-size:24px;color:#8f1d14;letter-spacing:8px;text-align:center;border-bottom:2px double #a8864a;}
+  #titlew .noticeVer{background:#9c2a1c;border-radius:2px;letter-spacing:2px;box-shadow:0 1px 0 #5a1a10;}
+  #titlew .loginBox{background:linear-gradient(rgba(24,30,34,.92),rgba(10,13,16,.95));border:2px solid #8f1d14;border-radius:3px;
+    box-shadow:inset 0 0 0 4px rgba(10,13,16,.9),inset 0 0 0 5px #b8964a,0 8px 28px #000;padding:24px 22px;}
+  #titlew .loginBox > div:first-child{font-size:28px !important;letter-spacing:12px;color:#f4e6b8 !important;text-shadow:0 0 10px rgba(255,224,140,.35);}
+  #titlew .loginBox .lrow label{color:#c9b27a;font-size:17px;}
+  #titlew .loginBox .lrow input{background:rgba(236,224,190,.08);border:0;border-bottom:1px solid #b8964a;border-radius:0;color:#f4e6b8;}
+  #titlew .loginBox .lrow input:focus{outline:none;background:rgba(236,224,190,.16);}
+  #titlew .loginBox .lbtn{background:linear-gradient(#b3261e,#7a1812);color:#ffe9d0;border:1px solid #d8a05a;border-radius:2px;letter-spacing:8px;
+    box-shadow:0 2px 0 #4a0e0a,0 0 0 1px rgba(0,0,0,.4) inset;}
+  #titlew .loginBox .lbtn:hover{background:linear-gradient(#d0382c,#8f1d14);}
+  #titlew .loginBox .lbtn.exit{background:linear-gradient(#3a444a,#1e2529);color:#c8d0d2;border-color:#78868c;}
+  #titlew .updBox{border-top:1px solid rgba(184,150,74,.5);color:#a89a76;}
+  #titlew #updBtn{letter-spacing:2px;background:linear-gradient(#3a444a,#1e2529);color:#e6dcc0;border-color:#78868c;}
+  #titlew #updBtn.hasnew{background:linear-gradient(#b3261e,#7a1812);color:#fff;border-color:#e8805a;}
+
   /* 選角 / 存檔 */
   #selectw{position:absolute;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;
     background:radial-gradient(circle at 50% 20%,#161310,#040302);color:#e8dcc0;padding:20px 6px;box-sizing:border-box;}
@@ -2027,7 +2068,18 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   <!-- 建立角色 -->
   <!-- 登入首頁 -->
   <div id="titlew">
-    <div id="titleLogo">天堂 · 像素版</div>
+    <div class="wxBg"></div>
+    <div class="wxMoon"></div>
+    <svg class="wxMtn" viewBox="0 0 1600 620" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <path d="M0 330 L120 250 L210 300 L330 190 L440 280 L560 220 L700 310 L820 200 L960 290 L1090 210 L1230 300 L1370 230 L1500 290 L1600 250 V620 H0Z" fill="#3a4d55" opacity=".7"/>
+      <path d="M0 420 L90 350 L200 400 L340 300 L470 395 L590 330 L730 420 L880 320 L1010 405 L1160 330 L1300 415 L1440 340 L1600 410 V620 H0Z" fill="#1d2a30" opacity=".8"/>
+      <path d="M0 520 L110 470 L230 520 L380 440 L520 515 L690 455 L850 525 L1010 460 L1170 520 L1330 465 L1480 520 L1600 480 V620 H0Z" fill="#0f1a1f"/>
+      <path d="M1180 560 L1230 380 L1255 470 L1275 330 L1310 480 L1340 400 L1390 560Z" fill="#0a1216"/>
+      <path d="M180 600 Q190 470 210 420 Q215 520 240 600Z" fill="#0a1216"/>
+    </svg>
+    <div class="wxMist"></div>
+    <div id="wxPetals"></div>
+    <div id="titleLogo">天堂 · 像素版<span class="seal">俠</span><small>快 意 江 湖</small></div>
     <div class="noticeScroll">
       <h3>📜 公告</h3>
       <div id="noticeBody"><div class="noticeVer">◆ 2026-08-28</div>
@@ -11050,9 +11102,15 @@ function drawSlotFigure(x,data){ x.clearRect(0,0,200,200);
 }
 function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 
+(function(){ // 登入首頁飄落花瓣（純裝飾）
+  const box=document.getElementById('wxPetals'); if(!box) return;
+  for(let i=0;i<16;i++){ const d=document.createElement('i'); d.className='wxPetal';
+    d.style.left=(Math.random()*100)+'%'; d.style.animationDuration=(9+Math.random()*9)+'s'; d.style.animationDelay=(-Math.random()*14)+'s';
+    d.style.transform='scale('+(0.7+Math.random()*0.8)+')'; box.appendChild(d); }
+})();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-9';
+const GAME_VER='v80.36-10';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
