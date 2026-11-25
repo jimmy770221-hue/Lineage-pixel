@@ -11050,11 +11050,11 @@ function toggleEndMenu(){ const el=document.getElementById('endmenu');
   else openEndMenu(false); }                                          // 否則→開啟
 function endCancel(){ document.getElementById('endmenu').classList.remove('on'); if(!endDeath) paused=false; navClear(); }
 function endRestart(){ document.body.classList.remove('ingame'); document.getElementById('endmenu').classList.remove('on');
-  if(curSlot>=0){ const snap=snapshot(); if(endDeath){ snap.mapId='village'; snap.hp=Math.max(1,Math.floor(S.maxhp*0.1)); } /* 重生：僅 10% */ SAVES[curSlot]=snap; persistSaves(); }
+  if(curSlot>=0){ const snap=snapshot(); if(endDeath){ snap.mapId='village'; snap.px=null; snap.py=null; snap.hp=Math.max(1,Math.floor(S.maxhp*0.1)); } /* 重生：回村莊(清掉死亡座標才會走村莊出生點)、僅 10% 血 */ SAVES[curSlot]=snap; persistSaves(); }
   paused=true; endDeath=false; curSlot=-1; selIndex=-1;
   document.getElementById('titlew').style.display='none';
   document.getElementById('selectw').classList.add('on'); selPage=0; renderSlots(); navBuild('select'); }
-function endExit(){ if(curSlot>=0){ const snap=snapshot(); if(endDeath) snap.mapId='village'; SAVES[curSlot]=snap; persistSaves(); } quitGame(); }
+function endExit(){ if(curSlot>=0){ const snap=snapshot(); if(endDeath){ snap.mapId='village'; snap.px=null; snap.py=null; } SAVES[curSlot]=snap; persistSaves(); } quitGame(); }
 function gotoSelect(){ document.getElementById('titlew').style.display='none';
   document.getElementById('selectw').classList.add('on'); selPage=0; selIndex=-1; renderSlots(); navBuild('select'); }
 function backToTitle(){ document.getElementById('selectw').classList.remove('on');
@@ -11138,7 +11138,7 @@ function loadCharacter(data){
   deriveStats(); S.hp=((data.hp||0)>0)?data.hp:Math.max(1,Math.floor(S.maxhp*0.1)); S.mp=data.mp||S.maxmp; S.food=(data.food!=null?data.food:100); S.kills=data.kills||0; S.mapId=((data.hp||0)>0)?(data.mapId||'village'):'village'; S.ketaKilledAt=data.ketaKilledAt||0; S.baphoKilledAt=data.baphoKilledAt||0; S.elfAttr=data.elfAttr||null; S.ketaBossKills=data.ketaBossKills||0; S.baphoBossKills=data.baphoBossKills||0;
   // 精確座標還原：只有存檔當時所在的地圖跟這次真正要進入的地圖一致時才套用(避免因死亡被送回村莊、卻用了舊地圖的座標)，
   // 否則沿用該地圖原本的預設出生點；找不到座標(例如舊存檔沒有px/py欄位)也一樣走預設出生點。
-  _pendingSpawn=(data.mapId===S.mapId && data.px!=null && data.py!=null)?{x:data.px,y:data.py,world:(data.wv===1)}:null;   // wv=1：座標已是大地圖座標；舊存檔(沒有wv)的座標是各區域自己的，進圖時自動換算
+  _pendingSpawn=(((data.hp||0)>0) && data.mapId===S.mapId && data.px!=null && data.py!=null)?{x:data.px,y:data.py,world:(data.wv===1)}:null;   // wv=1：座標已是大地圖座標；舊存檔(沒有wv)的座標是各區域自己的，進圖時自動換算
   arenaBets=(data.arenaBets||[]).map(function(b){ return {racerId:b.racerId, tickets:b.tickets}; });
   arenaBetPid=(data.arenaBetPid!=null)?data.arenaBetPid:null;
   if(arenaBets.length && arenaBetPid!==arenaPeriodId()) arenaBetPid=arenaPeriodId();   // 讀檔時把注單接到目前這一場，避免因為關閉遊戲/改版而讓已買的票平白消失
@@ -11197,7 +11197,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-17';
+const GAME_VER='v80.36-18';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
