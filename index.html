@@ -2253,7 +2253,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 </div>
 
 <script>
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const cv=document.getElementById('cv'); let ctx=cv.getContext('2d');   // 改成let：地形烘焙(tbBake)需要暫時把繪圖目標換成離屏畫布，畫完立刻換回來
 ctx.imageSmoothingEnabled=false;
 const VW=1024, VH=768;
 const NIGHT_ENABLED=false;   // ← 之後所有功能完成後改回 true 即可開啟夜晚
@@ -6355,6 +6355,95 @@ function talkNpcOpen(n){ talkNpc(n); }
 // 覆寫 openDialog 為直接印到聊天窗（避免暫停）
 openDialog=function(name,lines){ lines.forEach(l=>pushChat('💬 '+l,'sys')); };
 
+/* ============ 地形輪廓柔化（烘焙層）============
+   原本地面是一格一格的菱形磚，草地/泥地/沙地/水/道路的交界都是筆直的磚邊，看起來很方正。
+   這裡在進入地圖後，先把整張地面「烘焙」成一張大圖(只做一次)，烘焙時：
+   ① 先照原本畫法逐格鋪滿(紋理與舊版一致)；
+   ② 只在「相鄰格子地形不同」的交界處，用雜訊扭曲座標＋雙線性投票，重新決定每個像素屬於哪種地形，
+      讓邊界變成有機的彎曲輪廓、尖角變圓；
+   ③ 地圖外緣加上柔和的暗角淡出，不再是一刀切的直線。
+   碰撞、NPC座標、地圖資料完全沒動，純粹是視覺層；烘焙失敗(例如本機file://圖片被瀏覽器判定跨域無法讀像素)會自動退回舊的逐格繪製。*/
+const TB_FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS,T_SAND]);
+const TB_DYN=new Set([T_MAGICCIRCLE,T_ALTAR,T_STAIRS]);          // 會動(脈動發光)的地磚：烘焙後每影格仍要即時重畫
+let _tbCache=null, _tbFailed=false;
+function tbFloorOf(t){ return t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_STAIRUP ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (TB_FLOOR.has(t)?t:T_GRASS); }
+function tbClassOf(f){ return (f===T_GRASS||f===T_FLOWER)?0 : f===T_SAND?1 : (f===T_DIRT||f===T_DOORMAT)?2 : f===T_PATH?3 : f===T_WATER?4 : -1; }   // -1=特殊地磚(魔法陣/祭壇/地窖)，不參與柔化
+function tbHash(ix,iy,s){ let h=Math.imul(ix,374761393)^Math.imul(iy,668265263)^Math.imul(s,1274126177); h=Math.imul(h^(h>>>13),1274126177); h^=h>>>16; return (h>>>0)/4294967295; }
+function tbNoise(x,y,s){ const ix=Math.floor(x), iy=Math.floor(y), fx=x-ix, fy=y-iy, u=fx*fx*(3-2*fx), v=fy*fy*(3-2*fy);
+  const a=tbHash(ix,iy,s), b=tbHash(ix+1,iy,s), c=tbHash(ix,iy+1,s), d=tbHash(ix+1,iy+1,s);
+  return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v; }
+function tbTexData(img){ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight;
+  const x=c.getContext('2d'); x.drawImage(img,0,0); return x.getImageData(0,0,c.width,c.height); }
+function tbMapKey(){ let h=0; for(let y=0;y<MAPH;y++){ const r=MAP[y]; for(let x=0;x<MAPW;x++) h=(Math.imul(h,31)+r[x]+1)|0; } return curMapId+'|'+MAPW+'x'+MAPH+'|'+h; }
+const TB_ROW=[0,1,2,3,3], TB_SALT=[11,12,13,14,14];             // 地形類別→圖集列(草/沙/泥/(路不用)/水)與隨機鹽值，跟drawIsoFloor原本一致
+function tbBake(){
+  const W=MAPW, H=MAPH, bw=(W+H)*HW+HW*2, bh=(W+H)*HH+HH*2+6, offX=H*HW+HW, offY=HH+3;
+  const cvb=document.createElement('canvas'); cvb.width=bw; cvb.height=bh;
+  const bx=cvb.getContext('2d'); bx.imageSmoothingEnabled=false;
+  const cls=new Int8Array(W*H), floors=new Uint8Array(W*H), dyn=[];
+  const mainCtx=ctx; ctx=bx;
+  try{
+    for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){
+      const f=tbFloorOf(MAP[ty][tx]); floors[ty*W+tx]=f; cls[ty*W+tx]=tbClassOf(f);
+      drawIsoFloor(f,(tx-ty)*HW+offX,(tx+ty+1)*HH+offY,tx,ty);
+      if(TB_DYN.has(f)) dyn.push({tx,ty,f});
+    }
+  } finally { ctx=mainCtx; }
+  // 找出交界格(八鄰域內有不同地形)
+  const isB=new Uint8Array(W*H);
+  for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){ const c=cls[ty*W+tx]; if(c<0) continue;
+    for(let dy=-1;dy<=1&&!isB[ty*W+tx];dy++)for(let dx=-1;dx<=1;dx++){ const nx=tx+dx, ny=ty+dy; if(nx<0||ny<0||nx>=W||ny>=H) continue;
+      const nc=cls[ny*W+nx]; if(nc>=0&&nc!==c){ isB[ty*W+tx]=1; break; } } }
+  const gimg=tbTexData(GROUND_TEX), rimg=tbTexData(ROAD_TEX);   // 若圖片被判定跨域，這裡會丟例外→外層退回舊畫法
+  const ID=bx.getImageData(0,0,bw,bh), D=ID.data;
+  const BIAS=[0.030,0.010,0.015,0,0];                             // 草地稍微往外侵蝕泥地/沙地/道路邊緣；水沙之間對稱
+  const A1=0.30, A2=0.10, votes=[0,0,0,0,0], vcol=[0,0,0,0,0];
+  for(let ty=0;ty<H;ty++)for(let tx=0;tx<W;tx++){
+    if(!isB[ty*W+tx]) continue;
+    const home=cls[ty*W+tx], cx=(tx-ty)*HW+offX, cy=(tx+ty+1)*HH+offY;
+    const vc=[-1,-1,-1,-1,-1];                                    // 這一格各類地形的圖集欄位(每格每類只算一次)
+    for(let py=cy-HH;py<cy+HH;py++)for(let px=cx-HW;px<cx+HW;px++){
+      const dx=px+0.5-cx, dy=py+0.5-cy;
+      if(Math.abs(dx)/HW+Math.abs(dy)/HH>1) continue;             // 只處理這格自己的菱形範圍，每個像素恰好被一格負責
+      const gx=tx+0.5+(dx/HW+dy/HH)*0.5, gy=ty+0.5+(dy/HH-dx/HW)*0.5;
+      const wx=gx+A1*(2*tbNoise(gx*0.85,gy*0.85,1)-1)+A2*(2*tbNoise(gx*2.6,gy*2.6,3)-1);
+      const wy=gy+A1*(2*tbNoise(gx*0.85+31.7,gy*0.85+17.3,2)-1)+A2*(2*tbNoise(gx*2.6+9.1,gy*2.6+4.4,4)-1);
+      const sx=wx-0.5, sy=wy-0.5, i0=Math.floor(sx), j0=Math.floor(sy), fx=sx-i0, fy=sy-j0;
+      votes[0]=votes[1]=votes[2]=votes[3]=votes[4]=0; let tot=0;
+      for(let k=0;k<4;k++){ const ii=i0+(k&1), jj=j0+(k>>1); const w=((k&1)?fx:1-fx)*((k>>1)?fy:1-fy);
+        const ci=Math.min(W-1,Math.max(0,ii)), cj=Math.min(H-1,Math.max(0,jj)); const c=cls[cj*W+ci];
+        if(c>=0){ votes[c]+=w; tot+=w; } }
+      if(tot<=0) continue;
+      let best=home, bv=-1; for(let c=0;c<5;c++){ const v=votes[c]+BIAS[c]*tot; if(v>bv){ bv=v; best=c; } }
+      if(best===home && floors[ty*W+tx]===T_FLOWER) continue;       // 花朵地磚保留原本畫好的花；其餘交界格全部用乾淨紋理重寫，順便蓋掉舊磚邊的反鋸齒細線
+      let r,g,b,a; const u=px-(cx-HW-2), v=py-(cy-HH-1);
+      if(best===3){ const sxp=Math.min(rimg.width-1,Math.floor((u+0.5)*rimg.width/(HW*2+4))), syp=Math.min(rimg.height-1,Math.floor((v+0.5)*rimg.height/(HH*2+2))), o=(syp*rimg.width+sxp)*4;
+        r=rimg.data[o]; g=rimg.data[o+1]; b=rimg.data[o+2]; a=rimg.data[o+3]; }
+      else { if(vc[best]<0) vc[best]=groundVariant(tx,ty,TB_SALT[best],best===0);
+        const sxp=vc[best]*33+Math.min(31,Math.floor((u+0.5)*32/(HW*2+4))), syp=TB_ROW[best]*33+Math.min(31,Math.floor((v+0.5)*32/(HH*2+2))), o=(syp*gimg.width+sxp)*4;
+        r=gimg.data[o]; g=gimg.data[o+1]; b=gimg.data[o+2]; a=gimg.data[o+3]; }
+      if(a<128) continue;
+      const po=(py*bw+px)*4; D[po]=r; D[po+1]=g; D[po+2]=b; D[po+3]=255;
+    }
+  }
+  bx.putImageData(ID,0,0);
+  return {key:tbMapKey(), canvas:cvb, offX, offY, dyn, bw, bh};
+}
+function tbDraw(){
+  if(_tbFailed || !curMap || curMap.dungeon) return false;
+  if(!(GROUND_TEX.complete&&GROUND_TEX.naturalWidth&&ROAD_TEX.complete&&ROAD_TEX.naturalWidth)) return false;
+  const key=tbMapKey();
+  if(!_tbCache || _tbCache.key!==key){
+    try{ _tbCache=tbBake(); }
+    catch(e){ _tbFailed=true; _tbCache=null; console.warn('[地形柔化] 烘焙失敗，退回舊畫法：',e); return false; }
+  }
+  const c=_tbCache, ox=Math.round(originX-c.offX), oy=Math.round(originY-c.offY);
+  const sx0=Math.max(0,-ox), sy0=Math.max(0,-oy), sx1=Math.min(c.bw,VW-ox), sy1=Math.min(c.bh,VH-oy);
+  if(sx1>sx0&&sy1>sy0) ctx.drawImage(c.canvas,sx0,sy0,sx1-sx0,sy1-sy0,ox+sx0,oy+sy0,sx1-sx0,sy1-sy0);
+  c.dyn.forEach(function(d){ const s=tileCenter(d.tx,d.ty); if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) return; drawIsoFloor(d.f,s.x,s.y,d.tx,d.ty); });
+  return true;
+}
+
 /* ============ 繪製 ============ */
 function render(){
   updateCam();
@@ -6362,7 +6451,7 @@ function render(){
 
   // 1) 地面層（依深度 tx+ty 由遠到近）
   const FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS,T_SAND]);
-  { const _dLo=Math.floor((-HW-4-originX)/HW)-1, _dHi=Math.ceil((VW+HW+4-originX)/HW)+1;   // 可視範圍：tx-ty
+  if(!tbDraw()){ const _dLo=Math.floor((-HW-4-originX)/HW)-1, _dHi=Math.ceil((VW+HW+4-originX)/HW)+1;   // 可視範圍：tx-ty
     const _sLo=Math.floor((-HH-4-originY)/HH)-2, _sHi=Math.ceil((VH+HH+4-originY)/HH)+1;   // 可視範圍：tx+ty
   for(let ty=0;ty<MAPH;ty++){ const _a=Math.max(0, ty+_dLo, _sLo-ty), _b=Math.min(MAPW-1, ty+_dHi, _sHi-ty);
   for(let tx=_a;tx<=_b;tx++){
