@@ -6637,7 +6637,7 @@ function killFakePlayer(fp){
     FAKE_PLAYERS.push(fp2);
   }, 30000);
 }
-function hurtPlayer(dmg){ const real=Math.max(1,dmg-Math.floor((10-S.ac)/3)-(S.dmgReduce||0)); S.hp=Math.max(0,S.hp-real);
+function hurtPlayer(dmg){ const real=Math.max(1,dmg-Math.floor((10-S.ac)/3)-(S.dmgReduce||0)); S.hp=Math.max(0,S.hp-real); if(S.hp>0) player._hurtT0=Date.now();
   if(S.ats&&S.ats.on&&S.ats.hunt&&S.ats.hunt.on&&S.atsProf) S.atsProf.dmg+=real;
   refreshUI(); if(S.hp<=0) playerDown(); }
 /* 隊友受傷：套用被動技能(防禦系)簡化減傷，HP歸零時「被擊倒」，暫停戰鬥與移動，過一段時間自動起身(回滿血比例的一部分) */
@@ -6673,7 +6673,7 @@ function mobAttack(m,t,partyTarget,petTarget){ m.cd=900/((t.atkSpd||1)*(m._atkSp
     if(m.mp<=0) warnMsg(t.name+' 的魔力耗盡，改為近戰！');
   } else if(t.ranged){ if(!mobHitRoll(t)) return; mobFx.push({kind:'arrow', x0:m.x+16, y0:m.y+16, x:tx, y:ty, life:150}); applyDmg(Math.round(mobDmgRoll(t)*_dm)); if(!partyTarget) mobStRoll(t); }
   else { if(!mobHitRoll(t)) return; applyDmg(Math.round(mobDmgRoll(t)*_dm)); if(!partyTarget) mobStRoll(t); } }
-function playerDown(){ warnMsg('你被擊倒了……');
+function playerDown(){ warnMsg('你被擊倒了……'); player._dieT0=Date.now();
   S.hp=0; S.exp=Math.max(0,S.exp-Math.floor(expNeed()*0.1));   // 死亡：血維持 0，直到重生
   if(curMapId==='keta_room'){ S.ketaBossKills=0; sysMsg('挑戰克特失敗！魔法陣已經關閉，必須再累積100隻怪物才能重新挑戰。'); }
   if(curMapId==='bapho_room'){ S.baphoBossKills=0; sysMsg('挑戰巴風特失敗！魔法陣已經關閉，必須再累積100隻怪物才能重新挑戰。'); }
@@ -7439,6 +7439,9 @@ for(const c in SHEETS) for(const g in SHEETS[c]){ const im=new Image(); im.src=S
 const WALK_IMG={}, ATK_IMG={};
 for(const c in SHEETS) for(const g in SHEETS[c]){ const w=new Image(); w.onerror=()=>{ delete WALK_IMG[c+"_"+g]; }; w.src=SHEETS[c][g].replace('.png','_walk.png'); WALK_IMG[c+"_"+g]=w;
   const a=new Image(); a.onerror=()=>{ delete ATK_IMG[c+"_"+g]; }; a.src=SHEETS[c][g].replace('.png','_attack.png'); ATK_IMG[c+"_"+g]=a; }
+const HURT_IMG={}, DIE_IMG={}, CAST_IMG={};   // 受傷(2格)、死亡(4格)、施法(8格)；沒有圖的職業照舊
+for(const c in SHEETS) for(const g in SHEETS[c]){ [['_hurt',HURT_IMG],['_die',DIE_IMG],['_cast',CAST_IMG]].forEach(function(t){ const k=c+"_"+g, im=new Image(); im.onerror=function(){ delete t[1][k]; }; im.src=SHEETS[c][g].replace('.png',t[0]+'.png'); t[1][k]=im; }); }
+const HURT_MS=90, DIE_MS=130, CAST_MS=70;
 const ANIM_C=192, ANIM_FOOT=156, ANIM_CX=96, ANIM_HEAD=36, WALK_MS=85, ATK_MS=55;
 function animReady(map,art,gender){ const im=map[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 /* 畫一格動畫：frame=欄、dir=列；回傳頭頂Y(給名字/血條用) */
@@ -7447,6 +7450,9 @@ function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=fal
   return Math.round(fy-ANIM_FOOT*sc+ANIM_HEAD*sc); }
 /* 依狀態挑出走路/攻擊的畫面：st={moving,atkT0}；回傳頭頂Y，沒有對應動畫圖回傳null讓呼叫端畫原本的靜態圖 */
 function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
+  if(st.dieT0){ const im=animReady(DIE_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.min(3,Math.floor((now-st.dieT0)/DIE_MS))); }   // 死亡：播到第4格後停住
+  if(st.hurtT0 && now-st.hurtT0<HURT_MS*2){ const im=animReady(HURT_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.hurtT0)/HURT_MS)); }
+  if(st.castT0 && now-st.castT0<CAST_MS*8){ const im=animReady(CAST_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.castT0)/CAST_MS)); }
   if(st.atkT0){ const k=Math.floor((now-st.atkT0)/ATK_MS); const im=animReady(ATK_IMG,art,gender);
     if(im&&k<9) return drawAnimFrame(g,im,cx,fy,scale,dir,k); }
   if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%8); }
@@ -7537,7 +7543,7 @@ function drawPlayerSprite(gx,gy){
   const _now=Date.now(); if(player._lsx!==player.step){ player._lsx=player.step; player._mvT=_now; }
   if(player.atkFlash>0 && !(player._atkT0 && _now-player._atkT0<500)) player._atkT0=_now;
   const _fr=(DIR8_FRAME[player.dir8||'down']??0);
-  const _hs=drawHiState(ctx,art,S.gender,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<500)?player._atkT0:0});
+  const _hs=drawHiState(ctx,art,S.gender,gx,gy,1.5,_fr,{moving:(_now-(player._mvT||0))<160, atkT0:(player._atkT0&&_now-player._atkT0<500)?player._atkT0:0, hurtT0:player._hurtT0||0, castT0:player._castT0||0, dieT0:(S.hp<=0)?(player._dieT0||0):0});
   const _ry=(_hs!=null)?_hs:drawSheetFrame(ctx,img,gx,gy+bob,1.5,_fr);
   if(_invis) ctx.restore();
   return _ry; }
@@ -7864,6 +7870,7 @@ function drawPartyBuffAuras(p,gx,gy,topY){
     var vfx=(typeof BUFF_VFX!=='undefined')?BUFF_VFX[bn]:null; if(!vfx) continue;
     renderAuraStyle(vfx,gx,gy,t); } }
 function drawPlayerIso(){ const g=groundScreen(player.x+player.w/2, player.y+player.h);
+  if(S.hp<=0 && player._dieT0 && animReady(DIE_IMG,CLASS_ART[S.cls]||'royal',S.gender)){ drawPlayerSprite(g.x,g.y); nameTag((S.name||'冒險者')+' †', g.x, g.y-30, '#c8c8d0'); return; }
   if(S.hp<=0){ drawGraveIso(g.x,g.y); nameTag((S.name||'冒險者')+' †', g.x, g.y-42, '#c8c8d0'); return; }   // 死亡：顯示墳墓
   const moving=!!(moveTarget||attackTarget)||keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'];
   let topY=drawPlayerSprite(g.x,g.y);
@@ -8548,7 +8555,7 @@ function castSpell(sp){ if(!sp) return;
   if(!hasSpell(name)){ sysMsg('尚未學會「'+name+'」'); return; }
   var fx=(typeof SPELL_FX!=='undefined')?SPELL_FX[name]:null; var mp=fx?(fx.mp||0):0;
   if((S.mp||0)<mp){ sysMsg('MP 不足（需 '+mp+'）'); return; }
-  var ty=fx?fx.type:'buff';
+  var ty=fx?fx.type:'buff'; player._castT0=Date.now();   // 施法動畫
   function roll(dice){ var v=0; if(dice){ for(var r=0;r<dice[0];r++) v+=1+Math.floor(Math.random()*dice[1]); } return v; }
   if(name==='傳送術'){ S.mp-=mp;
     if(curMap && curMap.dungeon){                                 // 地監內：只在同一層隨機找位置移動，不會傳送到野外去
@@ -11187,7 +11194,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-14';
+const GAME_VER='v80.36-15';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
