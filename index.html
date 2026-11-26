@@ -7113,7 +7113,7 @@ function actorShadow(g,cx,fy,rx,ry){ g.fillStyle='rgba(0,0,0,.28)'; g.beginPath(
 /* ====== 玩家 8 方向立繪（職業×性別，外部檔案 assets/characters/）====== */
 const SHEETS={royal:{male:"assets/characters/royal_male.png",female:"assets/characters/royal_female.png"},knight:{male:"assets/characters/knight_male.png",female:"assets/characters/knight_female.png"},elf:{male:"assets/characters/elf_male.png",female:"assets/characters/elf_female.png"},mage:{male:"assets/characters/mage_male.png",female:"assets/characters/mage_female.png"}};
 const SHEET_IMG={};
-for(const c in SHEETS) for(const g in SHEETS[c]){ const im=new Image(); im.src=SHEETS[c][g]; SHEET_IMG[c+"_"+g]=im; }
+for(const c in SHEETS) for(const g in SHEETS[c]){ const im=new Image(); im.onload=function(){ if(im.naturalWidth===512&&im.naturalHeight===64) im._c64=1; }; im.src=SHEETS[c][g]; SHEET_IMG[c+"_"+g]=im; }   // 64格新角色(512x64)加旗標，跟64格怪物圖分開處理
 /* 武俠高解析角色的走路(8格)、攻擊(9格)動畫圖：每格192x192，8列依方向(南/東南/東/東北/北/西北/西/西南)；沒有這張圖的職業就維持原本靜態轉身 */
 const WALK_IMG={}, ATK_IMG={};
 for(const c in SHEETS) for(const g in SHEETS[c]){ const w=new Image(); w.onerror=()=>{ delete WALK_IMG[c+"_"+g]; }; w.src=SHEETS[c][g].replace('.png','_walk.png'); WALK_IMG[c+"_"+g]=w;
@@ -7126,9 +7126,11 @@ const HURT_MS=90, DIE_MS=130, CAST_MS=70;
 const ANIM_C=192, ANIM_FOOT=156, ANIM_CX=96, ANIM_HEAD=36, WALK_MS=85, ATK_MS=55;
 function animReady(map,art,gender){ let im=map[art+"_"+(gender||'male')]; if((!im||!im.complete||!im.naturalWidth)&&/_(bare|bow|blade|spear)$/.test(gender||'')) im=map[art+"_"+gender.replace(/_(bare|bow|blade|spear)$/,'')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 /* 畫一格動畫：frame=欄、dir=列；回傳頭頂Y(給名字/血條用) */
-function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=false; const sc=scale*HI_SCALE;
-  g.drawImage(img,frame*ANIM_C,dir*ANIM_C,ANIM_C,ANIM_C,Math.round(cx-ANIM_CX*sc),Math.round(fy-ANIM_FOOT*sc),ANIM_C*sc,ANIM_C*sc);
-  return Math.round(fy-ANIM_FOOT*sc+ANIM_HEAD*sc); }
+function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=false;
+  const n64=(img.naturalWidth===384&&img.naturalHeight===512);   // 64格新走路圖：6格x8方向，每格64
+  const C=n64?64:ANIM_C, FT=n64?60:ANIM_FOOT, CXX=n64?32:ANIM_CX, HD=n64?3:ANIM_HEAD, sc=scale*(n64?HI64_SCALE:HI_SCALE);
+  g.drawImage(img,frame*C,dir*C,C,C,Math.round(cx-CXX*sc),Math.round(fy-FT*sc),C*sc,C*sc);
+  return Math.round(fy-FT*sc+HD*sc); }
 /* 依狀態挑出走路/攻擊的畫面：st={moving,atkT0}；回傳頭頂Y，沒有對應動畫圖回傳null讓呼叫端畫原本的靜態圖 */
 function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
   if(st.dieT0){ const im=animReady(DIE_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.min(3,Math.floor((now-st.dieT0)/DIE_MS))); }   // 死亡：播到第4格後停住
@@ -7136,7 +7138,7 @@ function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
     if(im&&k<9) return drawAnimFrame(g,im,cx,fy,scale,dir,k); }
   if(st.castT0 && now-st.castT0<CAST_MS*8){ const im=animReady(CAST_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.castT0)/CAST_MS)); }
   if(st.hurtT0 && now-st.hurtT0<HURT_MS*2){ const im=animReady(HURT_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.hurtT0)/HURT_MS)); }
-  if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%8); }
+  if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%(im.naturalWidth===384?6:8)); }
   return null; }
 const CREATE_PORTRAIT={"宗主":{male:"assets/portraits/royal_male.png",female:"assets/portraits/royal_female.png"},"劍修":{male:"assets/portraits/knight_male.png",female:"assets/portraits/knight_female.png"},"弓修":{male:"assets/portraits/elf_male.png",female:"assets/portraits/elf_female.png"},"法修":{male:"assets/portraits/mage_male.png",female:"assets/portraits/mage_female.png"}};
 const PARTY_HEAD={"宗主_male":"assets/portraits/party_head_royal_male.png","宗主_female":"assets/portraits/party_head_royal_female.png","劍修_male":"assets/portraits/party_head_knight_male.png","劍修_female":"assets/portraits/party_head_knight_female.png","弓修_male":"assets/portraits/party_head_elf_male.png","弓修_female":"assets/portraits/party_head_elf_female.png","法修_male":"assets/portraits/party_head_mage_male.png","法修_female":"assets/portraits/party_head_mage_female.png"};
@@ -7178,6 +7180,7 @@ function npcPortraitReady(name){ const im=NPC_PORTRAIT_IMG[name]; return (im&&im
 const NPC_PORTRAIT_SCALE={"瑞奇":1.15,"高特":2.9};  // 依各圖實際像素比例校正，讓顯示高度統一貼近玩家角色
 const MOB_SCALE={"潘朵拉":1.5,"吉倫":1.5,"妖魔商人":1.5,goblinG:2.2,"人形殭屍":1.5,"石頭高崙":2.5,"克特":2,"侏儒":1.5,"長老":1.5,"夏洛柏":2.5,"黑騎士":1.5,"骷髏":1.5,"飄浮之眼":1,"史萊姆":1,"地靈":1.5,"狼":1,"狼人":1.5,"牧羊犬":1,"杜賓犬":1,"野豬":1,"那翰":1.5,"娜魯帕":1.5,"精靈":1.5,"精靈女皇":1.5,"安特":1.5,"潘":1.5,"芮克妬":1.5,"布拉伯":1.5,"艾爾":1.5,"琳達":1.5,"艾利溫":1.5,"里迪":1.5,"骷髏弓箭手":1.5,"骷髏斧手":1.5,"骷髏槍兵":1.5,"史巴托":1.5,"巴風特":2,"食人妖精":0.85};
 const SPR_F=64, SPR_FOOT=56, SPR_CX=32, SPR_HEAD=16;
+const HI64_SCALE=0.95;   // 64格新角色(畫面約1.3倍像素)，跟房屋的像素密度對齊
 const HI_SCALE=0.4;   // 128格高解析角色相對舊64格的縮放(1.5x舊角色→0.6x新角色，畫面上高度約72px)
 /* 腳底校正：程式原本假設每張sprite的腳底都畫在畫格的 y=56，但各張美術圖的實際內容底部不同，
    底部偏高的角色就會看起來浮在空中(例如潘朵拉差9px，放大後更明顯)。
@@ -7205,7 +7208,8 @@ function sheetReady(art,gender){ const im=SHEET_IMG[art+"_"+(gender||'male')]; r
 function drawSheetFrame(g,img,cx,fy,scale,frame,type){ g.imageSmoothingEnabled=false;
   // 武俠高解析角色圖(8方向各128x128，共1024x128)：格子大小、腳底、頭頂位置與舊的64格不同，縮放比例也要換算成同樣的畫面大小
   const hi=(img.naturalHeight===128&&img.naturalWidth===1024);
-  const F=hi?128:SPR_F, FT=hi?124:SPR_FOOT, CX=hi?64:SPR_CX, HD=hi?4:SPR_HEAD, sc=hi?scale*HI_SCALE:scale;
+  const c64=!!img._c64;   // 64格新角色：腳底在y=60、中心x=32
+  const F=hi?128:SPR_F, FT=c64?60:(hi?124:SPR_FOOT), CX=hi?64:SPR_CX, HD=c64?3:(hi?4:SPR_HEAD), sc=c64?scale*HI64_SCALE:(hi?scale*HI_SCALE:scale);
   const foot=FT-(type?footAdj(type):0);                    // 依該角色的實際腳底位置校正，讓腳確實踩在地上
   const dl=Math.round(cx-CX*sc), dt=Math.round(fy-foot*sc);
   g.drawImage(img,(frame||0)*F,0,F,F,dl,dt,F*sc,F*sc);
@@ -10879,7 +10883,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v86.4-0';
+const GAME_VER='v87.0-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
