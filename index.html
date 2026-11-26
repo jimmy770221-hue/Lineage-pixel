@@ -4446,7 +4446,8 @@ function spawnWorldMobs(){
       mobs.push({type,name:m.name,x:gx*TS,y:gy*TS,hp:m.hp,maxhp:m.hp,cd:0,wc:0,vx:0,vy:0,rid:R.id}); }
   });
 }
-function spawnMobs(){ mobs=[]; if(curMap && curMap.world){ spawnWorldMobs(); return; } if(!curMap || !curMap.wild) return;
+function spawnMobs(){ mobs=[]; return;   /* 暫時全部清空：不放任何怪物(之後重做新怪物再恢復) */
+  if(curMap && curMap.world){ spawnWorldMobs(); return; } if(!curMap || !curMap.wild) return;
   if(curMapId==='scarecrow'){ const _sm=MOBS['稻草人']; const g0x=Math.floor(MAPW/2)-10, g0y=Math.floor(MAPH/2)-10;
     for(let r=0;r<6;r++)for(let c=0;c<6;c++){ const gx=g0x+c*4, gy=g0y+r*4;
       if(MAP[gy]&&MAP[gy][gx]!=null&&T_SOLID.has(MAP[gy][gx])) MAP[gy][gx]=T_GRASS;
@@ -4603,6 +4604,7 @@ function fakePlayerAt(wx,wy){                                    // PVP用：找
 function clearFakePlayers(){ FAKE_PLAYERS.forEach(f=>releaseFakePlayerName(f.name)); FAKE_PLAYERS=[]; }
 function spawnFakePlayers(){
   clearFakePlayers();
+  return;   // 暫時全部清空：不放任何虛擬玩家(之後重做再恢復)
   if(!curMap) return;
   if(curMap.world){ spawnVillageFakePlayers(); const _ws=WORLD.regions.filter(r=>r.wild&&r.id!=='scarecrow').sort(()=>Math.random()-0.5).slice(0,7); _ws.forEach(r=>spawnWildFakePlayers(r.id,2+Math.floor(Math.random()*2))); return; }
   if(!curMap.wild && curMapId==='village') spawnVillageFakePlayers();
@@ -10877,7 +10879,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v86.3-0';
+const GAME_VER='v86.4-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
