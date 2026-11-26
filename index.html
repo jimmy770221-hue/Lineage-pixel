@@ -2984,6 +2984,7 @@ const VILLAGE_ASCII=[
   '????????????????????????????????????????????????????????'
 ];
 const VILLAGE_KIND={s:'shop',S:'shop',i:'inn',m:'medic',h:'home',k:'smith',e:'elder',g:'granary',a:'farm'};
+const WORLD_BLANK_SLATE=true;                                 // true＝清空整座島只剩大海(重新設計用)；改回false即恢復目前版本
 function buildWorld(){
   const MARGIN=60;                                  // 島外一大圈海：視野永遠看不到地圖邊界
   let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
@@ -3184,6 +3185,10 @@ function buildWorld(){
   worldShiftVillageData(vx0,vy0);
   const entries={ village:{ n:[gates.n.x+0.5,gates.n.y-2] }, cross_w:{ s:[caveX,caveY+2] } };
   WORLD={shallow:shallow,landmarks:_lm,W:W,H:H,rid:rid,regions:regions,byId:byId,spawnTiles:spawnTiles,entries:entries,gates:gates,vx0:vx0,vy0:vy0,inside:inside};
+  if(WORLD_BLANK_SLATE){                                                  // 全部清空：整張地圖只剩海洋，沒有島、沒有村、沒有房屋（準備從零重新設計）
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++) g[y][x]=T_WATER;
+    shallow.fill(0); WORLD.shallow=shallow; WORLD.spawnTiles=regions.map(function(){ return []; }); houses.length=0; MAP_WARPS['world']=[];
+  }
   return {name:V.name,id:'world',world:true,wild:false,grid:g,houses:houses,exits:{},px:V.cx*TS,py:V.cy*TS,W:W,H:H};
 }
 function buildCross(name,id,sides){ const W=40,H=34,g=NG(W,H),ex={},houses=[], cx=19,cy=16;
@@ -11414,7 +11419,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v82.0-1';
+const GAME_VER='v82.1-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
