@@ -3073,8 +3073,11 @@ function buildWorld(){
   const isIn=function(x,y){ return x>=0&&y>=0&&x<W&&y<H&&inside[y*W+x]===1; };
   const wallTiles=[];
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ if(!inside[y*W+x]) continue;
-    let edge=false; for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){ if(!isIn(x+dx,y+dy)){ edge=true; break; } }
-    if(edge) wallTiles.push([x,y]); }
+    if(!isIn(x+1,y)||!isIn(x-1,y)||!isIn(x,y+1)||!isIn(x,y-1)) wallTiles.push([x,y]); }   // 只取四方向邊界：牆一格寬
+  { const ws=new Set(wallTiles.map(function(p){ return p[1]*W+p[0]; })), add=[];             // 斜角相接處補一格，確保整圈四方向連通、沒有缺口
+    wallTiles.forEach(function(p){ [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(function(d){ const q=(p[1]+d[1])*W+(p[0]+d[0]); if(!ws.has(q) && false){} 
+      if(ws.has(q) && !ws.has(p[1]*W+p[0]+d[0]) && !ws.has((p[1]+d[1])*W+p[0])){ const k=p[1]*W+p[0]+d[0]; if(isIn(p[0]+d[0],p[1])){ ws.add(k); add.push([p[0]+d[0],p[1]]); } } }); });
+    add.forEach(function(a){ wallTiles.push(a); }); }
   const gates={};
   wallTiles.forEach(function(p){ const x=p[0], y=p[1], lx=x-vx0, ly=y-vy0; let t=T_TOWNWALL;
     if((lx===27||lx===28) && Math.abs(ly-24)>14){ t=(lx===27)?T_GATE:T_PATH; if(lx===27){ if(ly<24){ if(!gates.n||y<gates.n.y) gates.n={x:x,y:y}; } else { if(!gates.s||y>gates.s.y) gates.s={x:x,y:y}; } } }
@@ -3968,6 +3971,7 @@ function drawIsoObject(t,cx,cy,treeScale,fenceNb){
    改成沿著牆的走向(+X＝螢幕右下、+Y＝螢幕左下)鋪木樁，牆面才會連成一直線。*/
 function drawTownWallIso(cx,cy,nb){
   nb=nb||{};
+  if(v2Line('wall_stone',0.85,cx,cy,nb)) return;
   shadow(cx,cy,20,7);
   const woodL='#c08a48', wood='#9a6a34', woodD='#734f24', tip='#8a5a2a', grain='rgba(80,52,22,.45)';
   const h=50, top=cy-50;
@@ -4083,7 +4087,13 @@ function drawMotherTreeIso(cx,cy){ shadow(cx,cy,60,22);
 /* 柵欄：依相鄰的柵欄決定要往哪幾個方向接出橫桿，讓整排柵欄緊密相連、轉角形成完整直角，
    而不是每格都畫同一個角度的斜桿(那樣看起來像散落的木板)。
    等角投影下：世界座標 +X → 螢幕右下、+Y → 螢幕左下。*/
-function drawFenceIso(cx,cy,nb){                                         // 竹籬笆：粗竹立柱＋兩道竹橫桿＋一排尖頭竹片，竹節與麻繩綁帶
+function v2Line(key,sc,cx,cy,nb){                                          // v2 圍籬/牆：依四方鄰居畫連續片段；素材沿+Y(左下→右上)，水平翻轉＝沿+X
+  nb=nb||{}; const ax=nb.e||nb.w, ay=nb.n||nb.s;
+  if(ax||!ay){ if(!v2Draw(key,cx,cy+3,sc,true)) return false; }
+  if(ay){ if(!v2Draw(key,cx,cy+3,sc,false)) return false; }
+  return true; }
+function drawFenceIso(cx,cy,nb){
+  if(v2Line('fence_picket',0.8,cx,cy,nb)) return;                                         // 竹籬笆：粗竹立柱＋兩道竹橫桿＋一排尖頭竹片，竹節與麻繩綁帶
   nb=nb||{};
   const RAIL='#c4cf78', RAIL2='#9aab4a', PK='#b2c262', PK2='#8c9e44', POST='#a6b552', NODE='rgba(70,86,30,.55)', ROPE='#d9c58a';
   const seg=function(dirx){                                              // dirx=+1往右下(+X)，-1往左下(+Y)
@@ -7125,8 +7135,8 @@ function render(){
     const _fade=_wallOccludes(tx,ty);                          // 會擋到角色 → 用40%不透明度畫，看得到後面的人
     const _ts=(t===T_BIGTREE)?bigTreeScaleAt(tx,ty):1;              // 只有村莊正中央那棵大樹會放大
     const _fn=(t===T_FENCE||t===T_TOWNWALL)?{                       // 柵欄/城牆：查四方同類鄰居，決定連接方向
-      e:(MAP[ty]&&MAP[ty][tx+1]===t), w:(MAP[ty]&&MAP[ty][tx-1]===t),
-      s:(MAP[ty+1]&&MAP[ty+1][tx]===t), n:(MAP[ty-1]&&MAP[ty-1][tx]===t)}:null;
+      e:(MAP[ty]&&(MAP[ty][tx+1]===t||(t===T_TOWNWALL&&MAP[ty][tx+1]===T_GATE))), w:(MAP[ty]&&(MAP[ty][tx-1]===t||(t===T_TOWNWALL&&MAP[ty][tx-1]===T_GATE))),
+      s:(MAP[ty+1]&&(MAP[ty+1][tx]===t||(t===T_TOWNWALL&&MAP[ty+1][tx]===T_GATE))), n:(MAP[ty-1]&&(MAP[ty-1][tx]===t||(t===T_TOWNWALL&&MAP[ty-1][tx]===T_GATE)))}:null;
     talls.push({d:tx+ty, f:()=>{ _objTX=tx; _objTY=ty; if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts,_fn); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts,_fn); }});
   } } }
   curNpcs().forEach(n=>{ const gx=(n.x+16)/TS, gy=(n.y+16)/TS;
@@ -11381,7 +11391,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v81.0-1';
+const GAME_VER='v81.0-2';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
