@@ -2952,6 +2952,21 @@ function buildWorld(){
     if(!isLand){ for(let k=0;k<links.length;k++){ if(segDist(x,y,links[k][0],links[k][1])<5.5+2*N(x*0.1,y*0.1,5)){ isLand=true; break; } } }
     land[y*W+x]=isLand?1:0;
   }
+  /* 1b) 海灣與岬角：四個海灣(內凹，船好靠岸)＋一個伸出海面的岬角(盡頭放望海亭)，讓海岸線有層次，不再是圓滑的十字形 */
+  const _V0=byId.village, _lm=[];
+  const _protect=function(x,y){ for(let i=0;i<regions.length;i++){ if(Math.hypot(x-regions[i].cx,y-regions[i].cy)<7.5) return true; }
+    for(let k=0;k<links.length;k++){ if(segDist(x,y,links[k][0],links[k][1])<7) return true; } return false; };
+  const _coastR=function(ang){ let seenLand=false; for(let r=10;r<140;r+=0.5){ const x=Math.round(_V0.cx+Math.cos(ang)*r), y=Math.round(_V0.cy+Math.sin(ang)*r); if(x<1||y<1||x>=W-1||y>=H-1) return r; if(land[y*W+x]) seenLand=true; else if(seenLand) return r; } return 60; };
+  [320,75,160,205].forEach(function(deg,bi){ const a=deg*Math.PI/180, cr=_coastR(a), bx=_V0.cx+Math.cos(a)*(cr-1.5), by=_V0.cy+Math.sin(a)*(cr-1.5), rad=12+3*N(bi*7.3,3.1,71);
+    for(let y=Math.floor(by-rad*1.5);y<=Math.ceil(by+rad*1.5);y++)for(let x=Math.floor(bx-rad*1.5);x<=Math.ceil(bx+rad*1.5);x++){
+      if(x<2||y<2||x>=W-2||y>=H-2||!land[y*W+x]||_protect(x,y)) continue;
+      if(Math.hypot(x-bx,y-by)<rad*(0.78+0.4*N(x*0.19,y*0.19,72))) land[y*W+x]=0; } });
+  { const a=345*Math.PI/180, cr=_coastR(a);                                // 岬角：沿著一條射線連續疊上逐漸變細的陸地圓
+    let tipX=0,tipY=0;
+    for(let r=cr-3,k=0;r<=cr+11;r+=1.2,k++){ const px=_V0.cx+Math.cos(a)*r+1.6*(2*N(r*0.2,9,73)-1), py=_V0.cy+Math.sin(a)*r+1.6*(2*N(r*0.2,19,74)-1), rr=3.6-0.12*k;
+      for(let y=Math.floor(py-rr-1);y<=Math.ceil(py+rr+1);y++)for(let x=Math.floor(px-rr-1);x<=Math.ceil(px+rr+1);x++){ if(x>1&&y>1&&x<W-2&&y<H-2&&Math.hypot(x-px,y-py)<rr) land[y*W+x]=1; }
+      tipX=Math.round(px); tipY=Math.round(py); }
+    _lm.push({id:'pavilion',name:'望海亭',x:tipX,y:tipY}); }
   /* 2) 村莊的不規則外形（原本是方方正正的圍牆）：用「圓角方形＋起伏」做出外形，再保證所有房屋都在裡面 */
   const V=byId.village, vx0=V.cx-27, vy0=V.cy-24;
   const hsList=[[8,8,7,4,true],[17,8,5,3,false],[34,8,5,3,false],[43,8,7,4,true],[8,38,7,4,true],[17,40,5,3,false],[34,40,5,3,false],[43,38,7,4,true],[9,19,5,3,false],[43,26,5,3,false],[9,29,5,3,false],[43,16,5,3,false]];
@@ -3062,7 +3077,7 @@ function buildWorld(){
       g[y][x]=T_PATH; } };
   const carve=function(ax,ay,bx,by,seed){
     const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len, steps=Math.ceil(len*2);
-    for(let s=0;s<=steps;s++){ const t=s/steps, wob=(N(t*len*0.055,seed,11)-0.5)*2*6*Math.sin(Math.PI*t);
+    for(let s=0;s<=steps;s++){ const t=s/steps, wob=(N(t*len*0.055,seed,11)-0.5)*2*9*Math.sin(Math.PI*t);
       brush(ax+dx*t+nx*wob, ay+dy*t+ny*wob, 1.2); } };
   const gateOut={ n:[gates.n.x+0.5,gates.n.y-1.5], s:[gates.s.x+0.5,gates.s.y+2.5], w:[gates.w.x-1.5,gates.w.y+0.5], e:[gates.e.x+2.5,gates.e.y+0.5] };
   const sideOf={cross_n:'n',cross_s:'s',cross_w:'w',cross_e:'e'};
@@ -3084,7 +3099,35 @@ function buildWorld(){
     carve(R.cx,R.cy,x-sx*4,y-sy*4,300+R.idx); });
   const SC=byId.scarecrow;
   for(let y=SC.cy-12;y<=SC.cy+12;y++)for(let x=SC.cx-12;x<=SC.cx+12;x++){ if(x>0&&y>0&&x<W-1&&y<H-1&&g[y][x]!==T_WATER&&g[y][x]!==T_PATH) g[y][x]=T_GRASS; }   // 稻草人 6x6 陣列要用的空地
+  /* 6b) 地標：桃花仙觀(北山頂)、千年桃樹(梅香坡桃林中央)、望海亭(岬角盡頭)。山頂平台先整平，再鋪一條石徑上山 */
+  const _setH=function(hx,hy,hw,hd,big,kind){ for(let y=hy-2;y<hy+hd+2;y++)for(let x=hx-2;x<hx+hw+2;x++){ if(x>1&&y>1&&x<W-2&&y<H-2&&g[y][x]!==T_PATH&&g[y][x]!==T_WATER) g[y][x]=(Math.hypot(x-(hx+hw/2),y-(hy+hd/2))<3.6+hw*0.2)?T_DIRT:g[y][x]; }
+    for(let y=hy;y<hy+hd;y++)for(let x=hx;x<hx+hw;x++) g[y][x]=T_HOUSE; houses.push({x:hx,y:hy,w:hw,d:hd,big:big,kind:kind}); };
+  { const CN=byId.cross_n, mx=CN.cx-15, my=CN.cy-10;                         // 桃花仙觀：把山頂中央整平成高台
+    for(let y=my-6;y<=my+6;y++)for(let x=mx-8;x<=mx+8;x++){ if(x>1&&y>1&&x<W-2&&y<H-2&&Math.hypot((x-mx)/1.3,y-my)<5.2&&g[y][x]!==T_WATER) g[y][x]=T_DIRT; }
+    carve(CN.cx,CN.cy,mx+1,my+3,500);
+    _setH(mx-2,my-2,5,3,true,'temple'); _lm.push({id:'temple',name:'桃花仙觀',x:mx,y:my}); }
+  { const CS=byId.cross_s, tx0=CS.cx-9, ty0=CS.cy-9;                        // 千年桃樹：桃林空地中央一棵巨樹，四周落英滿地
+    for(let y=ty0-6;y<=ty0+6;y++)for(let x=tx0-6;x<=tx0+6;x++){ const dd=Math.hypot(x-tx0,y-ty0); if(x<2||y<2||x>=W-2||y>=H-2||g[y][x]===T_WATER||g[y][x]===T_PATH||g[y][x]===T_HOUSE||g[y][x]===T_FENCE||g[y][x]===T_DIRT) continue;
+      if(dd<5.2) g[y][x]=(dd<4.2&&tileRand(x,y,81)<0.7)?T_FLOWER:T_GRASS; }
+    g[ty0][tx0]=T_BIGTREE; carve(CS.cx,CS.cy,tx0+1,ty0+3,501); _lm.push({id:'peachtree',name:'千年桃樹',x:tx0,y:ty0}); }
+  { const P=_lm.find(function(m){ return m.id==='pavilion'; });
+    if(P){ for(let y=P.y-4;y<=P.y+4;y++)for(let x=P.x-4;x<=P.x+4;x++){ if(x>1&&y>1&&x<W-2&&y<H-2&&Math.hypot(x-P.x,y-P.y)<3.6&&g[y][x]!==T_WATER) g[y][x]=T_SAND; }
+      _setH(P.x-1,P.y-1,2,2,false,'pavilion'); const R0=byId.port_e; carve(R0.cx,R0.cy,P.x-2,P.y+1,502); } }
+  /* 6c) 溪流：從落英谷山腳出發，穿過翠竹徑西側、青竹林，流進南邊的碧潮灘池塘；道路穿越處自動變成石板淺灘(保留道路)，水岸有淺水漸層 */
+  { const pts=[[50,40],[46,56],[40,70],[42,84],[44,100],[46,114],[52,128],[62,138],[76,150],[88,168],[94,184],[98,204]];
+    for(let i=0;i<pts.length-1;i++){ const ax=pts[i][0]+SX, ay=pts[i][1]+SY, bx2=pts[i+1][0]+SX, by2=pts[i+1][1]+SY, len=Math.hypot(bx2-ax,by2-ay), nx=-(by2-ay)/len, ny=(bx2-ax)/len;
+      for(let k=0;k<=len*2;k++){ const t=k/(len*2), wob=(N(i*3.7+t*2,5,75)-0.5)*3.2, px=ax+(bx2-ax)*t+nx*wob, py=ay+(by2-ay)*t+ny*wob;
+        for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){ if(Math.hypot(dx,dy)>1.35+0.4*N(px*0.3+dx,py*0.3+dy,76)) continue; const x=Math.round(px)+dx, y=Math.round(py)+dy;
+          if(x<2||y<2||x>=W-2||y>=H-2||nearV[y*W+x]||inside[y*W+x]) continue; const tt=g[y][x];
+          if(tt===T_GRASS||tt===T_TREE||tt===T_FLOWER||tt===T_ROCK||tt===T_SAND||tt===T_DIRT&&false) g[y][x]=T_WATER; } } } }
   beachify(g,W,H);                                                         // 水岸自動鋪沙灘
+  /* 6d) 淺水漸層：離岸越近越淺(顏色偏青綠)，離岸越遠越深；只存資料，由地面繪製與交界重畫時上色 */
+  const shallow=new Uint8Array(W*H), dq=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){ if(g[y][x]!==T_WATER){ shallow[y*W+x]=0; dq.push(x,y); } else shallow[y*W+x]=255; }
+  const dist=new Uint8Array(W*H).fill(255); for(let i=0;i<dq.length;i+=2) dist[dq[i+1]*W+dq[i]]=0;
+  for(let qi=0;qi<dq.length;qi+=2){ const x=dq[qi], y=dq[qi+1], dv=dist[y*W+x]; if(dv>=6) continue;
+    for(let d=0;d<4;d++){ const nx=x+(d===0?1:d===1?-1:0), ny=y+(d===2?1:d===3?-1:0); if(nx<0||ny<0||nx>=W||ny>=H) continue; const ni=ny*W+nx; if(dist[ni]!==255) continue; dist[ni]=dv+1; dq.push(nx,ny); } }
+  for(let i=0;i<W*H;i++){ const dv=dist[i]; shallow[i]=(g[(i/W)|0][i%W]===T_WATER&&dv<255)?(dv<=1?4:dv<=2?3:dv<=3?2:dv<=5?1:0):0; }
   /* 7) 冒險洞穴入口（原本在西方岔路南邊的出口）：改成一座看得見的階梯 */
   for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){ const x=caveX+dx, y=caveY+dy; if(Math.hypot(dx,dy)<=2.7 && g[y][x]!==T_WATER && g[y][x]!==T_HOUSE) g[y][x]=T_DIRT; }
   carve(CW.cx,CW.cy,caveX,caveY-1,400);
@@ -3103,7 +3146,7 @@ function buildWorld(){
   /* 10) 村莊裡的 NPC／隊友站位平移到大地圖上的村莊位置 */
   worldShiftVillageData(vx0,vy0);
   const entries={ village:{ n:[gates.n.x+0.5,gates.n.y-2] }, cross_w:{ s:[caveX,caveY+2] } };
-  WORLD={W:W,H:H,rid:rid,regions:regions,byId:byId,spawnTiles:spawnTiles,entries:entries,gates:gates,vx0:vx0,vy0:vy0,inside:inside};
+  WORLD={shallow:shallow,landmarks:_lm,W:W,H:H,rid:rid,regions:regions,byId:byId,spawnTiles:spawnTiles,entries:entries,gates:gates,vx0:vx0,vy0:vy0,inside:inside};
   return {name:V.name,id:'world',world:true,wild:false,grid:g,houses:houses,exits:{},px:V.cx*TS,py:V.cy*TS,W:W,H:H};
 }
 function buildCross(name,id,sides){ const W=40,H=34,g=NG(W,H),ex={},houses=[], cx=19,cy=16;
@@ -3702,6 +3745,7 @@ function groundVariant(tx,ty,salt,avoidDark){                                   
   return 3+Math.floor(tileRand(tx,ty,salt+7)*5)%5;
 }
 const TEXW=128, TEXH=64, PITCHX=129, PITCHY=65;                                   // 地面圖集：每格128x64(2:1)，格距129x65
+function shallowAt(tx,ty){ return (curMap&&curMap.world&&WORLD&&WORLD.shallow&&tx>=0&&ty>=0&&tx<WORLD.W&&ty<WORLD.H)?WORLD.shallow[ty*WORLD.W+tx]:0; }   // 淺水等級0~4(4最淺)
 function roadVariant(tx,ty){ return Math.floor(tileRand(tx,ty,15)*4)%4; }        // 青石板路4款(幾何相同可無縫相接)
 function drawGroundTex(row,cx,cy,tx,ty,salt,avoidDark){                           // 從圖集裁切一格(128x64)貼到菱形地磚範圍，外擴2px蓋掉相鄰磚反鋸齒接縫
   const col=groundVariant(tx,ty,salt,avoidDark), sx=col*PITCHX, sy=row*PITCHY;
@@ -3723,7 +3767,7 @@ function drawIsoFloor(t,cx,cy,tx,ty){
     if(t===T_GRASS || t===T_FLOWER){ drawGroundTex(0,cx,cy,tx,ty,11,true); if(t===T_FLOWER) drawFlowerDecor(cx,cy); return; }
     if(t===T_SAND){ drawGroundTex(1,cx,cy,tx,ty,12); return; }
     if(t===T_DIRT || t===T_DOORMAT){ drawGroundTex(2,cx,cy,tx,ty,13); return; }
-    if(t===T_WATER){ drawGroundTex(3,cx,cy,tx,ty,14); return; }
+    if(t===T_WATER){ drawGroundTex(3,cx,cy,tx,ty,14); const _sl=shallowAt(tx,ty); if(_sl){ ctx.save(); ctx.globalAlpha=_sl*0.11; fillDiamond(cx,cy,'#a6e6d6',2); ctx.restore(); } return; }
   }
   let base = t===T_WATER?'#3a72b8' : (t===T_DIRT||t===T_DOORMAT)?'#b58a55' : t===T_PATH?'#9a8c6c' : t===T_MAGICCIRCLE?'#241a30' : t===T_ALTAR?'#2e1f3a' : t===T_STAIRS?'#4a4048' : t===T_SAND?'#d9c48d' : '#5a9a3a';
   fillDiamond(cx,cy,base,2);                                                // 外擴2px：相鄰地磚彼此重疊，蓋掉反鋸齒造成的暗色接縫格線
@@ -6894,6 +6938,7 @@ function tbBakeChunk(T,ccx,ccy){
           const xx=ox0+Math.min(TEXW-1,Math.floor(uu*TEXW/(HW*2+4))), yy=oy0+Math.min(TEXH-1,Math.floor(vv*TEXH/(HH*2+2))), o=(yy*img.width+xx)*4;
           sr+=img.data[o]; sg+=img.data[o+1]; sb+=img.data[o+2]; sa+=img.data[o+3]; }
         r=sr>>2; g=sg>>2; b=sb>>2; a=sa>>2; }
+      if(best===4){ const _sl=shallowAt(Math.floor(wx),Math.floor(wy)); if(_sl){ const k=_sl*0.11; r=r+(166-r)*k; g=g+(230-g)*k; b=b+(214-b)*k; } }   // 與地面繪製一致的淺水漸層
       if(a<128) continue;
       const po=(py*bw+px)*4; D[po]=r; D[po+1]=g; D[po+2]=b; D[po+3]=255;
     }
@@ -11270,7 +11315,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.37-3';
+const GAME_VER='v80.37-4';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
