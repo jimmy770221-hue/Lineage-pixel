@@ -1844,7 +1844,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 
   <!-- 左下角色狀態 -->
   <div class="ui panel" id="status">
-    <div id="mapName">說話之島村</div>
+    <div id="mapName">桃源村</div>
     <div class="srow"><span class="lv" id="stLv">LEV: 1</span><span id="stExp">0.0000%</span></div>
     <div class="expbar"><i id="stExpBar"></i></div>
     <div class="strow2">
@@ -2096,7 +2096,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 
   <!-- 小地圖 -->
   <div class="ui panel" id="mapw">
-    <div class="ttl">說話之島 · 地圖 <span class="win-x" onclick="toggleWin('mapw')">✕</span></div>
+    <div class="ttl">桃花島 · 地圖 <span class="win-x" onclick="toggleWin('mapw')">✕</span></div>
     <canvas id="mmcv" width="200" height="150"></canvas>
   </div>
 
@@ -2550,9 +2550,9 @@ const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 const VX0=28,VX1=52,VY0=24,VY1=48;
 const GATE_NX=[39,40], GATE_SX=[39,40], GATE_WY=[35,36], GATE_EY=[35,36];
 function inVillage(px,py){ if(!curMap) return true; if(curMap.world && px!=null){ const R=worldRegionAt(Math.floor(px/TS),Math.floor(py/TS)); return R?!R.wild:true; } return !curMap.wild; }
-const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20,T_STAIRUP=22,T_SAND=23;   // T_STAIRUP：立體的「往上/入口」石階結構(用於冒險洞穴入口、2樓落點)，T_STAIRS則是平面的「往下地窖」樣式；T_SAND：沙灘(可走)，由beachify()在陸地緊鄰海水處自動鋪設
+const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20,T_STAIRUP=22,T_SAND=23,T_ROCK=24;   // T_ROCK：山岩(不可走，高低不一的山脈，桃花島用)；   // T_STAIRUP：立體的「往上/入口」石階結構(用於冒險洞穴入口、2樓落點)，T_STAIRS則是平面的「往下地窖」樣式；T_SAND：沙灘(可走)，由beachify()在陸地緊鄰海水處自動鋪設
 const T_BOSSPORTAL=21;              // 惡魔召喚魔法陣（進入王座之間）：一律以 2x2 共4格為一組
-const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL]);   // T_STAIRUP改為可走(不在此清單)：它本身就是真正的樓梯出入口，玩家要能踩上去
+const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL,T_ROCK]);   // T_STAIRUP改為可走(不在此清單)：它本身就是真正的樓梯出入口，玩家要能踩上去
 
 let MAP=[];
 /* ================= 多地圖系統（寶可夢式一圖接一圖） ================= */
@@ -2861,7 +2861,7 @@ function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
   border(g);
   gapN(g,cx,ex,'cross_n'); gapS(g,cx,ex,'cross_s'); gapW(g,cy,ex,'cross_w'); gapE(g,cy,ex,'cross_e');
   vLane(g,cx,1,VY0); vLane(g,cx,VY1,H-2); hLane(g,cy,1,VX0); hLane(g,cy,VX1,W-2);   // 門外連到地圖邊
-  return {name:'說話之島村',id:'village',wild:false,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
+  return {name:MAP_NAME.village,id:'village',wild:false,grid:g,houses,exits:ex,px:cx*TS,py:cy*TS,W,H};
 }
 /* =====================================================================
    說話之島 · 大地圖（半開放世界）
@@ -2871,19 +2871,24 @@ function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
    玩法邏輯沿用原本的「地圖代號」：玩家走到哪個區域，curMapId 就會跟著變成該區域的代號
    （village / cross_n / port_n …），所以怪物出沒設定、安全區判斷、擊殺計數等都不用改。
    ===================================================================== */
+/* ★ 桃花島：各區域的顯示名稱集中在這裡，要改名只改這一張表(也會同步傳送選單、出生地選單、地圖標題) */
+const MAP_NAME={village:'桃源村', cross_n:'迎春嶺', port_n:'北海渡口', north_island:'落英谷', cross_w:'翠竹徑', scarecrow:'桃林修練場',
+  cross_e:'東市口', port_e:'桃花渡船頭', cross_s:'梅香坡', hunt_w:'青竹林', hunt_s:'碧潮灘', hunt_e:'亂石崗'};
+const ISLAND_NAME='桃花島';
+/* 地貌欄位(座標都是相對區域中心的格數)：mount=[[x,y,半徑]]山脈 / farm=[[x,y,寬,高]]田地 / market=[x,y]小市集 / bloom=桃花密度 */
 const WORLD_DEF=[
-  {id:'village',      name:'說話之島村',       wild:false, cx:108,cy:96, r:33, lc:[27,24], tree:0.72, scat:0.012},
-  {id:'cross_n',      name:'北方岔路',         wild:true,  cx:108,cy:48, r:25, lc:[19,16], tree:0.68, scat:0.018},
-  {id:'port_n',       name:'說話之島北邊港口', wild:true,  cx:108,cy:8,  r:25, lc:[20,17], tree:0.72, scat:0.012, dock:'n'},
-  {id:'north_island', name:'北島',             wild:true,  cx:62, cy:52, r:25, lc:[20,17], tree:0.68, scat:0.018, ponds:[[-3,3,6.5]]},
-  {id:'cross_w',      name:'西方岔路',         wild:true,  cx:62, cy:96, r:25, lc:[19,16], tree:0.68, scat:0.018},
-  {id:'scarecrow',    name:'稻草人修練場',     wild:true,  cx:20, cy:96, r:24, lc:[20,17], tree:0.80, scat:0.006},
-  {id:'cross_e',      name:'東方岔路',         wild:true,  cx:156,cy:96, r:25, lc:[19,16], tree:0.68, scat:0.018, ponds:[[9,-8,4.5]]},
-  {id:'port_e',       name:'說話之島東邊港口', wild:true,  cx:198,cy:96, r:24, lc:[20,17], tree:0.72, scat:0.012, dock:'e'},
-  {id:'cross_s',      name:'南方岔路',         wild:true,  cx:108,cy:146,r:25, lc:[19,16], tree:0.68, scat:0.018},
-  {id:'hunt_w',       name:'西邊狩獵場',       wild:true,  cx:64, cy:148,r:25, lc:[20,17], tree:0.62, scat:0.026},
-  {id:'hunt_s',       name:'南邊狩獵場',       wild:true,  cx:108,cy:192,r:25, lc:[20,17], tree:0.60, scat:0.026, ponds:[[-10,5,5]]},
-  {id:'hunt_e',       name:'東邊狩獵場',       wild:true,  cx:154,cy:146,r:25, lc:[20,17], tree:0.62, scat:0.026},
+  {id:'village',      name:MAP_NAME.village,      wild:false, cx:108,cy:96, r:33, lc:[27,24], tree:0.72, scat:0.012},
+  {id:'cross_n',      name:MAP_NAME.cross_n,      wild:true,  cx:108,cy:48, r:25, lc:[19,16], tree:0.68, scat:0.018, bloom:0.55, mount:[[-15,-10,8]]},
+  {id:'port_n',       name:MAP_NAME.port_n,       wild:true,  cx:108,cy:8,  r:25, lc:[20,17], tree:0.72, scat:0.012, dock:'n'},
+  {id:'north_island', name:MAP_NAME.north_island, wild:true,  cx:62, cy:52, r:25, lc:[20,17], tree:0.68, scat:0.018, ponds:[[-3,3,6.5]], bloom:0.40, mount:[[-11,-9,9]]},
+  {id:'cross_w',      name:MAP_NAME.cross_w,      wild:true,  cx:62, cy:96, r:25, lc:[19,16], tree:0.74, scat:0.018, farm:[[-14,-10,11,7]]},
+  {id:'scarecrow',    name:MAP_NAME.scarecrow,    wild:true,  cx:20, cy:96, r:24, lc:[20,17], tree:0.80, scat:0.006, bloom:0.45},
+  {id:'cross_e',      name:MAP_NAME.cross_e,      wild:true,  cx:156,cy:96, r:25, lc:[19,16], tree:0.68, scat:0.018, ponds:[[9,-8,4.5]], market:[-2,4], farm:[[-17,-13,9,6]]},
+  {id:'port_e',       name:MAP_NAME.port_e,       wild:true,  cx:198,cy:96, r:24, lc:[20,17], tree:0.72, scat:0.012, dock:'e'},
+  {id:'cross_s',      name:MAP_NAME.cross_s,      wild:true,  cx:108,cy:146,r:25, lc:[19,16], tree:0.68, scat:0.018, bloom:0.65, farm:[[6,5,11,7]]},
+  {id:'hunt_w',       name:MAP_NAME.hunt_w,       wild:true,  cx:64, cy:148,r:25, lc:[20,17], tree:0.58, scat:0.026, mount:[[-13,9,8]]},
+  {id:'hunt_s',       name:MAP_NAME.hunt_s,       wild:true,  cx:108,cy:192,r:25, lc:[20,17], tree:0.60, scat:0.026, ponds:[[-10,5,5]], bloom:0.30},
+  {id:'hunt_e',       name:MAP_NAME.hunt_e,       wild:true,  cx:154,cy:146,r:25, lc:[20,17], tree:0.62, scat:0.026, mount:[[9,-7,11],[-11,9,7]]},
 ];
 const WORLD_LINKS=[['village','cross_n'],['village','cross_w'],['village','cross_s'],['village','cross_e'],
   ['cross_n','port_n'],['cross_n','north_island'],['cross_w','north_island'],['cross_w','scarecrow'],
@@ -2924,7 +2929,7 @@ function worldEntryPx(id,side){
   return {x:R.cx*TS,y:R.cy*TS};
 }
 function buildWorld(){
-  const MARGIN=14;
+  const MARGIN=60;                                  // 島外一大圈海：視野永遠看不到地圖邊界
   let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
   WORLD_DEF.forEach(function(d){ const e=d.r*1.25; minX=Math.min(minX,d.cx-e); minY=Math.min(minY,d.cy-e); maxX=Math.max(maxX,d.cx+e); maxY=Math.max(maxY,d.cy+e); });
   const SX=Math.round(MARGIN-minX), SY=Math.round(MARGIN-minY);
@@ -2942,8 +2947,8 @@ function buildWorld(){
     let best=1e9, bi=0;
     for(let i=0;i<regions.length;i++){ const R=regions[i], d=Math.hypot(wx-R.cx,wy-R.cy)/R.r; if(d<best){ best=d; bi=i; } }
     rid[y*W+x]=bi;
-    const coast=best+0.20*(2*N(x*0.07,y*0.07,3)-1)+0.07*(2*N(x*0.19,y*0.19,4)-1);
-    let isLand=coast<1.0;
+    const coast=best+0.30*(2*N(x*0.05,y*0.05,3)-1)+0.10*(2*N(x*0.14,y*0.14,4)-1)+0.04*(2*N(x*0.31,y*0.31,6)-1);   // 海岸線：大的海灣/半島＋中等起伏＋細碎的小彎
+    let isLand=coast<1.14;
     if(!isLand){ for(let k=0;k<links.length;k++){ if(segDist(x,y,links[k][0],links[k][1])<5.5+2*N(x*0.1,y*0.1,5)){ isLand=true; break; } } }
     land[y*W+x]=isLand?1:0;
   }
@@ -2992,6 +2997,40 @@ function buildWorld(){
     for(let y=Math.floor(py-rr*1.6);y<=Math.ceil(py+rr*1.6);y++)for(let x=Math.floor(px-rr*1.6);x<=Math.ceil(px+rr*1.6);x++){
       if(x<1||y<1||x>=W-1||y>=H-1||nearV[y*W+x]||!land[y*W+x]) continue;
       if(Math.hypot(x-px,y-py)<rr*(0.7+0.55*N(x*0.2,y*0.2,9))) g[y][x]=T_WATER; } }); });
+  /* 3b) 桃花島地貌：山脈、田地、小市集、桃花林(道路稍後會從上面穿過去，所以不會把路堵死) */
+  const _free=function(x,y){ return x>2&&y>2&&x<W-3&&y<H-3 && land[y*W+x] && !nearV[y*W+x] && g[y][x]!==T_WATER; };
+  const _houses2=[];
+  regions.forEach(function(R){ const d=R.def;
+    (d.mount||[]).forEach(function(m){ const mx=R.cx+m[0], my=R.cy+m[1], rr=m[2];
+      for(let y=Math.floor(my-rr*1.5);y<=Math.ceil(my+rr*1.5);y++)for(let x=Math.floor(mx-rr*1.5);x<=Math.ceil(mx+rr*1.5);x++){
+        if(!_free(x,y)||Math.hypot(x-R.cx,y-R.cy)<7) continue;
+        const dd=Math.hypot(x-mx,y-my)/(rr*(0.8+0.45*N(x*0.17,y*0.17,61)));
+        if(dd<0.55) g[y][x]=(tileRand(x,y,62)<0.93)?T_ROCK:T_TREE;       // 山脊：山岩(高低起伏)
+        else if(dd<0.95 && tileRand(x,y,63)<0.75) g[y][x]=T_TREE;           // 山腳：樹林
+      } });
+    (d.farm||[]).forEach(function(f){ const fx=R.cx+f[0], fy=R.cy+f[1], fw=f[2], fh=f[3]; let ok=true;
+      for(let y=fy-1;y<=fy+fh&&ok;y++)for(let x=fx-1;x<=fx+fw;x++) if(!_free(x,y)){ ok=false; break; }
+      if(!ok) return;
+      for(let y=fy-1;y<=fy+fh;y++)for(let x=fx-1;x<=fx+fw;x++){
+        const edge=(x<fx||y<fy||x>=fx+fw||y>=fy+fh);
+        if(edge){ const gap=(y===fy+fh&&(x===fx+2||x===fx+3))||(x===fx-1&&(y===fy+2||y===fy+3)); g[y][x]=gap?T_GRASS:T_FENCE; }
+        else g[y][x]=((x-fx)%2===0)?T_DIRT:(tileRand(x,y,64)<0.5?T_FLOWER:T_GRASS);   // 田壟：一行泥土、一行作物(花)交替
+      } });
+    if(d.market){ const mx=R.cx+d.market[0], my=R.cy+d.market[1];
+      for(let y=my-3;y<=my+4;y++)for(let x=mx-12;x<=mx+12;x++){ if(_free(x,y)||g[y][x]===T_TREE) g[y][x]=T_PATH; }   // 市集街：石板廣場
+      [-9,-4,1,6].forEach(function(ox,i){ [[my-7,0],[my+5,1]].forEach(function(r){ const hx=mx+ox, hy=r[0];
+        let ok=true; for(let y=hy;y<hy+2&&ok;y++)for(let x=hx;x<hx+3;x++) if(!_free(x,y)&&g[y][x]!==T_PATH&&g[y][x]!==T_TREE){ ok=false; break; }
+        if(!ok) return;
+        for(let y=hy-1;y<hy+3;y++)for(let x=hx-1;x<hx+4;x++) if(x>0&&y>0&&x<W-1&&y<H-1&&g[y][x]===T_TREE) g[y][x]=T_GRASS;
+        for(let y=hy;y<hy+2;y++)for(let x=hx;x<hx+3;x++) g[y][x]=T_HOUSE;
+        _houses2.push({x:hx,y:hy,w:3,d:2,big:false});
+        const sy=r[1]?hy-1:hy+2; if(g[sy][hx+1]!==T_HOUSE) g[sy][hx+1]=T_SIGN;          // 攤位前的招牌
+      }); });
+      if(g[my-1][mx]!==T_HOUSE) g[my-1][mx]=T_WELL; }
+    if(d.bloom){ for(let y=Math.floor(R.cy-R.r);y<=Math.ceil(R.cy+R.r);y++)for(let x=Math.floor(R.cx-R.r);x<=Math.ceil(R.cx+R.r);x++){
+      if(!_free(x,y)||rid[y*W+x]!==R.idx||g[y][x]!==T_GRASS) continue;
+      if(N(x*0.08,y*0.08,65)>0.55 && tileRand(x,y,66)<d.bloom) g[y][x]=T_FLOWER; } }                // 桃花成片盛開
+  });
   /* 4) 村莊本體：廣場、十字大道、房屋、水井、大樹，最後圍上不規則的城牆與四個城門 */
   const wset=function(lx,ly,t){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1) g[y][x]=t; };
   const wget=function(lx,ly){ const x=vx0+lx, y=vy0+ly; return (x>0&&y>0&&x<W-1&&y<H-1)?g[y][x]:T_WATER; };
@@ -3000,7 +3039,7 @@ function buildWorld(){
     const ex=(lx-27.5)/5.6, ey=(ly-24.5)/3.7; if(ex*ex+ey*ey<1+0.35*(2*N((vx0+lx)*0.3,(vy0+ly)*0.3,22)-1) && inside[(vy0+ly)*W+vx0+lx]) wset(lx,ly,T_DIRT); }
   for(let ly=-4;ly<=52;ly++){ if(!inside[(vy0+ly)*W+vx0+27]) continue; wset(27,ly,T_PATH); wset(28,ly,T_PATH); }      // 南北大道
   for(let lx=-4;lx<=58;lx++){ if(!inside[(vy0+24)*W+vx0+lx]) continue; wset(lx,24,T_PATH); wset(lx,25,T_PATH); }      // 東西大道
-  const houses=[];
+  const houses=_houses2.slice();
   houseRects.forEach(function(h){ houses.push({x:vx0+h.x,y:vy0+h.y,w:h.w,d:h.d,big:h.big}); for(let j=0;j<h.d;j++)for(let i2=0;i2<h.w;i2++) wset(h.x+i2,h.y+j,T_HOUSE); });
   wset(40,26,T_WELL); wset(40,21,T_BIGTREE); wset(26,23,T_BIGTREE);
   [[19,15],[45,15],[19,35],[45,35]].forEach(function(p){ if(wget(p[0],p[1])===T_GRASS) wset(p[0],p[1],T_FLOWER); });
@@ -3802,8 +3841,15 @@ function drawHouse(h){
 }
 
 /* 立體物件：牆、屋頂、樹、柵欄、水井、招牌 */
+let _objTX=0,_objTY=0;
 function drawIsoObject(t,cx,cy,treeScale,fenceNb){
-  if(t===T_STONEWALL){
+  if(t===T_ROCK){                                           // 山岩：每格高度依雜訊起伏(22~62)，連成高低不一的山脈；高處偏淺灰，低處偏苔綠
+    const nz=tbNoise(_objTX*0.28,_objTY*0.28,71), h=Math.round(20+46*nz+8*tbHash(_objTX,_objTY,72));
+    const hi=h>46;
+    drawBlock(cx,cy,h, hi?'#b8b8a8':'#8f9a74', hi?'#868676':'#6c7459', hi?'#62625a':'#4e5440');
+    faceLines(cx,cy,h,hi?'#58584e':'#454a38',6);
+    if(h>30){ ctx.fillStyle='rgba(120,160,90,.55)'; ctx.beginPath(); ctx.moveTo(cx-6,cy-h); ctx.lineTo(cx,cy-h-3); ctx.lineTo(cx+6,cy-h); ctx.lineTo(cx,cy-h+3); ctx.closePath(); ctx.fill(); }   // 頂上的苔蘚
+  } else if(t===T_STONEWALL){
     drawBlock(cx,cy,20,'#8a8a92','#6a6a72','#4e4e56');    // 頂亮灰/左中灰/右暗灰（比磚牆矮、無窗＝薄石牆）
     faceLines(cx,cy,20,'#5a5a62',5);                       // 石縫（橫向較密）
     ctx.strokeStyle='#5a5a62'; ctx.lineWidth=1;            // 交錯直縫
@@ -6898,7 +6944,7 @@ function tbDraw(){
 /* ============ 繪製 ============ */
 function render(){
   updateCam();
-  ctx.fillStyle='#243c18'; ctx.fillRect(0,0,VW,VH);   // 邊界外底色（深草綠）
+  ctx.fillStyle=(curMap&&curMap.world)?'#2c6a96':'#243c18'; ctx.fillRect(0,0,VW,VH);   // 邊界外底色：大地圖是海洋色，其他地圖維持深草綠
 
   // 1) 地面層（依深度 tx+ty 由遠到近）
   const FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS,T_SAND]);
@@ -6937,7 +6983,7 @@ function render(){
 
   // 3) 立體物件 + 實體，統一依深度排序
   const talls=[];
-  const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE,T_STONEWALL,T_STAIRUP]);
+  const TALL=new Set([T_WALL,T_ROOF,T_TREE,T_FENCE,T_WELL,T_SIGN,T_TOWNWALL,T_GATE,T_BIGTREE,T_MOTHERTREE,T_STONEWALL,T_STAIRUP,T_ROCK]);
   /* 遮擋透明化：先收集玩家與隊友的格子座標(不含怪物)，等一下畫立體牆時，
      如果這面牆會擋住其中某一個就改用半透明繪製，避免角色被牆完全遮住、看起來像卡在牆裡或穿牆。
      等角投影下，同一條深度線(tx+ty)上、深度較大的物件會畫在後面(蓋住前面的)，
@@ -6972,7 +7018,7 @@ function render(){
     const _fn=(t===T_FENCE||t===T_TOWNWALL)?{                       // 柵欄/城牆：查四方同類鄰居，決定連接方向
       e:(MAP[ty]&&MAP[ty][tx+1]===t), w:(MAP[ty]&&MAP[ty][tx-1]===t),
       s:(MAP[ty+1]&&MAP[ty+1][tx]===t), n:(MAP[ty-1]&&MAP[ty-1][tx]===t)}:null;
-    talls.push({d:tx+ty, f:()=>{ if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts,_fn); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts,_fn); }});
+    talls.push({d:tx+ty, f:()=>{ _objTX=tx; _objTY=ty; if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts,_fn); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts,_fn); }});
   } } }
   curNpcs().forEach(n=>{ const gx=(n.x+16)/TS, gy=(n.y+16)/TS;
     talls.push({d:gx+gy+0.1, f:()=>drawNpcIso(n)}); });
@@ -8519,7 +8565,7 @@ function toggleWin(id){ const el=document.getElementById(id); el.classList.toggl
   if(id==='inv'&&!el.classList.contains('on')) invMove=null;
   if(el.classList.contains('on')) navBuildPanel(id); else navClear(); }
 const TELE_REGIONS=[
-  ['說話之島',['說話之島村','史萊姆競技場','稻草人修練場','北島','說話之島北邊港口','說話之島東邊港口','東邊狩獵場','西邊狩獵場','南邊狩獵場','冒險洞穴1樓','冒險洞穴2樓']],
+  [ISLAND_NAME,[MAP_NAME.village,'史萊姆競技場',MAP_NAME.scarecrow,MAP_NAME.north_island,MAP_NAME.port_n,MAP_NAME.port_e,MAP_NAME.hunt_e,MAP_NAME.hunt_w,MAP_NAME.hunt_s,'冒險洞穴1樓','冒險洞穴2樓']],
   ['妖精森林',['妖精森林']],
   ['銀騎士地區',['銀騎士村莊']],
 ];
@@ -8533,7 +8579,8 @@ function openTeleport(){ const w=document.getElementById('teleportw'), list=docu
     if(!collapsed){ spots.forEach(function(nm){ const d=document.createElement('div'); d.className='teleItem'; d.textContent='◈  '+nm; d.onclick=function(){ teleportTo(nm); }; list.appendChild(d); }); }
   });
   w.classList.add('on'); navBuildPanel('teleportw'); }
-const TELE_MAP={'說話之島村':'village','史萊姆競技場':'slime_arena','妖精森林':'elf_forest','銀騎士村莊':'silver_knight','稻草人修練場':'scarecrow','北島':'north_island','說話之島北邊港口':'port_n','說話之島東邊港口':'port_e','東邊狩獵場':'hunt_e','西邊狩獵場':'hunt_w','南邊狩獵場':'hunt_s','冒險洞穴1樓':'cave','冒險洞穴2樓':'cave2'};
+const TELE_MAP={'史萊姆競技場':'slime_arena','妖精森林':'elf_forest','銀騎士村莊':'silver_knight','冒險洞穴1樓':'cave','冒險洞穴2樓':'cave2'};
+Object.keys(MAP_NAME).forEach(function(id){ TELE_MAP[MAP_NAME[id]]=id; });   // 桃花島各區域的傳送點：名稱全部來自 MAP_NAME
 function playTeleportFx(){ if(typeof mobFx!=='undefined'&&typeof player!=='undefined') mobFx.push({kind:'teleportfx', x:player.x+player.w/2, y:player.y+player.h, life:500}); }
 function teleportTo(nm){ document.getElementById('teleportw').classList.remove('on'); navClear();
   const id=TELE_MAP[nm];
@@ -9172,7 +9219,7 @@ function drawMiniMap(){ const c=document.getElementById('mmcv'), x=c.getContext(
   if(curMap && curMap.world){                                       // 大地圖：只畫玩家周圍 80x60 格，隨著玩家移動
     const VWT=80, VHT=60, sx=c.width/VWT, sy=c.height/VHT;
     const gx0=Math.floor((player.x+16)/TS-VWT/2), gy0=Math.floor((player.y+16)/TS-VHT/2);
-    x.fillStyle='#10200c'; x.fillRect(0,0,c.width,c.height);
+    x.fillStyle='#3a7ac0'; x.fillRect(0,0,c.width,c.height);   // 地圖外＝海
     for(let j=0;j<VHT;j++){ const y=gy0+j; if(y<0||y>=MAPH) continue; const row=MAP[y];
       for(let i=0;i<VWT;i++){ const gx=gx0+i; if(gx<0||gx>=MAPW) continue; const t=row[gx];
         x.fillStyle = t===T_WATER?'#3a7ac0': (t===T_TREE||t===T_BIGTREE)?'#2a6a2a': (t===T_ROOF||t===T_WALL||t===T_HOUSE)?'#a0402a':
@@ -9185,7 +9232,7 @@ function drawMiniMap(){ const c=document.getElementById('mmcv'), x=c.getContext(
   const sx=c.width/MAPW, sy=c.height/MAPH;
   for(let y=0;y<MAPH;y++)for(let gx=0;gx<MAPW;gx++){ const t=MAP[y][gx];
     x.fillStyle = t===T_WATER?'#3a7ac0': t===T_TREE?'#2a6a2a': (t===T_ROOF||t===T_WALL)?'#a0402a':
-      t===T_STONEWALL?'#6a6a72': t===T_BOSSPORTAL?'#ff3a6a': t===T_MAGICCIRCLE?'#9a5aff': t===T_ALTAR?'#7a4aaa': t===T_STAIRS?'#c8a0ff':
+      t===T_ROCK?'#7a8068': t===T_STONEWALL?'#6a6a72': t===T_BOSSPORTAL?'#ff3a6a': t===T_MAGICCIRCLE?'#9a5aff': t===T_ALTAR?'#7a4aaa': t===T_STAIRS?'#c8a0ff':
       t===T_TOWNWALL?'#8a5a2a': t===T_GATE?'#b83a24': t===T_PATH?'#a89878': t===T_DIRT?'#b89060': t===T_SAND?'#dcc48c':
       (inVillage(gx*TS,y*TS)?'#5aa04a':'#4a8a30');
     x.fillRect(gx*sx,y*sy,Math.ceil(sx),Math.ceil(sy)); }
@@ -9203,7 +9250,7 @@ const INTRO=[
  {a:'📱',t:'【現代 · 深夜】\n你賴在床上滑手機，追著最新的穿越短劇……'},
  {a:'💭',t:'「唉～要是我也能穿越、還帶個系統，\n那該有多爽啊……」'},
  {a:'🌀',t:'一陣天旋地轉，眼前的畫面\n忽然像老電視般化成粗粗的像素點……'},
- {a:'🏰',t:'【說話之島村】\n你睜開眼，站在一座紅瓦木屋的村莊中央。\n村民、守衛、獵戶來來往往。'},
+ {a:'🏰',t:'【桃源村】\n你睜開眼，站在桃花島一座紅瓦木屋的村莊中央。\n村民、守衛、獵戶來來往往。'},
  {a:'🗡️',t:'你低頭一看——身上竟穿著冒險者的裝束，\n手裡還握著一把長劍！'},
  {a:'📜',t:'（提示）點擊地面移動、點擊怪物攻擊，\n空白鍵可朝面前揮擊。先去找雜貨商接任務吧！'}
 ];
@@ -10544,10 +10591,10 @@ let adminCat='shop', magicSub='royal';
   const SHOP_DEFAULTS={}; SHOP_KEYS_RESETTABLE.forEach(function(k){ SHOP_DEFAULTS[k]=(typeof SHOPS!=='undefined'&&SHOPS[k])?SHOPS[k].slice():[]; });   // 在套用任何覆蓋設定之前，先存一份檔案內建的原始清單當預設值
 
   /* --- 地區 / 地圖 --- */
-  const REGIONS=[['island01','說話之島'],['elf_forest','妖精森林'],['silver_knight','銀騎士村莊']];              // 目前只有一個地區，之後可再擴充
-  const SPAWN_MAPS=[['north_island','北島'],['port_n','北邊港口'],['port_e','東邊港口'],
-    ['hunt_w','西邊狩獵區'],['hunt_s','南邊狩獵區'],['hunt_e','東邊狩獵區'],['scarecrow','稻草人訓練場'],
-    ['cross_e','東邊岔路'],['cross_w','西邊岔路'],['cross_s','南邊岔路'],['cross_n','北邊岔路'],
+  const REGIONS=[['island01',ISLAND_NAME],['elf_forest','妖精森林'],['silver_knight','銀騎士村莊']];              // 目前只有一個地區，之後可再擴充
+  const SPAWN_MAPS=[['north_island',MAP_NAME.north_island],['port_n',MAP_NAME.port_n],['port_e',MAP_NAME.port_e],
+    ['hunt_w',MAP_NAME.hunt_w],['hunt_s',MAP_NAME.hunt_s],['hunt_e',MAP_NAME.hunt_e],['scarecrow',MAP_NAME.scarecrow],
+    ['cross_e',MAP_NAME.cross_e],['cross_w',MAP_NAME.cross_w],['cross_s',MAP_NAME.cross_s],['cross_n',MAP_NAME.cross_n],
     ['cave','冒險洞穴1樓'],['cave2','冒險洞穴2樓']];
   const REGION_MAPS={island01:SPAWN_MAPS.map(m=>m[0])};
   function allWildMaps(){ let a=[]; for(const r in REGION_MAPS)a=a.concat(REGION_MAPS[r]); return a; }
@@ -11225,7 +11272,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-24';
+const GAME_VER='v80.37-1';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
