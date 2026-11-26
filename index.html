@@ -4334,6 +4334,7 @@ const npcs=[
   {name:'多瑪', job:'鐵匠', mob:'多瑪', art:'dwarf', x:26*TS, y:38*TS, lines:['多瑪：「武器防具因戰鬥而損壞了嗎？修復的手藝還在準備中，晚點再來找我吧。」']},
   {name:'皮賽爾', job:'畢克斯商人', mob:'皮賽爾', art:'mage', x:30*TS, y:38*TS, pyxShop:true, lines:['皮賽爾：「想要更多畢克斯的沙漏嗎？我這裡有整箱的賣。手上的畢克斯的羽毛也能在我這裡兌換稀有裝備喔。」']}
 ];
+npcs.length=0;   // 暫時全部清空：地圖上不放任何NPC(之後重做新NPC再恢復)
 function curNpcs(){ return (curMap&&curMap.world)?npcs:curMapId==='village'?npcs:[]; }
 // 怪物模板
 const MOBS={
@@ -10876,7 +10877,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v86.2-0';
+const GAME_VER='v86.3-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
