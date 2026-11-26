@@ -1252,29 +1252,6 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
   #morphw .mitem .mlv{float:right;color:#a89878;font-size:13px;}
   #morphw .mlock{opacity:.4;cursor:not-allowed;}
   #morphw .mnote{font-size:12px;color:#a89878;line-height:1.6;margin-bottom:6px;}
-  /* 競技場視窗：位置/大小比照商店視窗 */
-  #arenaw{position:absolute;top:6px;left:6px;width:320px;display:none;z-index:96;}
-  #arenaw.on{display:block;}
-  #arenaw .win{background:linear-gradient(#2b2b30,#1a1a1e);border:3px solid #c8a24a;box-shadow:inset 0 0 0 1px #7a5a20,0 6px 24px rgba(0,0,0,.6);border-radius:5px;width:100%;height:500px;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;color:#e8dcc0;padding:10px;}
-  #arenaw h2{margin:0 0 8px;font-size:17px;color:#f2d489;display:flex;justify-content:space-between;align-items:center;}
-  #arenaw .abody{flex:1;min-height:0;overflow-y:auto;}
-  #arenaw .acount{font-size:14px;color:#ffd94a;text-align:center;padding:6px;margin-bottom:8px;
-    background:linear-gradient(#3a2a12,#241a0c);border:1px solid #6b4d22;border-radius:5px;}
-  #arenaw .arow{display:flex;align-items:center;gap:7px;padding:7px 8px;margin-bottom:6px;
-    background:linear-gradient(#2e2618,#1e1810);border:2px solid #5a4a2a;border-radius:6px;}
-  #arenaw .arow.star{border-color:#c8a24a;box-shadow:0 0 8px rgba(200,162,74,.35);}
-  #arenaw .alane{width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center;
-    font-size:13px;font-weight:bold;color:#140f08;background:#c8a24a;border-radius:50%;}
-  #arenaw .aname{flex:1;min-width:0;font-size:15px;font-weight:bold;color:#f2d489;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  #arenaw .aodds{flex:none;font-size:15px;font-weight:bold;color:#8fd06a;}
-  #arenaw .asub{font-size:12px;color:#a89878;}
-  #arenaw .abtn{flex:none;min-width:52px;min-height:38px;padding:6px 10px;font-size:14px;font-weight:bold;cursor:pointer;color:#f2d489;
-    background:linear-gradient(#7a5626,#563c18);border:2px solid #a97e34;border-radius:5px;}   /* 手指也好按：至少38px高 */
-  #arenaw .abtn:hover{background:linear-gradient(#9a6e36,#6d4c20);color:#fff;}
-  #arenaw .abig{width:100%;padding:9px 0;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:2px;
-    color:#fff8e0;background:linear-gradient(#6a8a3a,#3a5a1e);border:2px solid #a9c060;border-radius:5px;margin-top:6px;}
-  #arenaw .abig:hover{background:linear-gradient(#7fa348,#4a6e28);}
-  #arenaw .anote{font-size:12px;color:#a89878;line-height:1.6;}
   /* 交易視窗：位置/大小/外框全部比照商店視窗，維持介面統一 */
   #tradew{position:absolute;top:6px;left:6px;width:300px;display:none;z-index:96;}
   #tradew.on{display:block;}
@@ -2040,12 +2017,6 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     <div class="mbody" id="morphBody"></div>
   </div></div>
 
-  <!-- 史萊姆競技場：售票／兌獎 與 賽事情報 -->
-  <div id="arenaw"><div class="win">
-    <h2 id="arenaTitle">史萊姆競技場 <button class="sx" onclick="closeArena()">關閉</button></h2>
-    <div class="abody" id="arenaBody"></div>
-  </div></div>
-
   <div id="tradew"><div class="win">
     <h2 id="tradeTitle">交易 <button class="sx" onclick="tradeCancel()">關閉</button></h2>
     <div id="tradeGreet" style="font-size:15px;color:#d8c9a6;margin-bottom:6px"></div>
@@ -2784,62 +2755,6 @@ function placeBossCircle(grid,mapId,targetX,targetY,bossRoomId,spawnX,spawnY){
   if(typeof portalAnchors!=='undefined') portalAnchors.push({x:ax,y:ay});    // 記錄左上角，繪圖時用來把整張圖畫在2x2的正中央
 }
 
-/* 史萊姆競技場：5條賽道、每條30格長。左側是觀眾區與兩位侏儒NPC，右側是終點線。*/
-/* 娜魯帕洞穴：妖精森林地下的小洞穴。出入口在洞內最東方，娜魯帕待在最西方。*/
-function buildNarupaCave(){
-  const W=20,H=25,g=NG(W,H),ex={},houses=[];
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++) g[y][x]=T_DIRT;                     // 洞穴地面
-  for(let x=0;x<W;x++){ g[0][x]=T_STONEWALL; g[H-1][x]=T_STONEWALL; }          // 岩壁
-  for(let y=0;y<H;y++){ g[y][0]=T_STONEWALL; g[y][W-1]=T_STONEWALL; }
-  for(let y=3;y<H-3;y+=6)for(let x=4;x<W-4;x+=5) g[y][x]=T_STONEWALL;          // 洞內零星石柱，不會太空曠
-  g[H>>1][W-2]=T_STAIRS;                                                        // 出入口：最東方的階梯
-  MAP_WARPS['narupa_cave']=[{x:W-2, y:H>>1, kind:'map', toMap:'elf_forest', toX:24, toY:25}];
-  return {name:'娜魯帕洞穴', id:'narupa_cave', wild:false, grid:g, houses:houses, exits:ex,
-          px:(W-4)*TS, py:(H>>1)*TS, W:W, H:H, dungeon:true};
-}
-/* 洞穴裡的妖精居民：娜魯帕在最西方，另外幾位妖精假玩家會在洞內自由走動 */
-const NARUPA_NPCS=[
-  {name:'娜魯帕', job:'妖精製作匠人', mob:'娜魯帕', art:'mage', x:2*TS, y:12*TS, craft:'npc_narupa',
-   lines:['娜魯帕：「這裡是我的工房，獵戶的器物都在這兒打造。」']},
-].concat([
-  {n:'翠羽',  cls:'elf', g:'female', x:6,  y:5},
-  {n:'風鈴草',cls:'elf', g:'female', x:13, y:8},
-  {n:'橡實',  cls:'elf', g:'male',   x:5,  y:18},
-  {n:'苔蘚',  cls:'elf', g:'male',   x:14, y:19},
-].map(function(o){
-  // gambler 欄位在這裡只是「會自由走動」的標記，洞穴居民不會發話(聊天只在競技場觸發)
-  return {name:o.n, psheet:{cls:o.cls, gender:o.g}, art:'hero', x:o.x*TS, y:o.y*TS,
-          gambler:'idle', lines:['『'+o.n+'』：「……」']};
-}));
-function buildSlimeArena(){
-  const W=48,H=26,g=NG(W,H),ex={},houses=[];
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++) g[y][x]=T_DIRT;                       // 整場鋪土
-  for(let x=0;x<W;x++){ g[0][x]=T_TOWNWALL; g[H-1][x]=T_TOWNWALL; }              // 場館外牆
-  for(let y=0;y<H;y++){ g[y][0]=T_TOWNWALL; g[y][W-1]=T_TOWNWALL; }
-  // 觀眾區(左側)鋪石板，跟賽道區分開
-  for(let y=1;y<H-1;y++)for(let x=1;x<ARENA_X0-1;x++) g[y][x]=T_PATH;
-  // 5條賽道：每條只有1格寬(剛好容納一隻史萊姆)，之間用柵欄分隔。整區四周完全圍起，玩家無法進出
-  const trackTop=ARENA_Y0-1, trackBot=ARENA_Y0+(ARENA_LANES-1)*ARENA_LANE_H+1;
-  for(let ln=0;ln<ARENA_LANES;ln++){
-    const y0=ARENA_Y0+ln*ARENA_LANE_H;
-    for(let x=ARENA_X0;x<ARENA_X0+ARENA_LEN;x++){
-      g[y0][x]=T_GRASS;                                                          // 跑道(1格寬)
-      if(ln<ARENA_LANES-1) g[y0+1][x]=T_FENCE;                                   // 賽道之間的分隔柵欄
-    }
-    g[y0][ARENA_X0]=T_PATH;                                                      // 起跑線(石板)
-    g[y0][ARENA_X0+ARENA_LEN-1]=T_FLOWER;                                        // 終點線(花)
-  }
-  for(let x=ARENA_X0-1;x<=ARENA_X0+ARENA_LEN;x++){                               // 上下兩側圍欄
-    g[trackTop][x]=T_FENCE; g[trackBot][x]=T_FENCE;
-  }
-  for(let y=trackTop;y<=trackBot;y++){                                           // 左右兩側圍欄(起跑閘門/終點牆)
-    g[y][ARENA_X0-1]=T_FENCE; g[y][ARENA_X0+ARENA_LEN]=T_FENCE;
-  }
-  g[H-2][2]=T_SIGN;                                                              // 場館告示牌
-  gapS(g, 5, ex, 'village');                                                     // 南側出口回村莊
-  return {name:'史萊姆競技場', id:'slime_arena', wild:false, grid:g, houses:houses, exits:ex,
-          px:6*TS, py:10*TS, W:W, H:H};
-}
 function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
   const VX0=4,VX1=51,VY0=4,VY1=45, cx=27, cy=24;
   for(let x=VX0;x<=VX1;x++){g[VY0][x]=T_TOWNWALL;g[VY1][x]=T_TOWNWALL;}
@@ -3303,35 +3218,6 @@ function buildTerminal(name,id,wild,back,extra,size){   // size 可選：{W,H}�
   }
   return {name,id,wild,grid:g,houses,exits:ex,px:sx*TS,py:sy*TS,W,H};
 }
-function buildBirthTown(name,id,exitTo,forest,size){   // size 可選：{W,H}，不給就用預設 44x36
-  const W=(size&&size.W)||44, H=(size&&size.H)||36, g=NG(W,H),ex={},houses=[];
-  // 圍牆內縮1格就好(原本內縮3格，跟最外框的樹之間會形成兩排樹林，白白浪費空間)
-  const VX0=1,VX1=W-2,VY0=1,VY1=H-2, cx=W>>1, cy=H>>1;
-  // 妖精森林的邊界一律交給最外框那一圈大樹(見下方 border 之後的處理)，
-  // 這裡就不再多畫一圈圍牆，否則兩者相鄰會變成兩層樹牆、白白吃掉空間。
-  if(!forest){
-    const WALL = T_TOWNWALL;
-    for(let x=VX0;x<=VX1;x++){g[VY0][x]=WALL;g[VY1][x]=WALL;}
-    for(let y=VY0;y<=VY1;y++){g[y][VX0]=WALL;g[y][VX1]=WALL;}
-  }
-  for(let y=cy-2;y<cy+2;y++)for(let x=cx-3;x<cx+3;x++)g[y][x]=T_DIRT;            // 中央廣場
-  vLane(g,cx,VY0,VY1); hLane(g,cy,VX0,VX1); g[VY1][cx]=T_GATE;                    // 十字路 + 南門
-  if(forest){ scatterTrees(g,60,3);                                              // 林間散樹
-    [[9,10],[W-10,10],[9,H-12],[W-10,H-12]].forEach(function(p){ if(g[p[1]]&&g[p[1]][p[0]]===T_GRASS)g[p[1]][p[0]]=T_FLOWER; });
-  } else {
-    const hs=(x,y,w,d)=>{
-      const big=w>5, cx2=x+w/2, cy2=y+d/2, nw=big?4:3, nd=big?3:2, nx=Math.round(cx2-nw/2), ny=Math.round(cy2-nd/2);
-      houses.push({x:nx,y:ny,w:nw,d:nd,big});
-      for(let j=0;j<nd;j++)for(let i=0;i<nw;i++)if(g[ny+j]&&g[ny+j][nx+i]!==undefined)g[ny+j][nx+i]=T_HOUSE;
-    };
-    hs(6,6,6,4); hs(W-12,6,6,4); hs(6,H-11,6,4); hs(W-12,H-11,6,4);
-    if(g[cy-3])g[cy-3][cx+4]=T_WELL;
-  }
-  g[cy-1][cx] = forest?T_MOTHERTREE:T_BIGTREE;                                    // 中心巨樹：妖精森林＝森林之母、銀騎士村莊＝大樹
-  border(g);
-  if(forest){ for(let x=0;x<W;x++){g[0][x]=T_BIGTREE;g[H-1][x]=T_BIGTREE;} for(let y=0;y<H;y++){g[y][0]=T_BIGTREE;g[y][W-1]=T_BIGTREE;} } // 最外框：與內縮1格的圍牆合為單排樹林
-  gapS(g,cx,ex,exitTo); vLane(g,cx,VY1,H-2);
-  return {name:name,id:id,wild:false,grid:g,houses:houses,exits:ex,px:cx*TS,py:(cy+2)*TS,W:W,H:H}; }
 /* 地城(冒險洞穴)版面持久化：迷宮用亂數生成，若每次進圖都重新生成會導致玩家每次進去都是完全不同的
    格局(暗門/樓梯位置也會跟著變)，無法熟悉地圖。改成只在「第一次」生成迷宮，之後存進localStorage，
    下次進圖直接讀取存好的版面，格局、暗道、王房位置都會維持一致，直到玩家自己在後台清除重置。*/
@@ -3468,13 +3354,6 @@ const MAP_BUILDERS = {
   hunt_w: ()=>buildTerminal('西邊狩獵場','hunt_w',true,{e:'cross_s'},(g,o)=>scatterTrees(g,90,3)),
   hunt_s: ()=>buildTerminal('南邊狩獵場','hunt_s',true,{n:'cross_s'},(g,o)=>scatterTrees(g,90,9)),
   hunt_e: ()=>buildTerminal('東邊狩獵場','hunt_e',true,{w:'cross_s', n:'cross_e'},(g,o)=>scatterTrees(g,90,5)),
-  elf_forest: ()=>{ var _m=buildBirthTown('妖精森林','elf_forest','village',true,{W:56,H:50});   /* 尺寸比照說話之島村莊 */
-    { var _cx=_m.W>>1, _cy=(_m.H>>1)-1, _ex=_cx-4;                              /* 娜魯帕洞穴入口：森林之母左側4格 */
-      _m.grid[_cy][_ex]=T_STAIRS;
-      MAP_WARPS['elf_forest']=[{x:_ex, y:_cy, kind:'map', toMap:'narupa_cave', toX:16, toY:12}]; } if(typeof ELF_NPCS!=='undefined') ELF_NPCS.forEach(function(nn){ var _gx=(nn.x/TS)|0,_gy=(nn.y/TS)|0; if(_m.grid[_gy]&&_m.grid[_gy][_gx]===T_TREE) _m.grid[_gy][_gx]=T_GRASS; }); return _m; },        // 獵戶出生地
-  silver_knight: ()=>buildBirthTown('銀騎士村莊','silver_knight','village',false),// 武將出生地
-  slime_arena: ()=>buildSlimeArena(),                                            // 史萊姆競技場(賭場)
-  narupa_cave: ()=>buildNarupaCave(),                                            // 娜魯帕洞穴(妖精森林地下)
 };
 /* 野外地圖清單：給「傳送術」等隨機傳送類功能使用，涵蓋岔路/港口/狩獵場/冒險洞穴1-2樓（訓練場是固定佈局的特殊場地，不列入隨機傳送目的地）*/
 const WILD_MAP_IDS=['north_island','port_n','port_e','hunt_w','hunt_s','hunt_e','cross_e','cross_w','cross_s','cross_n'];
@@ -4145,7 +4024,7 @@ function drawTreeIso(cx,cy){
 /* 只有「村莊正中央那一棵」大樹要放大(銀騎士村)，其餘大樹一律原尺寸。
    妖精森林是拿大樹當外圍圍牆的，若整批放大會擋住裡面的NPC；
    說話之島村的路邊樹也一樣。所以這裡用座標判斷，只認中央那一格。*/
-const CENTER_TREE_SCALE={silver_knight:2.5};
+const CENTER_TREE_SCALE={};
 function bigTreeScaleAt(tx,ty){
   const s=CENTER_TREE_SCALE[curMapId]; if(!s) return 1;
   const cx=Math.floor(MAPW/2), cy=Math.floor(MAPH/2);
@@ -4431,499 +4310,7 @@ const npcs=[
   {name:'多瑪', job:'鐵匠', mob:'多瑪', art:'dwarf', x:26*TS, y:38*TS, lines:['多瑪：「武器防具因戰鬥而損壞了嗎？修復的手藝還在準備中，晚點再來找我吧。」']},
   {name:'皮賽爾', job:'畢克斯商人', mob:'皮賽爾', art:'mage', x:30*TS, y:38*TS, pyxShop:true, lines:['皮賽爾：「想要更多畢克斯的沙漏嗎？我這裡有整箱的賣。手上的畢克斯的羽毛也能在我這裡兌換稀有裝備喔。」']}
 ];
-const SILVER_NPCS=[
-  {name:'亞南', job:'鐵匠', mob:'亞南', art:'knight', x:18*TS, y:22*TS, lines:['亞南：「我是銀騎士村莊的鐵匠，修復武器的手藝還在準備中，晚點再來找我吧。」']},
-  {name:'傑瑞德', mob:'傑瑞德', art:'knight', x:27*TS, y:14*TS, quest50:true, lines:['傑瑞德：「我是武將公會的會長，想接受試煉嗎？」']},
-  {name:'梅林', job:'雜貨商', mob:'梅林', art:'mage', x:12*TS, y:13*TS, shop:'梅林', lines:['梅林：「歡迎光臨雜貨舖，需要點什麼嗎？」']},
-  {name:'格林', job:'武防具商人', mob:'格林', art:'dwarf', x:30*TS, y:24*TS, shop:'格林', lines:['格林：「武器、防具，我這兒都有，看看吧。」']},
-  {name:'高特', job:'倉庫管理員', mob:'高特', art:'knight', x:22*TS, y:18*TS, warehouse:true, lines:['高特：「要寄放東西嗎？我幫你看管倉庫。」']},
-  {name:'瑞奇', mob:'瑞奇', art:'knight', x:15*TS, y:20*TS, lines:['瑞奇：「……」']},
-];
-const ELF_NPCS=[
-  {name:'那翰', job:'道具製作', mob:'那翰', art:'mage', x:38*TS, y:20*TS, craft:'npc_nalien', lines:['那翰：「我能協助你製作魔法笛子。」']},
-  {name:'精靈', job:'森林守護者', mob:'精靈', art:'mage', x:14*TS, y:10*TS, craft:'npc_elf', lines:['精靈：「需要純粹的米索莉塊或精靈羽翼嗎？」']},
-  {name:'精靈女皇', job:'森林守護者', mob:'精靈女皇', art:'mage', x:8*TS, y:11*TS, craft:'npc_elfqueen', lines:['精靈女皇：「奧里哈魯根，唯有我能煉製。」']},
-  {name:'安特', job:'森林守護者', mob:'安特', art:'mage', x:18*TS, y:37*TS, craft:'npc_ent', lines:['安特：「森林的素材，我來為你加工。」']},
-  {name:'潘', job:'森林守護者', mob:'潘', art:'mage', x:10*TS, y:18*TS, craft:'npc_pan', lines:['潘：「想製作點什麼呢？」']},
-  {name:'芮克妮', job:'森林守護者', mob:'芮克妮', art:'mage', x:12*TS, y:31*TS, craft:'npc_rekne', lines:['芮克妮：「蛛網與絲線，交給我吧。」']},
-  {name:'布拉伯', job:'道具製作', mob:'布拉伯', art:'mage', x:22*TS, y:30*TS, craft:'npc_brabo', lines:['布拉伯：「精靈武器與部件的製作找我。」']},
-  {name:'艾爾', job:'倉庫管理員', mob:'艾爾', art:'mage', x:34*TS, y:19*TS, warehouse:true, lines:['艾爾：「要寄放東西嗎？倉庫四個角色共用。」']},
-  {name:'琳達', job:'精靈魔法商', mob:'琳達', art:'mage', x:36*TS, y:10*TS, shop:'琳達', lines:['琳達：「各種基本精靈水晶，歡迎選購。」']},
-  {name:'艾利溫', job:'精靈魔法傳授者', mob:'艾利溫', art:'mage', x:42*TS, y:15*TS, elfAttr:true,
-   lines:['艾利溫：「獵戶必須選定一種屬性，才能與精靈締結契約。你想學習哪一種？」']},
-  {name:'里迪', job:'道具製作', mob:'里迪', art:'mage', x:19*TS, y:33*TS, craft:'npc_ridi', lines:['里迪：「精靈餅乾的製作找我。願精靈守護你。」']},
-  {name:'迷幻森林之母', mob:'', art:'mage', x:28*TS, y:24*TS, nodraw:true, motherTrial:true, reach:46, lines:['迷幻森林之母：「年輕的獵戶啊，帶來受詛咒的精靈書，我將為你淨化它。」']}
-];
-function curNpcs(){ return (curMap&&curMap.world)?npcs:curMapId==='village'?npcs:(curMapId==='elf_forest'?ELF_NPCS:(curMapId==='silver_knight'?SILVER_NPCS:(curMapId==='slime_arena'?ARENA_NPCS:(curMapId==='narupa_cave'?NARUPA_NPCS:[])))); }
-/* ===================== 史萊姆競技場（賭場） =====================
-   5 條賽道、賽道長 30 格。常駐 12 隻史萊姆選手，每場隨機抽 5 隻出賽，每 30 分鐘一場。
-   一張票 200 金幣，可一次買多張；賠率由勝率換算（勝率越低賠率越高）。*/
-const ARENA_LANES=5, ARENA_LEN=30, ARENA_TICKET=200, ARENA_PERIOD=10*60*1000;   // 每10分鐘一場
-const ARENA_LANE_H=2;                                          // 每條賽道佔的格高(1格跑道+1格分隔柵欄)
-const ARENA_X0=14, ARENA_Y0=7;                                 // 賽道起點格與第一條賽道的y(上方留空間給北方的執行者葛拉)
-/* 選手名單：spd＝實力(影響勝率)，races/wins＝歷史戰績(供管理員報出歷史勝率)。
-   「流星」是當家傳奇明星，實力最強、人氣最高。*/
-const SLIME_RACERS=[
-  {id:1, name:'流星',       spd:88, races:142, wins:61, star:true},
-  {id:2, name:'閃電果凍',   spd:82, races:118, wins:38},
-  {id:3, name:'糖漿飛彈',   spd:80, races:96,  wins:29},
-  {id:4, name:'藍寶石',     spd:78, races:104, wins:28},
-  {id:5, name:'翡翠彈跳',   spd:76, races:87,  wins:21},
-  {id:6, name:'綠風',       spd:75, races:73,  wins:17},
-  {id:7, name:'滾滾麻糬',   spd:74, races:110, wins:23},
-  {id:8, name:'水晶之淚',   spd:72, races:65,  wins:13},
-  {id:9, name:'泡泡王子',   spd:71, races:58,  wins:11},
-  {id:10,name:'黏黏小霸王', spd:70, races:91,  wins:16},
-  {id:11,name:'夜露',       spd:68, races:44,  wins:7},
-  {id:12,name:'跳跳虎',     spd:66, races:52,  wins:8},
-  {id:13,name:'胖胖圓',     spd:62, races:38,  wins:4},
-  {id:14,name:'雷霆',       spd:84, races:77,  wins:26},
-  {id:15,name:'月影',       spd:79, races:63,  wins:18},
-  {id:16,name:'棉花糖',     spd:69, races:49,  wins:9},
-  {id:17,name:'碧波',       spd:73, races:55,  wins:12},
-  {id:18,name:'獵鷹',       spd:81, races:88,  wins:27},
-  {id:19,name:'小火苗',     spd:67, races:41,  wins:6},
-  {id:20,name:'鐵壁',       spd:64, races:35,  wins:5},
-];
-function slimeTag(s){ return '#'+s.id+' '+s.name; }        // 顯示格式：#18 獵鷹
-function slimeWinPct(s){ return s.races? Math.round(s.wins/s.races*1000)/10 : 0; }   // 歷史勝率(%)
-function arenaMsg(t){ if(curMapId==='slime_arena') sysMsg(t); }         // 賽事播報只有人在競技場時才顯示，比賽本身仍在背景照常進行/結算
-function arenaGoldMsg(t){ if(curMapId==='slime_arena') goldMsg(t); }
-/* ---- 比賽進行與結算 ---- */
-function arenaStartRace(){
-  if(arenaRunning) return;
-  var lineup=arenaLineup(), odds=arenaOdds(lineup);
-  arenaRunning={ pid:arenaPeriodId(), odds:odds,
-    runners:lineup.map(function(s,i){
-      // 當日狀態：每一場開賽前隨機決定(±35%)，模擬真實賽馬「今天狀況如何」。
-      // 沒有這個的話，實力最高的那隻會穩贏(實測勝率78%)，賭盤就完全沒有懸念了。
-      var form=0.65+Math.random()*0.70;
-      return {racer:s, lane:i, prog:0, form:form,
-              base:s.spd/100*form, burst:1, burstT:0, bob:Math.random()*1000, rank:0}; }),
-    finished:[], t0:Date.now(), phase:'countdown', phaseT:10200 };   // 阿門開賽前倒數10秒
-  arenaStandby=null; arenaStandbyPid=null;
-  arenaMsg('阿門【執行者】：「各位參賽者，各就各位——！」');
-  if(typeof refreshUI==='function') refreshUI();
-}
-/* 開賽前：讓本場出賽的5隻史萊姆先站在起跑閘門待命，玩家一進場就看得到誰要比賽。*/
-function arenaEnsureStandby(){
-  if(arenaRunning) return;
-  var pid=arenaPeriodId();
-  if(arenaStandby && arenaStandbyPid===pid) return;                // 同一場已經備好了
-  arenaStandbyPid=pid;
-  arenaStandby=arenaLineup().map(function(s,i){
-    return {racer:s, lane:i, prog:0, bob:Math.random()*1000};      // prog=0 就是起跑線上
-  });
-}
-function arenaUpdate(dt){
-  var R=arenaRunning;
-  if(!R){                                                          // 沒在比賽：讓選手在起跑線待命，時間到就開賽
-    if(curMapId==='slime_arena'){
-      arenaEnsureStandby();
-      if(arenaStandby) arenaStandby.forEach(function(r){ r.bob+=dt; });
-      if(Date.now()>=arenaNextRaceAt()-50) arenaStartRace();
-    }
-    return;
-  }
-  // ── 開跑前讀秒：3、2、1、開始！
-  if(R.phase==='countdown'){
-    var was=Math.ceil(R.phaseT/1000);
-    R.phaseT-=dt;
-    var now3=Math.ceil(R.phaseT/1000);
-    if(now3!==was && now3>0) arenaMsg('阿門【執行者】：「'+now3+'…」');
-    if(R.phaseT<=0){ R.phase='run'; arenaMsg('阿門【執行者】：「ＧＯ！！」'); }
-    R.runners.forEach(function(r){ r.bob+=dt; });                 // 待命時原地彈跳
-    return;
-  }
-  // ── 比賽進行：全程約40秒跑完30格，看得到你追我趕
-  R.runners.forEach(function(r){
-    r.bob+=dt;
-    if(r.prog>=ARENA_LEN) return;
-    r.burstT-=dt;
-    if(r.burstT<=0){                                              // 每0.6~1.4秒換一次狀態，形成領先/落後的拉鋸
-      r.burstT=600+Math.random()*800;
-      r.burst=0.5+Math.random()*1.05;
-    }
-    var prev=r.prog;
-    r.prog+=r.base*r.burst*(dt/1000)*1.15;                        // 速度調慢：30格約走40秒
-    if(prev<ARENA_LEN && r.prog>=ARENA_LEN){
-      r.prog=ARENA_LEN; R.finished.push(r.racer.id);
-      var pos=R.finished.length;
-      var nm=slimeTag(r.racer);
-      if(pos===1) arenaMsg('梅格【執行者】：「第 '+(arenaRaceSeq+1)+' 場比賽的優勝者是「'+nm+'」！」');
-      else arenaMsg('梅格【執行者】：「第'+pos+'名：'+nm+'」');
-    }
-  });
-  // 即時名次(供畫面顯示)
-  var sorted=R.runners.slice().sort(function(a,b){ return b.prog-a.prog; });
-  sorted.forEach(function(r,i){ r.rank=i+1; });
-  // 播報領先者變化
-  var lead=sorted[0];
-  if(lead && R.lead!==lead.racer.id && R.phase==='run' && lead.prog>1){
-    R.lead=lead.racer.id;
-    arenaMsg('▶ 目前領先：'+slimeTag(lead.racer)+'（'+Math.round(lead.prog)+'/'+ARENA_LEN+'格）');
-  }
-  if(R.finished.length>=R.runners.length || Date.now()-R.t0>120000) arenaSettle();
-}
-function arenaSettle(){
-  var R=arenaRunning; if(!R) return;
-  // 沒跑完的依進度補排名
-  var rest=R.runners.filter(function(r){ return R.finished.indexOf(r.racer.id)<0; })
-                    .sort(function(a,b){ return b.prog-a.prog; });
-  var order=R.finished.concat(rest.map(function(r){ return r.racer.id; }));
-  var winId=order[0];
-  var win=SLIME_RACERS.filter(function(s){return s.id===winId;})[0];
-  var names=order.map(function(id,i){ var s=SLIME_RACERS.filter(function(x){return x.id===id;})[0];
-    return (i+1)+'. '+(s?s.name:'?'); });
-  arenaMsg('🏁 比賽結束！冠軍：'+(win?win.name:'?')+'　（'+names.join('　')+'）');
-  // 結算彩金
-  var bet=arenaBets.filter(function(b){ return b.racerId===winId; })[0];
-  if(bet && bet.tickets>0){
-    var o=R.odds.filter(function(x){ return x.racer.id===winId; })[0];
-    var pay=Math.round(ARENA_TICKET*(o?o.odds:2)*bet.tickets);
-    S.gold+=pay;
-    arenaGoldMsg('★ 中獎！押中「'+slimeTag(win)+'」×'+bet.tickets+' 張，獲得 '+pay+' 金幣！');
-  } else if(arenaBets.length){
-    arenaMsg('可惜沒押中，下一場再來吧。');
-  }
-  // 更新歷史戰績
-  R.runners.forEach(function(r){ r.racer.races=(r.racer.races||0)+1; });
-  if(win) win.wins=(win.wins||0)+1;
-  arenaLastWinner=win?slimeTag(win):null; arenaLastSeq=arenaRaceSeq+1;   // 記下優勝者供梅格日後查詢
-  arenaRaceSeq++;                                                 // 場次+1，下一場會抽到不同的出賽名單
-  arenaNextAt=Date.now()+ARENA_PERIOD;                            // 從「這一場跑完」起算，隔10分鐘再開下一場
-  arenaBets=[]; arenaBetPid=arenaPeriodId(); arenaRunning=null;
-  arenaMsg('下一場將在 10 分鐘後開始，可以先去下注。');
-  if(typeof persistSaves==='function') persistSaves();   // 結算後存檔，獎金與清空的注單都保存下來
-  if(typeof refreshUI==='function') refreshUI();
-  if(document.getElementById('arenaw') && document.getElementById('arenaw').classList.contains('on')) renderArena();
-}
-/* 在賽道上把比賽中的史萊姆畫出來 */
-/* 賽道地面標示：起跑線與終點線的文字，直接畫在賽道上方便辨識 */
-function drawArenaMarks(){
-  if(curMapId!=='slime_arena') return;
-  ctx.save(); ctx.textAlign='center'; ctx.font='bold 13px sans-serif';
-  for(let ln=0;ln<ARENA_LANES;ln++){
-    const y=ARENA_Y0+ln*ARENA_LANE_H;
-    const a=groundScreen(ARENA_X0*TS+16,(y)*TS+16);
-    const b=groundScreen((ARENA_X0+ARENA_LEN-1)*TS+16,(y)*TS+16);
-    ctx.fillStyle='rgba(255,255,255,.85)'; ctx.strokeStyle='rgba(0,0,0,.85)'; ctx.lineWidth=3;
-    ctx.strokeText((ln+1)+'號', a.x, a.y-30); ctx.fillText((ln+1)+'號', a.x, a.y-30);
-    ctx.fillStyle='rgba(255,217,74,.95)';
-    ctx.strokeText('終點', b.x, b.y-30); ctx.fillText('終點', b.x, b.y-30);
-  }
-  ctx.restore();
-}
-function drawArenaRunner(r){
-  var sheet=(typeof mobSheetReady==='function')?mobSheetReady('史萊姆'):null;
-  var gx=(ARENA_X0+r.prog)*TS, gy=(ARENA_Y0+r.lane*ARENA_LANE_H)*TS;
-  var gs=groundScreen(gx+16, gy+28);
-  var hop=Math.abs(Math.sin((r.bob||0)/110))*7;                    // 史萊姆一蹦一蹦往前跳
-  actorShadow(ctx,gs.x,gs.y,12-hop*0.5,4-hop*0.15);                // 跳起來時影子縮小
-  var topY;
-  if(sheet) topY=drawSheetFrame(ctx,sheet,gs.x,gs.y-hop,1.4,0,'史萊姆');
-  else { ctx.fillStyle='#5ad0e0'; ctx.beginPath(); ctx.arc(gs.x,gs.y-10-hop,11,0,7); ctx.fill(); topY=gs.y-24-hop; }
-  var lbl=slimeTag(r.racer)+(r.rank?('　'+r.rank+'位'):'');
-  nameTag(lbl, gs.x, topY-2, '#ffffff');   // 選手名字統一白色，不因傳奇/一般而變色
-}
-/* ---- 競技場視窗 ---- */
-let _arenaTab='bet';
-function openArena(tab){ _arenaTab=tab||'bet'; renderArena();
-  var w=document.getElementById('arenaw'); if(w) w.classList.add('on');
-  if(typeof navBuildPanel==='function') navBuildPanel('arenaw');   // 手遊模式：註冊虛擬按鍵導覽，才能用方向鍵/確認鍵操作
-}
-function closeArena(){ var w=document.getElementById('arenaw'); if(w) w.classList.remove('on'); if(typeof navClear==='function') navClear(); }
-function openArenaBet(){ openArena('bet'); }
-function openArenaInfo(){ openArena('info'); }
-function arenaSyncBets(){                                          // 換場了就清掉上一場的注單
-  var pid=arenaPeriodId();
-  if(arenaBetPid!==pid){ arenaBetPid=pid; arenaBets=[]; }
-}
-function arenaBetOn(id){
-  arenaSyncBets();
-  if(arenaRunning){ sysMsg('比賽進行中，無法下注。'); return; }
-  if((S.gold||0)<ARENA_TICKET){ sysMsg('金幣不足，一張票要 '+ARENA_TICKET+' 金幣。'); return; }
-  S.gold-=ARENA_TICKET;
-  var b=arenaBets.filter(function(x){return x.racerId===id;})[0];
-  if(b) b.tickets++; else arenaBets.push({racerId:id, tickets:1});
-  var r=SLIME_RACERS.filter(function(s){return s.id===id;})[0];
-  goldMsg('買了 1 張「'+slimeTag(r)+'」的票（-'+ARENA_TICKET+' 金幣）');
-  if(typeof persistSaves==='function') persistSaves();   // 買完立刻存檔，關掉遊戲再回來票還在
-  if(typeof refreshUI==='function') refreshUI();
-  renderArena();
-}
-function arenaBetOn10(id){ for(var i=0;i<10;i++){ if((S.gold||0)<ARENA_TICKET) break; arenaBetOn(id); } }
-function renderArena(){
-  arenaSyncBets();
-  var body=document.getElementById('arenaBody'); if(!body) return;
-  var t=document.getElementById('arenaTitle');
-  var lineup=arenaLineup(), odds=arenaOdds(lineup);
-  var left=arenaNextRaceAt()-Date.now();
-  if(t) t.innerHTML=(_arenaTab==='bet'?'售票處 · 阿門':'賽事情報 · 葛拉')+' <button class="sx" onclick="closeArena()">關閉</button>';
-  var h='';
-  h+='<div class="acount" id="arenaCount">'+(arenaRunning?'⚑ 比賽進行中！':('下一場開賽倒數　'+arenaFmtCountdown(left)))+'</div>';
-  if(_arenaTab==='bet'){
-    var totT=arenaBets.reduce(function(a,b){return a+b.tickets;},0);
-    h+='<div class="anote" style="margin-bottom:7px">一張票 '+ARENA_TICKET+' 金幣，押中依賠率計算獎金。目前持有 '+totT+' 張票。</div>';
-    odds.forEach(function(o,i){
-      var mine=(arenaBets.filter(function(x){return x.racerId===o.racer.id;})[0]||{tickets:0}).tickets;
-      h+='<div class="arow'+(o.racer.star?' star':'')+'">'
-        +'<div class="alane">'+(i+1)+'</div>'
-        +'<div style="flex:1;min-width:0"><div class="aname">'+slimeTag(o.racer)+(o.racer.star?' ★':'')+'</div>'
-        +'<div class="asub">賠率 '+o.odds.toFixed(1)+' 倍'+(mine?('　<span style="color:#ffd94a">持票 '+mine+' 張</span>'):'')+'</div></div>'
-        +'<button class="abtn" onclick="arenaBetOn('+o.racer.id+')">買1張</button>'
-        +'<button class="abtn" onclick="arenaBetOn10('+o.racer.id+')">×10</button>'
-      +'</div>';
-    });
-    h+='<button class="abig" onclick="openArenaInfo()">查看賽事情報</button>';
-  } else {
-    h+='<div class="anote" style="margin-bottom:7px">本場出賽名單與選手狀態。歷史勝率為該選手出道以來的總戰績。</div>';
-    odds.forEach(function(o,i){
-      var s=o.racer;
-      h+='<div class="arow'+(s.star?' star':'')+'">'
-        +'<div class="alane">'+(i+1)+'</div>'
-        +'<div style="flex:1;min-width:0"><div class="aname">'+slimeTag(s)+(s.star?' ★ 傳奇':'')+'</div>'
-        +'<div class="asub">本場勝率 '+(o.winRate*100).toFixed(1)+'%　賠率 '+o.odds.toFixed(1)+' 倍</div>'
-        +'<div class="asub">歷史 '+s.wins+'勝 / '+s.races+'場（'+slimeWinPct(s)+'%）</div></div>'
-      +'</div>';
-    });
-    h+='<button class="abig" onclick="openArenaBet()">前往售票處下注</button>';
-  }
-  body.innerHTML=h;
-  var w=document.getElementById('arenaw');
-  if(w && w.classList.contains('on') && typeof navBuildPanel==='function') navBuildPanel('arenaw');   // 重繪後重新註冊導覽
-}
-/* 每場比賽由「時段編號」決定，同一時段不管誰去看、看幾次，出賽名單都一樣（但每場都不同）。
-   用固定亂數種子從時段編號推導，不需要存檔也能保證一致。*/
-/* 賽程改為「上一場跑完之後，再隔10分鐘開下一場」。
-   arenaNextAt 存下一場的開賽時刻；沒有紀錄時(第一次進場)給30秒暖身。*/
-let arenaNextAt=0, arenaRaceSeq=Math.floor(Date.now()/ARENA_PERIOD);   // 場次編號起始值改用真實時間推導，不再每次重開都固定從0開始(不然套進同一個亂數公式，第一場名單永遠一樣)
-let arenaLastWinner=null, arenaLastSeq=0;                      // 上一場的優勝者(供終點執行者梅格報告)
-function arenaNextRaceAt(){
-  if(!arenaNextAt) arenaNextAt=Date.now()+30000;
-  return arenaNextAt;
-}
-function arenaPeriodId(){ return arenaRaceSeq; }                 // 場次編號：每跑完一場 +1，用來決定出賽名單
-function _seedRand(seed){ let x=Math.sin(seed)*10000; return x-Math.floor(x); }
-function arenaLineup(pid){
-  pid=(pid==null)?arenaPeriodId():pid;
-  const pool=SLIME_RACERS.slice(), out=[];
-  for(let i=0;i<ARENA_LANES;i++){
-    const r=_seedRand(pid*97+i*31);
-    const idx=Math.floor(r*pool.length)%pool.length;
-    out.push(pool.splice(idx,1)[0]);
-  }
-  return out;
-}
-/* 勝率：以該場5隻的速度做加權，速度越高勝率越高。賠率＝(1/勝率)×0.85（莊家抽水15%）。*/
-function arenaOdds(lineup){
-  // 權重指數壓低到1.4：因為比賽有「當日狀態」的大幅隨機，實力高的並不會壓倒性獲勝，
-  // 賠率若還按實力大幅拉開就會失真(押強的完全不划算、押弱的又賠太多)。
-  const tot=lineup.reduce((a,s)=>a+Math.pow(s.spd,1.4),0);
-  return lineup.map(s=>{
-    const w=Math.pow(s.spd,1.4)/tot;
-    return {racer:s, winRate:w, odds:Math.max(1.2, Math.round((1/w)*0.85*10)/10)};
-  });
-}
-function arenaFmtCountdown(ms){
-  if(ms<0) ms=0;
-  const m=Math.floor(ms/60000), s=Math.floor(ms%60000/1000);
-  return m+' 分 '+String(s).padStart(2,'0')+' 秒';
-}
-let arenaBets=[];                 // 本場下注：[{racerId, tickets}]
-let arenaBetPid=null;             // 下注所屬的時段，跨場自動清空
-let arenaRunning=null;            // 比賽進行中的狀態
-let arenaStandby=null;            // 開賽前在起跑閘門待命的選手
-let arenaStandbyPid=null;
-/* 賭場裡的虛擬玩家：10位不同職業的賭客，會互相閒聊、討論賭盤。
-   type: ask=問人買誰、guess=猜誰會贏、push=慫恿別人跟注、brag=炫耀戰績、lose=輸錢哀嚎 */
-const ARENA_GAMBLERS=[
-  {name:'煞氣ａ雷神', cls:'knight', x:3, y:3, type:'brag'},
-  {name:'乂龍傲天乂', cls:'knight', x:10, y:3, type:'push'},
-  {name:'卍黑暗武將卐', cls:'knight', x:3, y:7, type:'brag'},
-  {name:'Oo孤傲oO', cls:'elf', x:11, y:6, type:'guess'},
-  {name:'冰之傲雪', cls:'mage', x:3, y:12, type:'guess'},
-  {name:'風中殘燭', cls:'mage', x:10, y:12, type:'lose'},
-  {name:'星之殞落', cls:'elf', x:3, y:17, type:'guess'},
-  {name:'夜雨聞鈴', cls:'elf', x:10, y:17, type:'ask'},
-  {name:'清風明月', cls:'mage', x:6, y:21, type:'guess'},
-  {name:'瀟灑走一回', cls:'knight', x:11, y:22, type:'brag'},
-  {name:'醉臥沙場', cls:'knight', x:18, y:23, type:'push'},
-  {name:'拾光', cls:'elf', x:24, y:23, type:'ask'},
-  {name:'蛋堡不加蛋', cls:'knight', x:30, y:23, type:'ask'},
-  {name:'鐵板麵加蛋', cls:'mage', x:36, y:23, type:'lose'},
-  {name:'大冰奶半糖', cls:'elf', x:42, y:23, type:'ask'},
-  {name:'鹹酥雞不要辣', cls:'knight', x:45, y:16, type:'brag'},
-  {name:'土城金城武', cls:'royal', x:43, y:19, type:'brag'},
-  {name:'中和彭于晏', cls:'royal', x:38, y:20, type:'push'},
-  {name:'三重周杰倫', cls:'knight', x:26, y:20, type:'guess'},
-  {name:'諸葛亮晶晶', cls:'mage', x:20, y:20, type:'ask'},
-  {name:'關我啥事', cls:'knight', x:6, y:5, type:'lose'},
-  {name:'孫尚香菜', cls:'elf', x:7, y:15, type:'push'},
-  {name:'曹操我褲子', cls:'knight', x:6, y:18, type:'guess'},
-  {name:'懶得取名字', cls:'mage', x:15, y:20, type:'lose'},
-  {name:'又菜又愛玩', cls:'knight', x:23, y:18, type:'ask'},
-  {name:'我家貓跑了', cls:'elf', x:33, y:20, type:'guess'},
-  {name:'騎蝸牛追火箭', cls:'mage', x:45, y:22, type:'brag'},
-  {name:'老闆我要離職', cls:'knight', x:39, y:23, type:'lose'},
-  {name:'昨天沒睡飽', cls:'royal', x:33, y:23, type:'lose'},
-  {name:'穩輸不穩贏', cls:'mage', x:13, y:17, type:'push'},
-];
-/* 賭客對話庫：分成「單獨自言自語」與「兩人對話」兩種。
-   對話是一問一答的成組台詞，讓賭場聽起來真的有人在互動。*/
-const ARENA_CHAT={
-  ask:  ['這場你買誰啊？','欸欸，你押哪一隻？','有內線消息嗎？分我一點','幫我看看買哪隻比較穩',
-         '我猶豫好久了…到底要買哪隻','聽說有人連中三把，是真的假的？','你都怎麼挑的？看賠率還是看勝率？'],
-  guess:['這場不知道誰會贏耶…','看起來勝負難料啊','我猜這場會爆冷門','賠率低的不一定會贏喔',
-         '剛剛那隻起跑超慢的，等等應該沒戲','我看好賠率高的那隻，搏一把','上一場我就是太保守才沒賺到',
-         '今天的賽道好像特別滑？','那隻昨天狀態就不好了'],
-  push: ['快！跟我一起買！這隻穩的！','相信我，這隻絕對第一！','再不買就來不及了，快下注！',
-         '我內線消息，這場買牠就對了！','別猶豫了，錯過這把會後悔！','這賠率不買可惜啊！'],
-  brag: ['我上一場賺了三千金幣！','小賭怡情，我從來沒輸過','看我的眼光，準得很','昨天連中五場，手氣正旺',
-         '我這身裝備都馬賭來的','跟著我買，包你賺'],
-  lose: ['唉…又輸了…','我的金幣啊……','最後一把，我要翻本！','明明就快贏了…可惡',
-         '早知道就買另一隻了','這隻史萊姆是不是被下藥了','我不玩了…好啦再一把就好'],
-};
-/* 兩人對話：[發起者台詞, 回應者台詞]，由兩位賭客一來一往講出來 */
-const ARENA_DIALOGS=[
-  ['欸，你上一場中了沒？','別提了，差一步就中，氣死我'],
-  ['你覺得傳奇那隻真的比較強嗎？','實力是強，但賠率太低啦，賺不了多少'],
-  ['我押了五張在同一隻','這麼有信心？輸了別哭喔'],
-  ['聽說賭場有作弊…','噓——小聲點，被執行者聽到就完了'],
-  ['我今天帶了三萬金幣來','三萬？等等剩三千我就笑了'],
-  ['那隻編號幾號來著？','我看看…好像是十八號吧'],
-  ['起跑的時候要看牠彈跳的節奏','有這種訣竅喔？教教我'],
-  ['我老婆不知道我在這裡','我也是啊，兄弟，噓'],
-  ['最近手氣有夠背','我也是，連輸七場了'],
-  ['你要不要跟我合買？','好啊，賺了對半分'],
-  ['我剛剛看到有人一次買二十張','有錢人的世界我不懂'],
-  ['這場結束我就回家了','每次都這樣說，然後又留下來'],
-  ['你看那隻，肚子好圓','搞不好比較重跑比較慢'],
-  ['賭場的酒有夠貴','來這裡誰是為了喝酒啊'],
-  ['我夢到七號會贏','夢？那我押八號好了'],
-  ['你今天穿這樣很好看欸','謝啦，贏錢再請你喝一杯'],
-  ['那個執行者是不是在瞪我','別看他，快轉頭'],
-  ['我把房子的錢都帶來了','兄弟…你冷靜點'],
-  ['聽說冠軍史萊姆會被加菜','難怪牠跑那麼拼'],
-  ['你買了幾張？','兩張，小賭而已'],
-  ['等等結束要不要去喝一杯','好啊，贏的人請客'],
-  ['我覺得賠率是騙人的','當然啊，莊家哪會做賠本生意'],
-  ['剛剛那隻起跑衝超快','衝太快後半段會沒力啦'],
-  ['我媽叫我不要賭博','那你怎麼還在這'],
-  ['這裡的位置好難站','你去右邊啦，那邊比較空'],
-  ['上個月我在這贏了一套裝備','真的假的？那是運氣好吧'],
-  ['我要買二十張！','二十張？！你瘋了嗎'],
-  ['牠們是不是有分品種？','應該吧，顏色好像不太一樣'],
-  ['今天人特別多欸','聽說有大賽，獎金很高'],
-];
-const ARENA_NPCS=[
-  // 三位執行者(妖魔造型)：阿門在起點喊開賽、梅格在終點報優勝、葛拉在北方公告賽事資訊
-  {name:'阿門', job:'售票執行者', mob:'妖魔', art:'goblin', x:(ARENA_X0-3)*TS, y:(ARENA_Y0+2)*TS, arenaBet:true,
-   lines:['阿門【售票執行者】：「買票押注找我，中獎票券也是我兌換。開賽前我會倒數十秒。」']},
-  {name:'梅格', job:'終點執行者', mob:'妖魔', art:'goblin', x:(ARENA_X0+ARENA_LEN+2)*TS, y:(ARENA_Y0+2)*TS, arenaFinish:true,
-   lines:['梅格【執行者】：「衝過終點線的瞬間，由我來宣布優勝者。」']},
-  {name:'葛拉', job:'賽事執行者', mob:'妖魔', art:'goblin', x:(ARENA_X0+Math.floor(ARENA_LEN/2))*TS, y:(ARENA_Y0-4)*TS, arenaInfo:true,
-   lines:['葛拉【執行者】：「本場出賽名單、勝率與賠率，都在我這裡。」']},
-].concat(ARENA_GAMBLERS.map(function(g){
-  return {name:g.name, psheet:{cls:g.cls, gender:'male'}, art:'hero', x:g.x*TS, y:g.y*TS,
-          gambler:g.type, lines:['『'+g.name+'』：「'+ARENA_CHAT[g.type][0]+'」']};
-}));
-/* 賭客閒聊：每隔一段時間隨機挑一位講一句，讓賭場有人氣。押注中的玩家會被慫恿型賭客點名。*/
-let _arenaChatAt=0;
-/* 倒數計時每秒跳動：只更新那一行文字，不重繪整個清單(否則按鈕會閃爍、也會打斷操作)。*/
-let _arenaCountAt=0;
-function arenaCountTick(){
-  var w=document.getElementById('arenaw');
-  if(!w || !w.classList.contains('on')) return;
-  var now=Date.now();
-  if(now<_arenaCountAt) return;
-  _arenaCountAt=now+250;
-  var el=document.getElementById('arenaCount'); if(!el) return;
-  if(arenaRunning){
-    if(arenaRunning.phase==='countdown'){
-      el.textContent='⚑ 即將開跑　'+Math.max(1,Math.ceil(arenaRunning.phaseT/1000))+'…';
-    } else {
-      var ld=arenaRunning.runners.slice().sort(function(a,b){return b.prog-a.prog;})[0];
-      el.textContent='⚑ 比賽中！領先：'+(ld?slimeTag(ld.racer)+'（'+Math.round(ld.prog)+'/'+ARENA_LEN+'）':'—');
-    }
-  } else el.textContent='下一場開賽倒數　'+arenaFmtCountdown(arenaNextRaceAt()-now);
-}
-function arenaChatTick(){
-  if(curMapId!=='slime_arena') return;                              // 只有競技場的賭客會聊天；洞穴居民只走動不說話
-  var now=Date.now();
-  // 處理所有進行中的對話(可同時多組)：時間到就講下一句
-  for(var k=_arenaDlgs.length-1;k>=0;k--){
-    var d2=_arenaDlgs[k];
-    if(now<d2.at) continue;
-    if(d2.step===0){ sayBubble(d2.a, d2.lines[0], 10000); d2.step=1; d2.at=now+1800; }
-    else { sayBubble(d2.b, d2.lines[1], 10000); _arenaDlgs.splice(k,1); }
-  }
-  if(now<_arenaChatAt) return;
-  _arenaChatAt=now+380+Math.random()*420;                          // 每0.38~0.8秒補一次發言
-  var npcs=(typeof ARENA_NPCS!=='undefined')?ARENA_NPCS.filter(function(n){return n.gambler;}):[];
-  if(!npcs.length) return;
-  if(bubbles.length>=ARENA_TALK_TARGET) return;                    // 場上氣泡夠多就先不加
-  var busy={};                                                     // 已在講話的人不重複挑
-  bubbles.forEach(function(b){ if(b.who&&b.who.name) busy[b.who.name]=1; });
-  _arenaDlgs.forEach(function(x){ busy[x.a.name]=1; busy[x.b.name]=1; });
-  var free=npcs.filter(function(n){ return !busy[n.name]; });
-  if(!free.length) return;
-  // 一半機率開一組雙人對話
-  if(Math.random()<0.5 && free.length>=2){
-    var pairs=[];
-    for(var i2=0;i2<free.length;i2++)for(var j2=i2+1;j2<free.length;j2++){
-      if(Math.hypot(free[i2].x-free[j2].x, free[i2].y-free[j2].y)<200) pairs.push([free[i2],free[j2]]);
-    }
-    if(pairs.length){
-      var pr=pairs[Math.floor(Math.random()*pairs.length)];
-      var dl=ARENA_DIALOGS[Math.floor(Math.random()*ARENA_DIALOGS.length)];
-      _arenaDlgs.push({a:pr[0], b:pr[1], lines:dl, step:0, at:now});
-      return;
-    }
-  }
-  // 否則單人自言自語
-  var g=free[Math.floor(Math.random()*free.length)];
-  var pool=ARENA_CHAT[g.gambler]||ARENA_CHAT.guess;
-  var line=pool[Math.floor(Math.random()*pool.length)];
-  if(g.gambler==='push'){                                          // 慫恿型：直接點名本場某一隻
-    var lu=arenaLineup();
-    var pick=lu[Math.floor(Math.random()*lu.length)], pickN=slimeTag(pick);
-    line=['快跟我買「'+pickN+'」！穩的！','我內線消息，這場「'+pickN+'」絕對第一！',
-          '「'+pickN+'」！相信我準沒錯，快下注！'][Math.floor(Math.random()*3)];
-  }
-  sayBubble(g, line, 10000);
-}
-/* 賭客走動：在觀眾區隨機晃來晃去，偶爾停下來。講話中的會暫停移動並面向對方。*/
-/* NPC自由走動：在自己的起始位置附近隨機晃動，走一段停一下。
-   套用對象＝標了 gambler(競技場賭客/洞穴居民) 或 wander(妖精森林的守護者) 的NPC。*/
-function arenaWanderTick(dt){
-  var list=(typeof curNpcs==='function')?curNpcs():null;
-  if(!list||!list.length) return;
-  list.forEach(function(n){
-    if(!n.gambler && !n.wander) return;                            // 其他NPC(商人/倉庫管理員等)站原地
-    if(n.home==null){ n.home={x:n.x,y:n.y}; n.wc=0; }
-    if(_arenaDlgs.some(function(x){return x.a===n||x.b===n;})) return;   // 對話中：站著講話
-    n.wc-=dt;
-    if(n.wc<=0){                                                   // 換一個目標點或原地休息
-      n.wc=1800+Math.random()*3200;
-      if(Math.random()<0.35){ n.tx=null; }                          // 休息
-      else {
-        var ang=Math.random()*Math.PI*2, r=20+Math.random()*70;
-        n.tx=n.home.x+Math.cos(ang)*r; n.ty=n.home.y+Math.sin(ang)*r;
-      }
-    }
-    if(n.tx==null) return;
-    var dx=n.tx-n.x, dy=n.ty-n.y, d=Math.hypot(dx,dy);
-    if(d<4){ n.tx=null; return; }
-    var sp=0.55*(dt/16.67);
-    var nx=n.x+dx/d*sp, ny=n.y+dy/d*sp;
-    if(typeof solidAt==='function' && (solidAt(nx+16,ny+24)||solidAt(nx+16,ny+8))){ n.tx=null; return; }
-    n.x=nx; n.y=ny;
-    if(typeof dir8of==='function'){ var d8=dir8of(dx,dy); if(d8) n.dir8=d8; }
-  });
-}
-let _arenaDlgs=[];                 // 同時進行中的多組對話
-const ARENA_TALK_TARGET=13;        // 場上同時維持的氣泡數(約10~15人在講話)
+function curNpcs(){ return (curMap&&curMap.world)?npcs:curMapId==='village'?npcs:[]; }
 // 怪物模板
 const MOBS={
   '史萊姆':{name:'史萊姆', lv:5, size:'small', undead:false, boss:false, aggressive:false, calls:[], hp:40, dmg:4, dmgMin:1, dmgMax:8, hitBonus:0, db:0, ac:10, mr:0, atkSpd:2, spd:1, aggro:260, exp:15, gold:7, goldMin:3, goldMax:7, align:1.0},
@@ -5193,7 +4580,7 @@ function spawnFakePlayers(){
   clearFakePlayers();
   if(!curMap) return;
   if(curMap.world){ spawnVillageFakePlayers(); const _ws=WORLD.regions.filter(r=>r.wild&&r.id!=='scarecrow').sort(()=>Math.random()-0.5).slice(0,7); _ws.forEach(r=>spawnWildFakePlayers(r.id,2+Math.floor(Math.random()*2))); return; }
-  if(!curMap.wild && (curMapId==='village'||curMapId==='elf_forest'||curMapId==='silver_knight')) spawnVillageFakePlayers();
+  if(!curMap.wild && curMapId==='village') spawnVillageFakePlayers();
   else if(curMap.wild && curMapId!=='scarecrow' && curMapId!=='keta_room' && curMapId!=='bapho_room') spawnWildFakePlayers();
 }
 function spawnVillageFakePlayers(){                            // 村莊：4~6位，在有商店的NPC之間走動
@@ -5432,8 +4819,6 @@ const SHOPS={
 };
 SHOPS['巴辛']=['箭','歐西斯匕首','燈','斧','歐西斯弓','歐西斯頭盔','阿克海盾牌','歐西斯環甲','歐西斯鏈甲','歐西斯之矛','歐西斯斗篷','歐西斯短劍','釘錘','蠟燭','肉','紅色藥水','自我加速藥水']; // 巴辛：依官方資料校正的固定清單
 SHOPS['潘朵拉']=['箭','匕首','燈','斧','弓','亞連','巴迪須','闊矛','矛','釘錘','短劍','彎刀','長劍','皮夾克','小盾牌','小藤甲','銀釘皮甲','解除詛咒的卷軸','環甲','綿質長袍','鱗甲','大盾牌','鏈甲','蠟燭','肉','紅色藥水','糖果','信紙','血盟信紙','橙色藥水','翡翠藥水','哨子','鑑定卷軸','瞬間移動卷軸','返回卷軸','白色藥水','自我加速藥水']; // 潘朵拉：依官方資料校正的固定清單
-SHOPS['格林']=['箭','銀箭','弓','戰斧','戰錘','闊矛','短劍','小盾牌','大盾牌','鋼鐵頭盔','小藤甲','銀釘皮甲','環甲','鱗甲']; // 格林（銀騎士村莊武器防具商）：依參考資料校正的固定清單
-SHOPS['梅林']=['肉','短統靴','蠟燭','燈','燈籠','燈油','哨子','糖果','信紙','血盟信紙','紅色藥水','白色藥水','翡翠藥水','自我加速藥水','鑑定卷軸','瞬間移動卷軸','返回卷軸','解除詛咒的卷軸','復活卷軸','磨刀石']; // 梅林（銀騎士村莊道具商）：依參考資料校正的固定清單（驅逐魔杖非本版遊戲道具，不列入）
 const SCROLL_IMG="assets/items/scroll_unused.png";
 const COIN_IMG="assets/items/coin.png";
 const ITEM_ICON={"回憶蠟燭":"assets/items/回憶蠟燭.png","紅色藥水":"assets/items/紅色藥水.png","藍色藥水":"assets/items/藍色藥水.png","自我加速藥水":"assets/items/自我加速藥水.png","橙色藥水":"assets/items/橙色藥水.png","白色藥水":"assets/items/白色藥水.png","黑色藥水":"assets/items/黑色藥水.png","肉":"assets/items/肉.png","加速符咒":"assets/items/加速符咒.png","慎重藥水":"assets/items/慎重藥水.png","消耗品袋子":"assets/items/消耗品袋子.png","祝福的對武器施法卷軸":"assets/items/祝福的對武器施法卷軸.png","祝福的對防具施法卷軸":"assets/items/祝福的對防具施法卷軸.png","福袋":"assets/items/福袋.png","紅包":"assets/items/紅包.png","老舊獵人的箭桶":"assets/items/老舊獵人的箭桶.png","老舊皮革的箭桶":"assets/items/老舊皮革的箭桶.png","萬能藥(CHA)":"assets/items/萬能藥(CHA).png","萬能藥(CON)":"assets/items/萬能藥(CON).png","萬能藥(DEX)":"assets/items/萬能藥(DEX).png","萬能藥(INT)":"assets/items/萬能藥(INT).png","萬能藥(STR)":"assets/items/萬能藥(STR).png","萬能藥(WIS)":"assets/items/萬能藥(WIS).png","詛咒的對武器施法卷軸":"assets/items/詛咒的對武器施法卷軸.png","詛咒的對防具施法卷軸":"assets/items/詛咒的對防具施法卷軸.png","變鈍的武器":"assets/items/變鈍的武器.png"};
@@ -5826,7 +5211,6 @@ function npcAt(wx,wy){ var _ns=(typeof curNpcs==='function')?curNpcs():((curMapI
 function partyAt(wx,wy){                                   // 找出點擊位置附近的隊友(村莊內駐守時才可互動)
   if(typeof party==='undefined' || !party.length) return null;
   if(curMap && curMap.wild) return null;
-  if(curMapId==='slime_arena') return null;                // 競技場內隊友不進場，不該被點到(否則會誤開交易視窗)
   let best=null, bd=1e9;
   party.forEach(function(p){ if(p.down||p._hidden) return;
     const d=Math.hypot((p.x+16)-wx,(p.y+16)-wy);
@@ -5960,12 +5344,9 @@ const VILLAGE_PARTY_SPOTS=[[32,31],[36,30],[40,31],[31,35],[35,34],[39,35],[36,3
    往外螺旋搜尋可站立又互不重疊的格子。回傳的座標對同一張地圖是固定的(不含亂數)，
    所以出村再回來，每位隊友都會回到自己原本的位置。*/
 const _villageSpotCache={};
-/* 妖精森林：隊友固定安置在東南方那片草地(該區刻意留白給隊伍用) */
-const ELF_PARTY_SPOTS=[[34,31],[38,30],[42,31],[34,36],[38,35],[42,36],[46,33]];
 function villagePartySpots(){
   const id=curMapId||'';
   if(id==='village') return VILLAGE_PARTY_SPOTS;
-  if(id==='elf_forest') return ELF_PARTY_SPOTS;
   if(_villageSpotCache[id]) return _villageSpotCache[id];
   const cx=Math.floor(MAPW/2), cy=Math.floor(MAPH/2);
   const used={}, out=[];
@@ -6158,10 +5539,6 @@ function updateParty(dt){
   const wild = (typeof curMap!=='undefined') && curMap && curMap.wild;
   const GAP=13;                          // 軌跡取樣間隔：每位隊友間隔幾個記錄點（數字越小跟得越緊）
   for(let i=0;i<party.length;i++){ const p=party[i];
-    if(curMapId==='slime_arena'){                             // 競技場內不出現隊友(賭場不讓閒雜人等進場)
-      p._hidden=true; p.target=null; p._path=null;
-      p.x=-9999; p.y=-9999;                                   // 移出場外，避免被點擊或被任何互動判定抓到
-      continue; }
     p._hidden=false;
     if(p.down) continue;                                    // 被擊倒中：暫停戰鬥與移動，直到自動起身
     if(!wild){
@@ -6283,11 +5660,7 @@ function update(dt){
   updateParty(dt);
   updatePets(dt);
   updateSummons(dt);
-  if(typeof arenaUpdate==='function') arenaUpdate(dt);   // 史萊姆競技場：開賽判定與比賽進行
-  if(typeof arenaChatTick==='function') arenaChatTick();  // 賭客閒聊
-  if(typeof arenaWanderTick==='function') arenaWanderTick(dt);  // 賭客走動
   if(typeof fakePlayersTick==='function') fakePlayersTick(dt);  // 假玩家：村莊買賣模擬／野外狩獵
-  if(typeof arenaCountTick==='function') arenaCountTick(); // 倒數計時器即時跳動
   { var _mmw=document.getElementById('mapw'); if(_mmw&&_mmw.classList.contains('on')){ miniMapAcc+=dt; if(miniMapAcc>=250){ miniMapAcc=0; if(typeof drawMiniMap==='function') drawMiniMap(); } } else { miniMapAcc=0; } }   // 小地圖開著時，玩家位置即時跟著移動，不用重開視窗
   { var _swOn=document.getElementById('socialw'), _piOn=document.getElementById('petInfow');
     var _needSummonTick=(_swOn&&_swOn.classList.contains('on')&&socialCurTab==='pet') || (_piOn&&_piOn.classList.contains('on')&&_petIdxIsSummon);
@@ -6457,7 +5830,7 @@ function update(dt){
   regenAcc+=dt;                                                        // 自然回復（HP/MP）
   if(regenAcc>=3000){ regenAcc-=3000;
     if(S.hp>0 && (S.hp<S.maxhp||S.mp<S.maxmp)){
-      const mult=(S.cls==='獵戶'&&curMapId==='elf_forest')?2:1;         // 獵戶在妖精森林：2 倍
+      const mult=1;
       if(S.hp<S.maxhp) S.hp=Math.min(S.maxhp, S.hp+Math.max(1,Math.round((S.hpRegenMax||1)*mult)));
       if(S.mp<S.maxmp) S.mp=Math.min(S.maxmp, S.mp+Math.max(1,Math.round((S.mpRegen||1)*mult)));
       if(typeof refreshUI==='function')refreshUI();
@@ -6979,12 +6352,6 @@ function talkNpc(n){
   if(n.shop){ openShop(n.shop, (n.lines&&n.lines[0])||'要購買，還是要販售呢？'); return; }
   if(n.warehouse){ openWarehouse(); return; }
   if(n.elfAttr){ openElfAttr(); return; }                    // 艾利溫：選擇獵戶屬性魔法
-  if(n.arenaBet){ openArenaBet(); return; }
-  if(n.arenaInfo){ openArenaInfo(); return; }
-  if(n.arenaFinish){                                         // 梅格(終點)：報告上一場優勝者
-    if(arenaLastWinner) sysMsg('梅格【執行者】：「第 '+arenaLastSeq+' 場比賽的優勝者是「'+arenaLastWinner+'」！」');
-    else sysMsg('梅格【執行者】：「還沒有比賽紀錄，等第一場跑完再來問我。」');
-    return; }
   if(n.craft){ openCraft(n.craft); return; }
   if(n.petWarehouse){ openPetWarehouse(); return; }
   if(n.pyxShop){ openPyxShop(); return; }
@@ -7202,7 +6569,6 @@ function render(){
     });
   }
 
-  if(typeof drawArenaMarks==='function') drawArenaMarks();   // 競技場起終點標示
 
   // 2) 掉落物（貼地）
   drops.forEach(dp=>{ const s=groundScreen(dp.x+8,dp.y+10);
@@ -7267,12 +6633,6 @@ function render(){
     talls.push({d:gx+gy+0.10, f:()=>drawPetIso(p)}); });
   summons.forEach(s=>{ const gx=(s.x+16)/TS, gy=(s.y+16)/TS;                 // 召喚獸沿用寵物的繪製函式(結構相同：type/dir8/hp/maxhp/lv)
     talls.push({d:gx+gy+0.10, f:()=>drawPetIso(s)}); });
-  if(curMapId==='slime_arena'){                                                        // 競技場：待命中或比賽中的史萊姆選手
-    const _rs=(typeof arenaRunning!=='undefined'&&arenaRunning)?arenaRunning.runners
-             :((typeof arenaStandby!=='undefined'&&arenaStandby)?arenaStandby:null);
-    if(_rs) _rs.forEach(r=>{ const gx=ARENA_X0+r.prog, gy=ARENA_Y0+r.lane*ARENA_LANE_H;
-      talls.push({d:gx+gy+0.08, f:()=>drawArenaRunner(r)}); });
-  }
   function _houseOccludes(h){                                   // 房子是單張固定視角的貼圖，沒有畫背面牆，只有玩家站在房子「北側/背面」時，單靠深度排序沒辦法判斷該不該擋住人物；前面、側面已經用footprint後角當深度鍵正確處理了，不需要再套用半透明，只在背面才觸發
     for(let i=0;i<_occActors.length;i++){
       const ax=_occActors[i][0], ay=_occActors[i][1];
@@ -8804,7 +8164,7 @@ function openTeleport(){ const w=document.getElementById('teleportw'), list=docu
     if(!collapsed){ spots.forEach(function(nm){ const d=document.createElement('div'); d.className='teleItem'; d.textContent='◈  '+nm; d.onclick=function(){ teleportTo(nm); }; list.appendChild(d); }); }
   });
   w.classList.add('on'); navBuildPanel('teleportw'); }
-const TELE_MAP={'史萊姆競技場':'slime_arena','妖精森林':'elf_forest','銀騎士村莊':'silver_knight','冒險洞穴1樓':'cave','冒險洞穴2樓':'cave2'};
+const TELE_MAP={'冒險洞穴1樓':'cave','冒險洞穴2樓':'cave2'};
 Object.keys(MAP_NAME).forEach(function(id){ TELE_MAP[MAP_NAME[id]]=id; });   // 桃花島各區域的傳送點：名稱全部來自 MAP_NAME
 function playTeleportFx(){ if(typeof mobFx!=='undefined'&&typeof player!=='undefined') mobFx.push({kind:'teleportfx', x:player.x+player.w/2, y:player.y+player.h, life:500}); }
 function teleportTo(nm){ document.getElementById('teleportw').classList.remove('on'); navClear();
@@ -8877,7 +8237,7 @@ function castSpell(sp){ if(!sp) return;
     if(!_tpPool.length){ sysMsg('這裡無法使用傳送術。'); refreshUI(); return; }
     var _tpDest=_tpPool[Math.floor(Math.random()*_tpPool.length)];
     loadMap(_tpDest); playTeleportFx(); sysMsg('施放「傳送術」，隨機傳送到附近區域。'); refreshUI(); return; }
-  if(name==='世界樹的呼喚'){ S.mp-=mp; if(typeof teleportTo==='function') teleportTo('妖精森林'); refreshUI(); return; }
+  if(name==='世界樹的呼喚'){ sysMsg('妖精森林已不存在，世界樹沒有回應。'); return; }
   if(name==='能量感測'){ var _scMobile=document.body.classList.contains('mobilemode');
     var _scTgt = _scMobile ? ((lockTarget&&mobs.indexOf(lockTarget)>=0)?lockTarget:nearestMob()) : ((lockTarget&&mobs.indexOf(lockTarget)>=0)?lockTarget:null);
     if(!_scTgt){ sysMsg(_scMobile?'附近沒有目標':'請先點選要感測的目標'); return; }
@@ -9847,7 +9207,7 @@ function startGame(){ if(!cc.cls) return;
   Object.assign(S,{ acDexBase:undefined, align:0,
     equip:{weapon:null,body:null,helmet:null,tshirt:null,cloak:null,gloves:null,boots:null,shield:null,necklace:null,ring:null,ring2:null,belt:null,ammo:null},
     inv:{}, invOrder:[], food:80, kills:0, ketaKilledAt:0, baphoKilledAt:0, ketaBossKills:0, baphoBossKills:0, tameUntil:0, elfAttr:null });
-  pets=[]; arenaBets=[]; arenaBetPid=null;
+  pets=[];
   S.spells=[]; S.ats=null; S.atsProf=null; S.trial50=null; S.redKnight=false; S.st={}; S.buffs={}; S.transformInto=null; S.transformUntil=0; S.statPoints=0; party=[]; partyMode='focus'; playerTrail=[]; _pendingPartySlots=null; _pendingPartyMode=null; _pendingHaste=null;
   for(let p=0;p<4;p++)for(let i=0;i<8;i++) hotbar[p][i]=null;
   if(typeof loadSharedWarehouse==='function') S.warehouse=loadSharedWarehouse(); else S.warehouse={};   // 倉庫改為跨角色共用
@@ -9857,7 +9217,7 @@ function startGame(){ if(!cc.cls) return;
   S.inv={'金幣':200,'新手裝備箱':1,'新手戒指箱':1,'新手武器箱':1,[startWpn]:1,'皮夾克':1,'蠟燭':2,'說話之島卷軸':1};
   if(cc.cls==='獵戶') S.inv['箭']=30;               // 獵戶附帶一些箭矢
   equipItem(startWpn); equipItem('皮夾克'); recalcStats();
-  S.mapId = cc.cls==='獵戶' ? 'elf_forest' : cc.cls==='武將' ? 'silver_knight' : 'village';  // 出生地
+  S.mapId = 'village';  // 出生地：所有職業都從桃源村開始
   buildHotbar();
   if(pendingSlot>=0){ SAVES[pendingSlot]=snapshot(); persistSaves(); }
   // 建立完成後回到存檔頁面（反白剛建立的角色），需雙擊或按 OK 才進入遊戲
@@ -10522,7 +9882,7 @@ function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; 
   el.innerHTML=h; }
 function snapshot(){ return { name:S.name,cls:S.cls,gender:S.gender,acDexBase:S.acDexBase,align:S.align,lv:S.lv,exp:S.exp,
   str:S.str,dex:S.dex,con:S.con,int:S.int,wis:S.wis,cha:S.cha,
-  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),wv:1,px:player.x,py:player.y,ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,elfAttr:S.elfAttr||null,ketaBossKills:S.ketaBossKills||0,baphoBossKills:S.baphoBossKills||0,pets:(typeof pets!=='undefined'?pets.map(function(p){return {type:p.type,name:p.name,lv:p.lv,exp:p.exp,hp:p.hp,maxhp:p.maxhp,str:p.str,con:p.con,dex:p.dex,align:p.align};}):[]),petWarehouse:(typeof petWarehouse!=='undefined'?petWarehouse.slice():[]),pyxMs:S.pyxMs||0,pyxFeatherMs:S.pyxFeatherMs||0,arenaBets:(typeof arenaBets!=='undefined'?arenaBets.slice():[]),arenaBetPid:(typeof arenaBetPid!=='undefined'?arenaBetPid:null),
+  hp:S.hp,maxhp:S.maxhp,mp:S.mp,maxmp:S.maxmp,ac:S.ac,mr:S.mr,gold:S.gold,food:S.food,kills:S.kills,mapId:(S.mapId||curMapId),wv:1,px:player.x,py:player.y,ketaKilledAt:S.ketaKilledAt||0,baphoKilledAt:S.baphoKilledAt||0,elfAttr:S.elfAttr||null,ketaBossKills:S.ketaBossKills||0,baphoBossKills:S.baphoBossKills||0,pets:(typeof pets!=='undefined'?pets.map(function(p){return {type:p.type,name:p.name,lv:p.lv,exp:p.exp,hp:p.hp,maxhp:p.maxhp,str:p.str,con:p.con,dex:p.dex,align:p.align};}):[]),petWarehouse:(typeof petWarehouse!=='undefined'?petWarehouse.slice():[]),pyxMs:S.pyxMs||0,pyxFeatherMs:S.pyxFeatherMs||0,
   equip:Object.assign({},S.equip),inv:Object.assign({},S.inv),invOrder:(S.invOrder||[]).slice(),warehouse:Object.assign({},S.warehouse),
   hotbar:hotbar.map(p=>p.slice()), spells:(S.spells||[]).map(s=>({name:s.name,desc:s.desc||'',icon:s.icon||'📖'})), ats:(S.ats?JSON.parse(JSON.stringify(S.ats)):null), atsProf:(S.atsProf?JSON.parse(JSON.stringify(S.atsProf)):null), trial50:(S.trial50||null), redKnight:!!S.redKnight, seen:Date.now(),
   buffs:(S.buffs?JSON.parse(JSON.stringify(S.buffs)):null),   // 魔法buff：連同絕對到期時間戳一起存，讀檔時依剩餘時間繼續倒數
@@ -10657,9 +10017,7 @@ function redSubmit(){ for(var i=0;i<REDQ_PX.length;i++){ if((S.inv[REDQ_PX[i][0]
   REDQ_PX.forEach(function(r){ removeItem(r[0],r[1]); }); S.redKnight=true; goldMsg('★ 完成紅騎士任務！'); refreshUI(); openRedQuest(); }
 // 依製作鍵反查工匠名（用於標題）
 function craftNpcName(key){ var ov={npc_mother:'迷幻森林之母'}; if(ov[key])return ov[key];
-  var pools=[]; if(typeof npcs!=='undefined')pools.push(npcs); if(typeof ELF_NPCS!=='undefined')pools.push(ELF_NPCS);
-  if(typeof SILVER_NPCS!=='undefined')pools.push(SILVER_NPCS);
-  if(typeof NARUPA_NPCS!=='undefined')pools.push(NARUPA_NPCS);   // 洞穴NPC也要納入，否則娜魯帕會抓到別人的名字
+  var pools=[]; if(typeof npcs!=='undefined')pools.push(npcs);
   for(var p=0;p<pools.length;p++){ for(var i=0;i<pools[p].length;i++){ if(pools[p][i].craft===key)return pools[p][i].name; } }
   return '工匠'; }
 function closeCraft(){ var w=document.getElementById('craftw'); if(w)w.style.display='none'; _craftIdx=null; if(typeof navClear==='function')navClear(); }   // 關閉時回到清單頁，下次打開不會停在上次的詳細頁
@@ -10812,11 +10170,11 @@ let adminCat='shop', magicSub='royal';
   const SHOP_OV_KEY ='lineage_pixel_shop_overrides_v2';    // { 雜貨店:[名...], 武器店:[...], 防具店:[...] }　v2：發佈基準線更新後版號提升，讓開發過程中殘留在瀏覽器裡的舊版覆蓋自動失效，不會蓋掉新的官方預設清單
   const CAT_OV_KEY  ='lineage_pixel_cat_overrides';     // { 'wkind:名':'sword','aslot:名':'body','icat:名':'potion' }
   const DROP_OV_KEY ='lineage_pixel_drop_overrides';    // { 怪物名:[[物品,數量]...] }
-  const SHOP_KEYS_RESETTABLE=['潘朵拉','巴辛','格林','梅林','吉倫','琳達'];   // 有販售清單、支援「恢復預設值」的商人
+  const SHOP_KEYS_RESETTABLE=['潘朵拉','巴辛','吉倫'];   // 有販售清單、支援「恢復預設值」的商人
   const SHOP_DEFAULTS={}; SHOP_KEYS_RESETTABLE.forEach(function(k){ SHOP_DEFAULTS[k]=(typeof SHOPS!=='undefined'&&SHOPS[k])?SHOPS[k].slice():[]; });   // 在套用任何覆蓋設定之前，先存一份檔案內建的原始清單當預設值
 
   /* --- 地區 / 地圖 --- */
-  const REGIONS=[['island01',ISLAND_NAME],['elf_forest','妖精森林'],['silver_knight','銀騎士村莊']];              // 目前只有一個地區，之後可再擴充
+  const REGIONS=[['island01',ISLAND_NAME]];              // 目前只有一個地區，之後可再擴充
   const SPAWN_MAPS=[['north_island',MAP_NAME.north_island],['port_n',MAP_NAME.port_n],['port_e',MAP_NAME.port_e],
     ['hunt_w',MAP_NAME.hunt_w],['hunt_s',MAP_NAME.hunt_s],['hunt_e',MAP_NAME.hunt_e],['scarecrow',MAP_NAME.scarecrow],
     ['cross_e',MAP_NAME.cross_e],['cross_w',MAP_NAME.cross_w],['cross_s',MAP_NAME.cross_s],['cross_n',MAP_NAME.cross_n],
@@ -10838,8 +10196,6 @@ let adminCat='shop', magicSub='royal';
   const SHOP_NPCS=[['pandora','潘朵拉'],['gillon','吉倫'],['basin','巴辛']];
   const REGION_SHOP_NPCS={                     // 各村莊 → 可編輯商店 NPC 書籤
     island01:SHOP_NPCS,
-    elf_forest:[['linda','琳達']],
-    silver_knight:[['meilin','梅林'],['gelin','格林']],
   };
   const PANDORA_FILTERS=[['all','全部'],['potion','藥水'],['scroll','卷軸'],['item','道具']];
   const BASIN_SEGS=[['weapon','武器'],['armor','防具']]; // 巴辛(妖魔商人)：武器/防具都寫入同一份 SHOPS['巴辛']
@@ -11439,9 +10795,6 @@ function loadCharacter(data){
   // 精確座標還原：只有存檔當時所在的地圖跟這次真正要進入的地圖一致時才套用(避免因死亡被送回村莊、卻用了舊地圖的座標)，
   // 否則沿用該地圖原本的預設出生點；找不到座標(例如舊存檔沒有px/py欄位)也一樣走預設出生點。
   _pendingSpawn=(((data.hp||0)>0) && data.mapId===S.mapId && data.px!=null && data.py!=null)?{x:data.px,y:data.py,world:(data.wv===1)}:null;   // wv=1：座標已是大地圖座標；舊存檔(沒有wv)的座標是各區域自己的，進圖時自動換算
-  arenaBets=(data.arenaBets||[]).map(function(b){ return {racerId:b.racerId, tickets:b.tickets}; });
-  arenaBetPid=(data.arenaBetPid!=null)?data.arenaBetPid:null;
-  if(arenaBets.length && arenaBetPid!==arenaPeriodId()) arenaBetPid=arenaPeriodId();   // 讀檔時把注單接到目前這一場，避免因為關閉遊戲/改版而讓已買的票平白消失
   pets=(data.pets||[]).map(function(d){
     var st=(d.str!=null)?{str:d.str,con:d.con,dex:d.dex}:null;
     var np=makePet(d.type,d.lv||1,st); if(!np) return null;
@@ -11459,6 +10812,7 @@ function loadCharacter(data){
   document.getElementById('selectw').classList.remove('on'); enterGame();
 }
 function enterGame(){ navClear(); document.body.classList.add('ingame');
+  if(['elf_forest','silver_knight','slime_arena','narupa_cave'].indexOf(S.mapId)>=0){ S.mapId='village'; _pendingSpawn=null; }   // 舊存檔停在已刪除的地圖：回桃源村
   loadMap(S.mapId||'village', null, _pendingSpawn); _pendingSpawn=null;   // 有記到精確座標就原地重生，沒有(新角色/舊存檔/死亡重置)才用地圖預設出生點
   player.dir='down';
   { var _nowE=Date.now(), _ph=_pendingHaste;
@@ -11497,7 +10851,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v84.8-0';
+const GAME_VER='v84.9-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
