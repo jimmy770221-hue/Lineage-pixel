@@ -3764,7 +3764,8 @@ function drawGroundTex(row,cx,cy,tx,ty,salt,avoidDark){                         
   ctx.drawImage(GROUND_TEX, sx,sy,TEXW,TEXH, cx-HW-2,cy-HH-1, HW*2+4,HH*2+2);
   ctx.restore();
 }
-function drawFlowerDecor(cx,cy){ const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
+function drawFlowerDecor(cx,cy,tx,ty){ if(tx!==undefined&&natDraw('dec_flowers'+(Math.floor(tileRand(tx,ty,89)*4)%4),cx+(tileRand(tx,ty,88)-0.5)*10,cy+6,1.6)) return;
+  const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
   sp(cx-8+i*7,cy-2+((i%2)*4),4,4); ctx.fillStyle='#ffe27a'; sp(cx-7+i*7,cy-1+((i%2)*4),2,2);} }
 function drawIsoFloor(t,cx,cy,tx,ty){
   if(t===T_PATH && ROAD_TEX.complete && ROAD_TEX.naturalWidth){             // 道路：貼上PixelLab生成的石板路材質，取代原本純色程序繪製
@@ -3775,7 +3776,7 @@ function drawIsoFloor(t,cx,cy,tx,ty){
   }
   const GT_OK=GROUND_TEX.complete && GROUND_TEX.naturalWidth;               // 地面材質圖集(草地/沙地/泥地/海水)是否已載入完成
   if(GT_OK){
-    if(t===T_GRASS || t===T_FLOWER){ drawGroundTex(0,cx,cy,tx,ty,11,true); if(t===T_FLOWER) drawFlowerDecor(cx,cy); return; }
+    if(t===T_GRASS || t===T_FLOWER){ drawGroundTex(0,cx,cy,tx,ty,11,true); if(t===T_GRASS&&curMap&&curMap.world){ const rr=tileRand(tx,ty,93); const ox=(tileRand(tx,ty,87)-0.5)*14; if(rr<0.045) natDraw('dec_tuft'+(Math.floor(tileRand(tx,ty,86)*3)%3),cx+ox,cy+5,1.5); else if(rr<0.06) natDraw('dec_bush'+(Math.floor(tileRand(tx,ty,85)*3)%3),cx+ox,cy+6,1.2); else if(rr<0.07) natDraw('dec_rock'+(Math.floor(tileRand(tx,ty,84)*2)%2),cx+ox,cy+6,1.2); else if(rr<0.08) natDraw('dec_petals0',cx+ox,cy+3,1.4); } if(t===T_FLOWER) drawFlowerDecor(cx,cy,tx,ty); return; }
     if(t===T_SAND){ drawGroundTex(1,cx,cy,tx,ty,12); return; }
     if(t===T_DIRT || t===T_DOORMAT){ drawGroundTex(2,cx,cy,tx,ty,13); return; }
     if(t===T_WATER){ drawGroundTex(3,cx,cy,tx,ty,14); const _sl=shallowAt(tx,ty); if(_sl){ ctx.save(); ctx.globalAlpha=_sl*0.11; fillDiamond(cx,cy,'#a6e6d6',2); ctx.restore(); } return; }
@@ -3824,7 +3825,7 @@ function drawIsoFloor(t,cx,cy,tx,ty){
     ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(cx-HW,cy); ctx.lineTo(cx,cy-HH); ctx.lineTo(cx+HW,cy); ctx.stroke();
     ctx.strokeStyle='rgba(0,0,0,.16)';       ctx.beginPath(); ctx.moveTo(cx-HW,cy); ctx.lineTo(cx,cy+HH); ctx.lineTo(cx+HW,cy); ctx.stroke();
   }
-  if(t===T_FLOWER) drawFlowerDecor(cx,cy);
+  if(t===T_FLOWER) drawFlowerDecor(cx,cy,tx,ty);
 }
 
 /* 立體方塊（牆 / 屋頂用）*/
@@ -3842,7 +3843,7 @@ function poly(pts,fill,stroke){ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y); ctx.closePath();
   if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();} }
 /* 中式木屋美術(assets/objects/houses)：每種都有固定的地基格數(w x d)，錨點＝圖內「最靠近鏡頭的前角」落地點；樣式=農舍/民宅/商鋪/鐵匠/藥鋪/客棧/長老屋/倉房/仙觀/涼亭 */
-const HOUSE_META={"farm0": {"w": 272, "h": 228, "ax": 152, "ay": 202}, "farm1": {"w": 272, "h": 228, "ax": 152, "ay": 202}, "farm2": {"w": 272, "h": 228, "ax": 152, "ay": 202}, "home0": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "home1": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "home2": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "shop0": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "shop1": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "smith0": {"w": 272, "h": 230, "ax": 152, "ay": 204}, "medic0": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "inn0": {"w": 336, "h": 278, "ax": 184, "ay": 252}, "inn1": {"w": 336, "h": 278, "ax": 184, "ay": 252}, "elder0": {"w": 336, "h": 276, "ax": 184, "ay": 250}, "granary0": {"w": 240, "h": 206, "ax": 120, "ay": 180}, "temple0": {"w": 368, "h": 338, "ax": 216, "ay": 312}, "pavilion0": {"w": 240, "h": 208, "ax": 120, "ay": 182}};
+const HOUSE_META={"farm0": {"w": 272, "h": 292, "ax": 152, "ay": 266}, "farm1": {"w": 272, "h": 292, "ax": 152, "ay": 266}, "farm2": {"w": 272, "h": 292, "ax": 152, "ay": 266}, "home0": {"w": 272, "h": 302, "ax": 152, "ay": 276}, "home1": {"w": 272, "h": 302, "ax": 152, "ay": 276}, "home2": {"w": 272, "h": 302, "ax": 152, "ay": 276}, "shop0": {"w": 272, "h": 302, "ax": 152, "ay": 276}, "shop1": {"w": 272, "h": 302, "ax": 152, "ay": 276}, "smith0": {"w": 272, "h": 300, "ax": 152, "ay": 274}, "medic0": {"w": 272, "h": 302, "ax": 152, "ay": 276}, "inn0": {"w": 336, "h": 408, "ax": 184, "ay": 382}, "inn1": {"w": 336, "h": 408, "ax": 184, "ay": 382}, "elder0": {"w": 336, "h": 364, "ax": 184, "ay": 338}, "granary0": {"w": 240, "h": 262, "ax": 120, "ay": 236}, "temple0": {"w": 368, "h": 422, "ax": 216, "ay": 396}, "pavilion0": {"w": 240, "h": 302, "ax": 120, "ay": 276}};
 const HOUSE_KIND_VARS={farm:3,home:3,shop:2,smith:1,medic:1,inn:2,elder:1,granary:1,temple:1,pavilion:1};
 const HOUSE_KIND_SIZE={farm:[3,2],home:[3,2],shop:[3,2],smith:[3,2],medic:[3,2],inn:[4,3],elder:[4,3],granary:[2,2],temple:[5,3],pavilion:[2,2]};
 const HOUSE_IMGS={}; Object.keys(HOUSE_META).forEach(function(k){ const im=new Image(); im.src="assets/objects/houses/"+k+".png"; HOUSE_IMGS[k]=im; });
@@ -3959,7 +3960,7 @@ function drawTownWallIso(cx,cy,nb){
   nb=nb||{};
   shadow(cx,cy,20,7);
   const woodL='#c08a48', wood='#9a6a34', woodD='#734f24', tip='#8a5a2a', grain='rgba(80,52,22,.45)';
-  const h=30, top=cy-30;
+  const h=50, top=cy-50;
   // 決定走向：有東西向鄰居就沿 +X，否則沿 +Y(南北向)。兩者皆無時預設沿 +X。
   const alongX = (nb.e||nb.w) || !(nb.n||nb.s);
   const ux = alongX ? HW : -HW;            // 一格在螢幕上的水平位移
@@ -3973,7 +3974,7 @@ function drawTownWallIso(cx,cy,nb){
     ctx.lineTo(cx+ux/2, cy-off+uy/2);
     ctx.stroke();
   };
-  beam(24,woodD,4); beam(12,woodD,4);
+  beam(40,woodD,5); beam(20,woodD,5);
   // 一排尖頭木樁：位置沿走向分布，越靠+X/+Y方向越暗
   for(let i=0;i<N;i++){
     const t=(i/(N-1))-0.5;                                        // -0.5 ~ +0.5
@@ -3985,9 +3986,13 @@ function drawTownWallIso(cx,cy,nb){
     ctx.moveTo(px-3.5,py-h); ctx.lineTo(px,py-h-5); ctx.lineTo(px+3.5,py-h); ctx.closePath(); ctx.fill();
     ctx.fillStyle=grain; ctx.fillRect(px+1, py-h+3, 1, h-5);      // 木紋
   }
-  beam(24,'#a87a3a',1); beam(12,'#a87a3a',1);                     // 前方橫樑高光
+  beam(40,'#a87a3a',1); beam(20,'#a87a3a',1);                     // 前方橫樑高光
+  beam(34,'#dcc88c',2); beam(16,'#dcc88c',2);                      // 麻繩綁帶
+  ctx.fillStyle='#8f8b80'; ctx.beginPath(); ctx.moveTo(cx-ux/2,cy-uy/2+1); ctx.lineTo(cx+ux/2,cy+uy/2+1); ctx.lineTo(cx+ux/2,cy+uy/2-5); ctx.lineTo(cx-ux/2,cy-uy/2-5); ctx.closePath(); ctx.fill();   // 石砌基座
+  ctx.strokeStyle='rgba(60,56,50,.55)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx-ux/2,cy-uy/2-2); ctx.lineTo(cx+ux/2,cy+uy/2-2); ctx.stroke();
 }
 function drawGateIso(cx,cy){
+  if(NAT_IMGS.paifang&&NAT_IMGS.paifang.complete&&NAT_IMGS.paifang.naturalWidth){ natDraw('paifang',cx,cy+10,1.5); ctx.fillStyle='#f2dca0'; ctx.font='bold 15px "Microsoft JhengHei",monospace'; ctx.textAlign='center'; ctx.fillText('村口',cx,cy+10-76); return; }
   // 紅色牌樓（村口）
   ctx.fillStyle='#8a2a1a'; ctx.fillRect(cx-16,cy-46,5,46); ctx.fillRect(cx+11,cy-46,5,46);   // 兩柱
   ctx.fillStyle='#b83a24'; ctx.fillRect(cx-20,cy-52,40,8);                                       // 上樑
@@ -3999,7 +4004,31 @@ function drawGateIso(cx,cy){
 
 function shadow(cx,cy,rx,ry){ ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,7); ctx.fill(); }
 
-function drawTreeIso(cx,cy){ shadow(cx,cy,16,7);
+/* 桃花島自然與村莊物件美術(assets/objects/nature)：桃樹/松樹/闊葉樹/竹叢/柳樹(各數款)、大樹、千年桃樹、地面小物(灌木/草叢/石頭/野花/落英)、水井、村口牌坊；錨點＝落地點 */
+const NAT_META={"tree_peach0": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_peach1": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_peach2": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_pine0": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_pine1": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_broad0": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_broad1": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_broad2": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_bamboo0": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_bamboo1": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_bamboo2": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_willow0": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "tree_willow1": {"w": 104, "h": 132, "ax": 52, "ay": 120}, "big_peach0": {"w": 197, "h": 250, "ax": 98, "ay": 227}, "big_broad0": {"w": 197, "h": 250, "ax": 98, "ay": 227}, "big_pine0": {"w": 197, "h": 250, "ax": 98, "ay": 227}, "big_peach_gold": {"w": 260, "h": 330, "ax": 130, "ay": 300}, "dec_bush0": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_bush1": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_bush2": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_tuft0": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_tuft1": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_tuft2": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_rock0": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_rock1": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_flowers0": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_flowers1": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_flowers2": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_flowers3": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "dec_petals0": {"w": 48, "h": 36, "ax": 24, "ay": 26}, "well": {"w": 96, "h": 100, "ax": 48, "ay": 82}, "paifang": {"w": 200, "h": 150, "ax": 100, "ay": 128}};
+const NAT_IMGS={}; Object.keys(NAT_META).forEach(function(k){ const im=new Image(); im.src="assets/objects/nature/"+k+".png"; NAT_IMGS[k]=im; });
+function natDraw(key,x,y,sc){ const im=NAT_IMGS[key], m=NAT_META[key]; if(!im||!im.complete||!im.naturalWidth) return false; sc=sc||1;
+  ctx.drawImage(im, x-m.ax*sc, y-m.ay*sc, m.w*sc, m.h*sc); return true; }
+const TREE_SP=['peach','pine','broad','bamboo','willow'], TREE_NV={peach:3,pine:2,broad:3,bamboo:3,willow:2};
+const TREE_MIX={ _:[.12,.26,.47,.15], village:[.30,.10,.50,.10], cross_n:[.45,.15,.30,.10], north_island:[.45,.10,.30,.15], scarecrow:[.45,.15,.30,.10], cross_s:[.50,.10,.30,.10], hunt_s:[.35,.15,.30,.20],
+  hunt_w:[.05,.15,.20,.60], cross_w:[.10,.15,.35,.40], hunt_e:[.05,.50,.30,.15], port_n:[.10,.35,.40,.15], port_e:[.10,.30,.45,.15], cross_e:[.15,.25,.45,.15] };
+const _TK={map:null,a:null};
+function treeKindAt(tx,ty){                                          // 這一格的樹種(固定、成片分布)：回傳 樹種*4+款式
+  if(_TK.map!==MAP){ _TK.map=MAP; _TK.a=new Uint8Array(MAPW*MAPH).fill(255); }
+  const i=ty*MAPW+tx; if(_TK.a[i]!==255) return _TK.a[i];
+  let R=worldRegionAt(tx,ty), mix=TREE_MIX[(R&&TREE_MIX[R.id])?R.id:'_'];
+  const z=tbNoise(tx*0.11,ty*0.11,95)*0.7+tileRand(tx,ty,96)*0.3; let acc=0, sp=2;
+  for(let k=0;k<4;k++){ acc+=mix[k]; if(z<acc*0.82+0.09){ sp=k; break; } if(k===3) sp=2; }
+  let water=false; for(let dy=-2;dy<=2&&!water;dy++)for(let dx=-2;dx<=2;dx++){ const r=MAP[ty+dy]; if(r&&r[tx+dx]===T_WATER){ water=true; break; } }
+  if(water&&tileRand(tx,ty,97)<0.6) sp=4;
+  let v=Math.floor(tileRand(tx,ty,98)*TREE_NV[TREE_SP[sp]])%TREE_NV[TREE_SP[sp]];
+  if(sp===2&&tileRand(tx,ty,99)>0.93) v=2; else if(sp===2) v=v%2;
+  return (_TK.a[i]=sp*4+v);
+}
+function isLandmarkAt(id,tx,ty){ if(!WORLD||!WORLD.landmarks) return false; for(let k=0;k<WORLD.landmarks.length;k++){ const m=WORLD.landmarks[k]; if(m.id===id&&m.x===tx&&m.y===ty) return true; } return false; }
+function drawTreeIso(cx,cy){
+  if(curMap&&curMap.world){ const kc=treeKindAt(_objTX,_objTY), sp=TREE_SP[kc>>2]; if(natDraw('tree_'+sp+(kc&3),cx,cy+4)) return; }   // 桃花島：多樹種美術
+  shadow(cx,cy,16,7);
   ctx.fillStyle='#7a4a22'; sp(cx-3,cy-18,6,20);           // 樹幹
   ctx.fillStyle='#245e22'; ctx.beginPath(); ctx.arc(cx,cy-30,15,0,7); ctx.fill();
   ctx.fillStyle='#2e7a2e'; ctx.beginPath(); ctx.arc(cx-6,cy-34,10,0,7); ctx.fill();
@@ -4016,6 +4045,7 @@ function bigTreeScaleAt(tx,ty){
   return (tx===cx && ty===cy-1) ? s : 1;                          // 中央巨樹的位置(建圖時放在 cy-1)
 }
 function drawBigTreeIso(cx,cy,s){ s=s||1;
+  if(curMap&&curMap.world){ const key=isLandmarkAt('peachtree',_objTX,_objTY)?'big_peach_gold':['big_peach0','big_broad0','big_pine0','big_broad0'][Math.floor(tileRand(_objTX,_objTY,94)*4)%4]; if(natDraw(key,cx,cy+6)) return; }
   shadow(cx,cy,30*s,12*s);
   ctx.fillStyle='#6a4020'; sp(cx-8*s,cy-40*s,16*s,44*s);               // 粗樹幹
   ctx.fillStyle='#5a3418'; sp(cx-8*s,cy-40*s,4*s,44*s);
@@ -4038,29 +4068,28 @@ function drawMotherTreeIso(cx,cy){ shadow(cx,cy,60,22);
 /* 柵欄：依相鄰的柵欄決定要往哪幾個方向接出橫桿，讓整排柵欄緊密相連、轉角形成完整直角，
    而不是每格都畫同一個角度的斜桿(那樣看起來像散落的木板)。
    等角投影下：世界座標 +X → 螢幕右下、+Y → 螢幕左下。*/
-function drawFenceIso(cx,cy,nb){
+function drawFenceIso(cx,cy,nb){                                         // 竹籬笆：粗竹立柱＋兩道竹橫桿＋一排尖頭竹片，竹節與麻繩綁帶
   nb=nb||{};
-  const POST='#9a6a34', RAIL='#b98a4a', RAIL2='#8f6636';
-  // 往 +X(右下) 接的橫桿
-  const railX=function(){
-    ctx.fillStyle=RAIL;
-    ctx.beginPath(); ctx.moveTo(cx,cy-13); ctx.lineTo(cx+HW,cy-13+HH); ctx.lineTo(cx+HW,cy-9+HH); ctx.lineTo(cx,cy-9); ctx.closePath(); ctx.fill();
-    ctx.fillStyle=RAIL2;
-    ctx.beginPath(); ctx.moveTo(cx,cy-6); ctx.lineTo(cx+HW,cy-6+HH); ctx.lineTo(cx+HW,cy-2+HH); ctx.lineTo(cx,cy-2); ctx.closePath(); ctx.fill();
+  const RAIL='#c4cf78', RAIL2='#9aab4a', PK='#b2c262', PK2='#8c9e44', POST='#a6b552', NODE='rgba(70,86,30,.55)', ROPE='#d9c58a';
+  const seg=function(dirx){                                              // dirx=+1往右下(+X)，-1往左下(+Y)
+    const ex=dirx*HW, ey=HH;
+    [[27,RAIL],[13,RAIL2]].forEach(function(r){ ctx.fillStyle=r[1]; ctx.beginPath(); ctx.moveTo(cx,cy-r[0]); ctx.lineTo(cx+ex,cy-r[0]+ey); ctx.lineTo(cx+ex,cy-r[0]+ey+3); ctx.lineTo(cx,cy-r[0]+3); ctx.closePath(); ctx.fill(); });
+    for(let i=1;i<=3;i++){ const t=i/4, px=cx+ex*t, py=cy+ey*t;                // 尖頭竹片
+      ctx.fillStyle=(i%2)?PK:PK2; ctx.fillRect(px-2,py-30,4,32); ctx.beginPath(); ctx.moveTo(px-2,py-30); ctx.lineTo(px,py-35); ctx.lineTo(px+2,py-30); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=NODE; ctx.fillRect(px-2,py-16,4,1); }
   };
-  // 往 +Y(左下) 接的橫桿
-  const railY=function(){
-    ctx.fillStyle=RAIL;
-    ctx.beginPath(); ctx.moveTo(cx,cy-13); ctx.lineTo(cx-HW,cy-13+HH); ctx.lineTo(cx-HW,cy-9+HH); ctx.lineTo(cx,cy-9); ctx.closePath(); ctx.fill();
-    ctx.fillStyle=RAIL2;
-    ctx.beginPath(); ctx.moveTo(cx,cy-6); ctx.lineTo(cx-HW,cy-6+HH); ctx.lineTo(cx-HW,cy-2+HH); ctx.lineTo(cx,cy-2); ctx.closePath(); ctx.fill();
-  };
-  if(nb.e) railX();
-  if(nb.s) railY();
-  if(!nb.e && !nb.s && !nb.w && !nb.n){ railX(); }        // 孤立的一格：仍畫一段，不會變成只剩柱子
-  ctx.fillStyle=POST; sp(cx-2,cy-16,4,18);                // 立柱畫在最後，蓋住橫桿接縫＝轉角是完整直角
+  if(nb.e) seg(1);
+  if(nb.s) seg(-1);
+  if(!nb.e && !nb.s && !nb.w && !nb.n) seg(1);
+  ctx.fillStyle=POST; sp(cx-3.5,cy-38,7,41);                                // 粗竹立柱
+  ctx.fillStyle='#c9d684'; sp(cx-3.5,cy-38,2,41);
+  ctx.fillStyle=NODE; sp(cx-3.5,cy-24,7,1); sp(cx-3.5,cy-10,7,1);
+  ctx.fillStyle='#8a9a42'; ctx.beginPath(); ctx.ellipse(cx,cy-38,3.5,1.8,0,0,7); ctx.fill();   // 竹口
+  ctx.fillStyle=ROPE; sp(cx-4,cy-28,8,2); sp(cx-4,cy-14,8,2);        // 麻繩綁帶
 }
-function drawWellIso(cx,cy){ shadow(cx,cy,18,8);
+function drawWellIso(cx,cy){
+  if(natDraw('well',cx,cy+8,1.35)) return;
+  shadow(cx,cy,18,8);
   drawBlock(cx,cy,10,'#8a8a8a','#5a5a5a','#707070');       // 石圈
   ctx.fillStyle='#1a2a3a'; diamondPath(cx,cy-10); ctx.fill(); // 井口
   ctx.fillStyle='#3a6ea5'; ctx.beginPath(); ctx.moveTo(cx,cy-10-HH*0.5); ctx.lineTo(cx+HW*0.5,cy-10); ctx.lineTo(cx,cy-10+HH*0.5); ctx.lineTo(cx-HW*0.5,cy-10); ctx.closePath(); ctx.fill();
@@ -11341,7 +11370,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.37-5';
+const GAME_VER='v80.37-6';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
