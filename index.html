@@ -2898,8 +2898,8 @@ let WORLD=null;
 let mapSerial=0;                                              // 每次 loadMap 加 1：計時器用它判斷「玩家是不是還在同一次載入的地圖」(區域代號會隨走動改變，不能再拿來比)
 /* 原本村莊的 NPC／隊友站位是用「村莊自己的座標」寫的；拼進大地圖後整批平移。只記一次原始座標，重複建圖也不會越移越遠 */
 let _villageBase=null;
-const VILLAGE_NPC_POS={'潘朵拉':[20,19],'吉倫':[12,24],'巴辛':[20,31],'多瑪':[37,31],'詹森':[43,15],'詹姆':[9,16],'連':[15,11],'拉達':[43,23],'甘特':[46,33],'法林':[25,7],'皮賽爾':[37,41],'朵琳':[26,24]};   // 全新桃源村：各NPC站在對應房屋門前
-const VILLAGE_SPOT_POS=[[33,24],[31,27],[27,28],[23,26],[24,22],[27,20],[31,21]];
+const VILLAGE_NPC_POS={'潘朵拉':[20,19],'吉倫':[12,24],'巴辛':[20,31],'多瑪':[37,31],'詹森':[43,15],'詹姆':[9,16],'連':[15,11],'拉達':[43,23],'甘特':[46,33],'法林':[25,7],'皮賽爾':[37,41],'朵琳':[23,43]};   // 全新桃源村：各NPC站在對應房屋門前
+const VILLAGE_SPOT_POS=[[24,22],[33,26],[18,26],[40,24],[27,31],[30,17],[20,34]];
 function worldShiftVillageData(vx0,vy0){
   if(!_villageBase){
     _villageBase={ npcs:npcs.map(function(n){ return {x:n.x,y:n.y}; }), spots:VILLAGE_PARTY_SPOTS.map(function(p){ return [p[0],p[1]]; }) };
@@ -2951,16 +2951,16 @@ const VILLAGE_ASCII=[
   '....f....d..................ppp...........d....aaa......',
   '.....f~.fd.........sss......ppp...iiii....d..FFFdFFF....',
   '.....~~~~d.........sss.....ppp....iiii....d..FccdccF....',
-  '....~~~~~d..........d....ddpppdd..iiii....d..FccdccF....',
-  '..fff~~~.d..........d..dddpppddddd..ddppppp..FccdccF....',
-  '..pp.....d..........d..ddddpdddddd...ppppphhhFFFdFFF....',
-  '.ppppp.f.d.sss..pp..d.dddddddddddd.ppppp.phhh...d.......',
-  '.ppppppppp.sss.pppppppppddddddddpppppp...ppp....d.......',
-  '.pp..p.pppppppppppppppppddddWdddppp.......pp....d....p.p',
-  '.........ppppppp...pppddddddddddddd.......ppppppp..ppppp',
-  'p.......ppp............dddddddddddd.....dddppppppppp...p',
-  '........pp...............ddpdpddddd....ddddddpp.ppp.....',
-  '........pppp..............pppppddd.....dddddppp.........',
+  '....~~~~~d..........d......ppp....iiii....d..FccdccF....',
+  '..f.f~~~.d..........d..dd.ppp.......ddppppp..FccdccF....',
+  '..pp.....d..........d.dddddp.........ppppphhhFFFdFFF....',
+  '.ppppp.f.d.sss..pp..d.ddddd........ppppp.phhh...d.......',
+  '.ppppppppp.sss.pppppppppdd......pppppp...ppp....d.......',
+  '.pp..p.ppppppppppppppppp........ppp.......pp....d....p.p',
+  '.........ppppppp...ppp..........ddd....f..ppppppp..ppppp',
+  'p.......ppp.....................dddd....Wddppppppppp...p',
+  '........pp.................p.p..ddd....ddddddpp.ppp.....',
+  '........pppp..............ppppp........dddddppp.........',
   '.........pppp..ddddSSS..pppp.ppp....kkkddddddpp.........',
   '...........pppdddddSSS..ppppppppp...kkk.dddddpp.........',
   '........hhh.ppdppppppppppp..pp..ppp..d.......hhh........',
@@ -2970,15 +2970,15 @@ const VILLAGE_ASCII=[
   '.............d...........ppp..........ppppp.............',
   '.............dmmm.......ppp.............................',
   '.............dmmm.......pp..............................',
-  '..T..........dmmm.......ppp.......................T.....',
-  '.............ddd.........ppp........hhh.................',
+  '...T.........dmmm.......ppp......................T......',
+  '.............ddd.........ppp........hhh.............T...',
   '......aaa....d............pppp......hhh......f...f......',
-  '......aaa....d........hhh.d.pppp.ddddd............f.T...',
-  '....FFFddddddd........hhh.d..ppppp.........f.~~~~f......',
+  '......aaa....d........hhh.d.pppp.ddddd............f.....',
+  '....FFFddddddd........hhh.d..ppppp.......T.f.~~~~f......',
   '....FcccccF............dddd....pppp......ff.~~~~~~......',
-  '....FcccccF....................pppp........f~~~~~~~..T..',
+  '....FcccccF....................pppp........f~~~~~~~..B..',
   '....FcccccF...................ppppp........~~~~~~~......',
-  '....FFFFFFF...........B...T..pppp...........~~~~~f..f...',
+  '....FFFFFFF...........T......pppp...........~~~~~f..f...',
   '.............................ppp.........f..............',
   '.............................ppp........................',
   '.............................ppp........................'
@@ -11483,7 +11483,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v84.3-0';
+const GAME_VER='v84.4-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
