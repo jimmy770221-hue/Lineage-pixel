@@ -3956,6 +3956,8 @@ function drawHouse(h){
 /* 立體物件：牆、屋頂、樹、柵欄、水井、招牌 */
 let _objTX=0,_objTY=0;
 function drawIsoObject(t,cx,cy,treeScale,fenceNb){
+  if(t===T_ROCK && curMap && curMap.world && V2_IMGS.rock0 && V2_IMGS.rock0.complete){   // 全新島：山只用 PixelLab 岩山素材(每格一座小岩丘，彼此疊起來成山)
+    const rr=tileRand(_objTX,_objTY,77); v2Draw('rock0',cx+(rr-0.5)*14,cy+10,0.78+0.3*rr,rr<0.5); return; }
   if(t===T_ROCK){                                           // 山岩：每格高度依雜訊起伏(22~62)，連成高低不一的山脈；高處偏淺灰，低處偏苔綠
     const nz=tbNoise(_objTX*0.28,_objTY*0.28,71), h=Math.round(20+46*nz+8*tbHash(_objTX,_objTY,72));
     const hi=h>46;
@@ -11425,7 +11427,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v83.0-1';
+const GAME_VER='v83.0-2';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
