@@ -2898,8 +2898,8 @@ let WORLD=null;
 let mapSerial=0;                                              // 每次 loadMap 加 1：計時器用它判斷「玩家是不是還在同一次載入的地圖」(區域代號會隨走動改變，不能再拿來比)
 /* 原本村莊的 NPC／隊友站位是用「村莊自己的座標」寫的；拼進大地圖後整批平移。只記一次原始座標，重複建圖也不會越移越遠 */
 let _villageBase=null;
-const VILLAGE_NPC_POS={'朵琳':[27,26],'潘朵拉':[20,25],'巴辛':[32,25],'吉倫':[18,33],'詹姆':[22,41],'拉達':[38,20],'連':[18,11],'甘特':[35,33],'法林':[25,8],'詹森':[45,23],'多瑪':[27,35],'皮賽爾':[31,41]};   // 新版桃源村：各NPC站在對應房屋門前
-const VILLAGE_SPOT_POS=[[21,29],[23,31],[26,30],[21,31],[22,33],[24,33],[28,29]];
+const VILLAGE_NPC_POS={'朵琳':[21,26],'潘朵拉':[17,25],'巴辛':[25,25],'吉倫':[18,39],'詹姆':[29,41],'拉達':[29,18],'連':[17,19],'甘特':[37,34],'法林':[37,10],'詹森':[45,22],'多瑪':[25,36],'皮賽爾':[37,41]};   // 全新桃源村：各NPC站在對應房屋門前
+const VILLAGE_SPOT_POS=[[19,27],[21,30],[24,30],[19,30],[20,32],[22,33],[27,28]];
 function worldShiftVillageData(vx0,vy0){
   if(!_villageBase){
     _villageBase={ npcs:npcs.map(function(n){ return {x:n.x,y:n.y}; }), spots:VILLAGE_PARTY_SPOTS.map(function(p){ return [p[0],p[1]]; }) };
@@ -2930,6 +2930,60 @@ function worldEntryPx(id,side){
   if(e) return {x:e[0]*TS,y:e[1]*TS};
   return {x:R.cx*TS,y:R.cy*TS};
 }
+/* 桃源村：親手逐格設計的全新村莊地圖(56x50)。圖例：#城牆 G城門 p石板路 d泥土 ~小溪 W水井 B大樹 T樹 f野花 F籬笆 c田 .草地 ?村外；字母＝房屋(s商店 S商店 i客棧 m醫館 h民宅 k鐵匠 e長老屋 g糧倉 a農舍) */
+const VILLAGE_ASCII=[
+  '????????????????????????????????????????????????????????',
+  '????????????????????????????????????????????????????????',
+  '????????????????????????????????????????????????????????',
+  '??????????????????????????##############Gp###########???',
+  '??????????????????????????#...f..f....f.pp..........#???',
+  '??????????????????????????#.............pp..........#???',
+  '??????????????????????????#...gg....eeeepp...f......#???',
+  '??????????????????????????#...gg....eeeepp..hhh.....#???',
+  '??????????????????????????#.T..d.f..eeeepp..hhh.....#???',
+  '??????????????????????????#....d......d.pp...dT.....#???',
+  '??????????????????????????#....d......d.pp.f.d....T.#???',
+  '??????????????????????????#..T....B...dppp..FdFFFFF.#???',
+  '??????#####################.T....T.....ppp..F.aaa.F.#???',
+  '??????#.........TT...................f.pp...F.aaa.F.#???',
+  '??????#.................T.............ppp...FccdcpppG???',
+  '??????#...~~~~..T..Thhh.....kkk......ppp....Fcppppppp???',
+  '??????#.hhh~~~..hhh.hhh.....kkk.....ppp.....ppppppF.#???',
+  '??????#.hhh~~...hhh..d.......d.....ppp.....pppp.T..T#???',
+  '??????#..d~~.f...d...d.B.....dhhh.ppp....fppppFFFf..#???',
+  '??????#.fd.~~....d...d.......dhhhppp.....pppaaa.FT.T#???',
+  '??????#..d.~~....d.............dppp..f.pppp.aaa.F...#???',
+  '??????#.....~~.........Tiiii...dppp..TppppFccdcTF...#???',
+  '??????#.....~~..sss...f.iiii...ppp...pppp.FccdccF..T#???',
+  '??????#.....~~..sss..T..iiii.pppp..ppppp..FFFdFFF...#???',
+  '??????#.....~~...d...dddT.d.pppp.ppppp..B.........T.#???',
+  '??????#.....~~...d.ddddddddpppppppppp..........TT...#???',
+  '??????#..B..~~T..ddddpppddppppppppp............f....#???',
+  '??????Gpppppppp..dddppWpppppppppp.................###???',
+  '??????ppppppppppppppppppppppppp...................#?????',
+  '??????#......ppppppppppppppp......................#?????',
+  '??????#.....TT~~..dddpppddd..T....FFFFFFF.........#?????',
+  '??????#........~~..dddpppd...T....F.aaa.F..hhh.T..#?????',
+  '??????#.....T..~~....ddpp.........F.aaa.F..hhh....#?????',
+  '??????#........~~......pmmmTB.....FccdccF...d.....#?????',
+  '??????#FFFFFF.~~.fT....pmmm.......FcTdccF.T.d.....#?????',
+  '??????#.aaa.F~~........ppp.......TFFFdFFF.f.d.....#?????',
+  '??????#.aaa.F~~..SSS....pp....................f.B.#?????',
+  '??????#ccdcc~~...SSS...ppp...........T............#?????',
+  '??????#ccdcc~~....d...ppp...hhh...T.gg.....hhh.T..#?????',
+  '??????#FFdF~~.....d...ppp...hhh.....gg.....hhh....#?????',
+  '??????#.....~~....d..pppf..f.d.......d....T.d.....#?????',
+  '??????#....~~~~....f.pp......d...B...d......d.....#?????',
+  '??????#....~~~~......pp......d.......d......d.....#?????',
+  '??????#.............ppp..TT........TT.............#?????',
+  '??????##############Gp#############################?????',
+  '????????????????????????????????????????????????????????',
+  '????????????????????????????????????????????????????????',
+  '????????????????????????????????????????????????????????',
+  '????????????????????????????????????????????????????????',
+  '????????????????????????????????????????????????????????'
+];
+const VILLAGE_KIND={s:'shop',S:'shop',i:'inn',m:'medic',h:'home',k:'smith',e:'elder',g:'granary',a:'farm'};
 function buildWorld(){
   const MARGIN=60;                                  // 島外一大圈海：視野永遠看不到地圖邊界
   let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
@@ -2975,29 +3029,17 @@ function buildWorld(){
       for(let y=Math.floor(py-rr-1);y<=Math.ceil(py+rr+1);y++)for(let x=Math.floor(px-rr-1);x<=Math.ceil(px+rr+1);x++){ if(x>1&&y>1&&x<W-2&&y<H-2&&Math.hypot(x-px,y-py)<rr) land[y*W+x]=1; }
       tipX=Math.round(px); tipY=Math.round(py); }
     _lm.push({id:'pavilion',name:'望海亭',x:tipX,y:tipY}); }
-  /* 2) 村莊的不規則外形（原本是方方正正的圍牆）：用「圓角方形＋起伏」做出外形，再保證所有房屋都在裡面 */
+  /* 2) 村莊：整張地圖從 VILLAGE_ASCII 讀入(全新設計，沒有任何舊版產生程式)。這裡先算出房屋清單與「村內」遮罩 */
   const V=byId.village, vx0=V.cx-27, vy0=V.cy-24;
-  /* 桃源村房屋：不再是左右對稱的方格，而是大小、款式不同的木屋，沿著蜿蜒小路自然聚成幾個聚落；[x,y,寬,深,種類] */
-  const hsList=[[23,4,4,3,'elder'],[31,5,2,2,'granary'],[35,9,3,2,'home'],[17,8,3,2,'home'],[37,17,3,2,'smith'],[30,21,4,3,'inn'],[19,22,3,2,'shop'],
-    [26,32,3,2,'medic'],[17,31,3,2,'home'],[34,30,3,2,'home'],[42,12,3,2,'farm'],[44,20,3,2,'farm'],[43,34,3,2,'farm'],[21,38,3,2,'shop'],[30,38,3,2,'home'],
-    [4,10,3,2,'home'],[3,18,3,2,'home'],[4,31,3,2,'farm'],[40,41,2,2,'granary']];
-  const houseRects=hsList.map(function(a){ return {x:a[0], y:a[1], w:a[2], d:a[3], big:a[2]>=4, kind:a[4]}; });
-  const VLOBES=[1.10,0.86,1.14,0.90,1.16,0.84,1.12,0.88,1.08,0.92,1.14,0.86];
-  const inside=new Uint8Array(W*H);
-  const forceHouses=function(){ houseRects.forEach(function(h){ for(let y=h.y-2;y<h.y+h.d+2;y++)for(let x=h.x-2;x<h.x+h.w+2;x++){ const wx=vx0+x, wy=vy0+y; if(wx>=0&&wy>=0&&wx<W&&wy<H) inside[wy*W+wx]=1; } }); };
-  for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){
-    const wx=vx0+lx, wy=vy0+ly; if(wx<1||wy<1||wx>=W-1||wy>=H-1) continue;
-    const nx=(lx-27)/26.5, ny=(ly-24)/23.5, sq=Math.pow(Math.pow(Math.abs(nx),2.3)+Math.pow(Math.abs(ny),2.3),1/2.3), ang=Math.atan2(ny,nx);
-    const ap=(ang+Math.PI)/(2*Math.PI)*VLOBES.length, ai=Math.floor(ap)%VLOBES.length, af=ap-Math.floor(ap), aj=(ai+1)%VLOBES.length, fe=(1-Math.cos(af*Math.PI))/2;
-    const lim=VLOBES[ai]*(1-fe)+VLOBES[aj]*fe+0.10*(2*N(wx*0.09,wy*0.09,21)-1);          // 圍牆半徑：沿著一圈高低起伏的「凸出/凹進」，再疊上細小的曲折
-    inside[wy*W+wx]=(sq<lim)?1:0;
-  }
-  forceHouses();
-  for(let pass=0;pass<2;pass++){                                         // 多數決平滑：去掉鋸齒小突起
-    const cp=inside.slice();
-    for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ let c=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) c+=cp[(y+dy)*W+x+dx]; inside[y*W+x]=(c>=5)?1:0; }
-  }
-  forceHouses();
+  const VA=VILLAGE_ASCII, VAH=VA.length, VAW=VA[0].length;
+  const houseRects=[], inside=new Uint8Array(W*H);
+  { const seen={};
+    for(let y=0;y<VAH;y++)for(let x=0;x<VAW;x++){ const c=VA[y][x];
+      if(c!=='?'){ const wx=vx0+x, wy=vy0+y; if(wx>0&&wy>0&&wx<W-1&&wy<H-1) inside[wy*W+wx]=1; }
+      if(VILLAGE_KIND[c] && !seen[x+','+y]){ let w=0,d=0; while(VA[y][x+w]===c) w++; while(VA[y+d]&&VA[y+d][x]===c) d++;
+        for(let j=0;j<d;j++)for(let i=0;i<w;i++) seen[(x+i)+','+(y+j)]=1;
+        houseRects.push({x:x,y:y,w:w,d:d,big:w>=4,kind:VILLAGE_KIND[c]}); } } }
+  const forceHouses=function(){};
   const CW=byId.cross_w, caveX=CW.cx+4, caveY=CW.cy+13;                    // 冒險洞穴入口位置：確保是陸地、周圍沒有樹
   const nearV=new Uint8Array(W*H);                                        // 圍牆外再擴3格：保證是陸地、沒有樹
   for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){ if(Math.hypot(dx,dy)<=5.5){ const xx=caveX+dx, yy=caveY+dy; nearV[yy*W+xx]=1; land[yy*W+xx]=1; } }
@@ -3057,44 +3099,13 @@ function buildWorld(){
       if(!_free(x,y)||rid[y*W+x]!==R.idx||g[y][x]!==T_GRASS) continue;
       if(N(x*0.08,y*0.08,65)>0.55 && tileRand(x,y,66)<d.bloom) g[y][x]=T_FLOWER; } }                // 桃花成片盛開
   });
-  /* 4) 村莊本體：廣場、十字大道、房屋、水井、大樹，最後圍上不規則的城牆與四個城門 */
-  const wset=function(lx,ly,t){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1) g[y][x]=t; };
-  const wget=function(lx,ly){ const x=vx0+lx, y=vy0+ly; return (x>0&&y>0&&x<W-1&&y<H-1)?g[y][x]:T_WATER; };
-  for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1&&inside[y*W+x]) g[y][x]=T_GRASS; }
-  /* 蜿蜒小路：從四個城門各一條石板主路彎進中央廣場，再分出泥土小徑通到每棟房子的門口，沒有筆直的十字大道 */
-  const vset=function(lx,ly,t){ const x=vx0+lx, y=vy0+ly; if(x<1||y<1||x>=W-1||y>=H-1||!inside[y*W+x]) return; const c=g[y][x]; if(c===T_HOUSE||c===T_WELL||c===T_BIGTREE||c===T_PATH&&t===T_DIRT) return; g[y][x]=t; };
-  const vlane=function(ax,ay,bx,by,seed,rad,tile,amp){ const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len, steps=Math.ceil(len*2.5);
-    for(let k=0;k<=steps;k++){ const t=k/steps, wob=(N(t*len*0.06+seed,seed*1.7,31)-0.5)*2*amp*Math.sin(Math.PI*t), px=ax+dx*t+nx*wob, py=ay+dy*t+ny*wob;
-      for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++){ if(Math.hypot(ox,oy)<=rad) vset(Math.round(px)+ox,Math.round(py)+oy,tile); } } };
-  /* 小溪：從北邊的小水潭流到南邊的小水潭，彎彎曲曲穿過村子西側；道路跨過去的地方自動變成可走的踏石淺灘 */
-  for(let ly=4;ly<=45;ly++){ const bx=12+2.4*Math.sin(ly*0.21)+1.2*Math.sin(ly*0.57+1), wd=(ly<7||ly>42)?2.4:1.1;
-    for(let lx=Math.floor(bx-wd-1);lx<=Math.ceil(bx+wd+1);lx++){ if(Math.abs(lx-bx)<=wd+0.2*(2*N(lx*0.5,ly*0.5,26)-1)){ const x=vx0+lx, y=vy0+ly; if(inside[y*W+x]&&g[y][x]!==T_HOUSE) g[y][x]=T_WATER; } } }
-  for(let ly=14;ly<=36;ly++)for(let lx=15;lx<=34;lx++){                  // 小廣場：偏西南的不規則泥地，中央一圈石板，正中是水井
-    const ex=(lx-24)/5.8, ey=(ly-28)/4.2, wv=0.28*(2*N((vx0+lx)*0.27,(vy0+ly)*0.27,22)-1); if(ex*ex+ey*ey<1+wv) vset(lx,ly,T_DIRT); }
-  [[27.5,-3,31,8,2.6],[31,8,26,22,2.6],[27.5,52,31,41,2.6],[31,41,24.5,31,2.2],[-3,24.5,10,25.5,1.4],[10,25.5,21,27.5,1.8],[58,24.5,40,24,2.0],[40,24,28,27.5,1.8]].forEach(function(l,i){ vlane(l[0],l[1],l[2],l[3],200+i,1.15,T_PATH,l[4]); });
-  for(let ly=23;ly<=33;ly++)for(let lx=19;lx<=29;lx++){ const ex=(lx-24)/3.4, ey=(ly-28)/2.4; if(ex*ex+ey*ey<1+0.2*(2*N((vx0+lx)*0.4,(vy0+ly)*0.4,24)-1)) vset(lx,ly,T_PATH); }
+  /* 4) 村莊本體：直接把設計好的村莊地圖蓋上去 */
   const houses=_houses2.slice();
   houseRects.forEach(function(h){ houses.push({x:vx0+h.x,y:vy0+h.y,w:h.w,d:h.d,big:h.big,kind:h.kind}); });
-  houseRects.forEach(function(h){ for(let j=0;j<h.d;j++)for(let i2=0;i2<h.w;i2++) wset(h.x+i2,h.y+j,T_HOUSE); });
-  const hubs=[[24,29],[25,9],[25,20],[34,25],[40,24],[24,38],[16,27],[9,24.5],[44,28],[37,13],[30,34]];
-  houseRects.forEach(function(h,i){ const dx0=h.x+Math.floor(h.w/2), dy0=h.y+h.d; let best=hubs[0], bd=1e9; hubs.forEach(function(q){ const dd=Math.hypot(q[0]-dx0,q[1]-dy0); if(dd<bd){ bd=dd; best=q; } });
-    vlane(dx0,dy0,best[0],best[1],300+i,0.55,T_DIRT,1.6); vset(dx0,dy0,T_DIRT); });
-  wset(24,28,T_WELL); wset(20,17,T_BIGTREE); wset(41,25,T_BIGTREE); wset(15,36,T_BIGTREE); wset(28,12,T_BIGTREE); wset(36,40,T_BIGTREE); wset(8,26,T_BIGTREE);
-  for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){ const x=vx0+lx, y=vy0+ly; if(x>1&&y>1&&x<W-2&&y<H-2&&inside[y*W+x]&&g[y][x]===T_GRASS&&N(x*0.2,y*0.2,25)>0.62&&tileRand(x,y,26)<0.5) g[y][x]=T_FLOWER; }   // 院落邊成叢的野花
-  /* 城牆：圍牆內側與外側相鄰的格子(八方向)＝牆，這樣斜角也不會留縫 */
-  const isIn=function(x,y){ return x>=0&&y>=0&&x<W&&y<H&&inside[y*W+x]===1; };
-  const wallTiles=[];
-  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){ if(!inside[y*W+x]) continue;
-    if(!isIn(x+1,y)||!isIn(x-1,y)||!isIn(x,y+1)||!isIn(x,y-1)) wallTiles.push([x,y]); }   // 只取四方向邊界：牆一格寬
-  { const ws=new Set(wallTiles.map(function(p){ return p[1]*W+p[0]; })), add=[];             // 斜角相接處補一格，確保整圈四方向連通、沒有缺口
-    wallTiles.forEach(function(p){ [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(function(d){ const q=(p[1]+d[1])*W+(p[0]+d[0]); if(!ws.has(q) && false){} 
-      if(ws.has(q) && !ws.has(p[1]*W+p[0]+d[0]) && !ws.has((p[1]+d[1])*W+p[0])){ const k=p[1]*W+p[0]+d[0]; if(isIn(p[0]+d[0],p[1])){ ws.add(k); add.push([p[0]+d[0],p[1]]); } } }); });
-    add.forEach(function(a){ wallTiles.push(a); }); }
-  const gates={};
-  wallTiles.forEach(function(p){ const x=p[0], y=p[1], lx=x-vx0, ly=y-vy0; let t=T_TOWNWALL;
-    if((lx===27||lx===28) && Math.abs(ly-24)>14){ t=(lx===27)?T_GATE:T_PATH; if(lx===27){ if(ly<24){ if(!gates.n||y<gates.n.y) gates.n={x:x,y:y}; } else { if(!gates.s||y>gates.s.y) gates.s={x:x,y:y}; } } }
-    else if((ly===24||ly===25) && Math.abs(lx-27)>14){ t=(ly===24)?T_GATE:T_PATH; if(ly===24){ if(lx<27){ if(!gates.w||x<gates.w.x) gates.w={x:x,y:y}; } else { if(!gates.e||x>gates.e.x) gates.e={x:x,y:y}; } } }
-    g[y][x]=t; });
+  const gates={}, VT={'.':T_GRASS,'#':T_TOWNWALL,'G':T_GATE,'p':T_PATH,'d':T_DIRT,'~':T_WATER,'W':T_WELL,'B':T_BIGTREE,'T':T_TREE,'f':T_FLOWER,'F':T_FENCE,'c':T_FLOWER};
+  for(let y=0;y<VAH;y++)for(let x=0;x<VAW;x++){ const c=VA[y][x]; if(c==='?') continue; const wx=vx0+x, wy=vy0+y; if(wx<1||wy<1||wx>=W-1||wy>=H-1) continue;
+    let t=VT[c]; if(t===undefined) t=VILLAGE_KIND[c]?T_HOUSE:T_GRASS; g[wy][wx]=t;
+    if(c==='G'){ if(y<10) gates.n={x:wx,y:wy}; else if(y>38) gates.s={x:wx,y:wy}; else if(x<10) gates.w={x:wx,y:wy}; else gates.e={x:wx,y:wy}; } }
   /* 5) 道路：從四個城門出發，用蜿蜒的小路連到各區域的中心；各區域中心鋪一塊不規則的泥地廣場 */
   const brush=function(px,py,rad){
     for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){ if(Math.hypot(dx,dy)>rad) continue;
@@ -11403,7 +11414,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v81.0-4';
+const GAME_VER='v82.0-1';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
