@@ -5034,7 +5034,7 @@ function fpHuntTick(fp,dt){
   if(d>34){ fpMoveToward(fp, m.x+16, m.y+16, 0.6*dt/16); return; }
   fp.atkCd-=dt;
   if(fp.atkCd<=0){
-    fp.atkCd=700+Math.random()*450;
+    fp.atkCd=700+Math.random()*450; fp._atkT0=Date.now();   // 出手：播攻擊動畫
     m.hp-=4+Math.floor(Math.random()*8);
     if(m.hp<=0){
       const idx=mobs.indexOf(m); if(idx>=0) mobs.splice(idx,1);
@@ -6088,7 +6088,7 @@ function update(dt){
           if(pvpTarget.pvpAtkCd<=0){
             pvpTarget.pvpAtkCd=750+Math.random()*500;
             const back=(typeof fpAttackPower==='function')?fpAttackPower(pvpTarget):(4+Math.floor(Math.random()*10));
-            pvpTarget.atkFlash=140;                                  // 反擊視覺效果保留，頻道文字改為不顯示
+            pvpTarget.atkFlash=140; pvpTarget._atkT0=Date.now();                                  // 反擊視覺效果保留，頻道文字改為不顯示
             hurtPlayer(back);
           }
         }
@@ -7536,7 +7536,8 @@ function dir8of(dx,dy){ if(!dx&&!dy)return null;
   return DIR8_ROT[d]||d;                    // 再順時針旋轉45°→等角螢幕方向
 }
 /* 目前裝備對應的姿勢：沒裝武器=空手，弓=_bow，矛/長槍=_spear，名字含「刀」=_blade，其餘(劍、短劍…)=持劍原圖 */
-function weaponPose(){ const w=S.equip&&S.equip.weapon; if(!w) return '_bare'; const d=ITEM_DEF[w]; if(!d) return ''; if(d.kind==='bow') return '_bow'; if(/刀/.test(w)) return '_blade'; if(d.kind==='spear') return '_spear'; return ''; }
+function weaponPose(){ return weaponPoseOf(S.equip&&S.equip.weapon); }
+function weaponPoseOf(w){ if(!w) return '_bare'; const d=ITEM_DEF[w]; if(!d) return ''; if(d.kind==='bow') return '_bow'; if(/刀/.test(w)) return '_blade'; if(d.kind==='spear') return '_spear'; return ''; }
 function sheetReady(art,gender){ const im=SHEET_IMG[art+"_"+(gender||'male')]; return (im&&im.complete&&im.naturalWidth)?im:null; }
 function drawSheetFrame(g,img,cx,fy,scale,frame,type){ g.imageSmoothingEnabled=false;
   // 武俠高解析角色圖(8方向各128x128，共1024x128)：格子大小、腳底、頭頂位置與舊的64格不同，縮放比例也要換算成同樣的畫面大小
@@ -7728,8 +7729,17 @@ function drawNpcIso(n){
   } else if(n.psheet){ const img=sheetReady(n.psheet.cls, n.psheet.gender);
     const _col=(n.align!==undefined && typeof alignNameColor==='function')?alignNameColor(n.align):'#ffe0a0';   // 假玩家(有align欄位)依性向值變色，一般NPC維持原本淡金色
     if(img){ const gs=groundScreen(n.x+16,n.y+28); actorShadow(ctx,gs.x,gs.y,15,5);
-      const topY=drawSheetFrame(ctx,img,gs.x,gs.y,1.5,(DIR8_FRAME[n.dir8||'down']??0));
-      if(n.equip && n.equip.weapon && ITEM_DEF[n.equip.weapon]){                 // 假玩家依裝備的武器種類，手上畫出對應的武器
+      /* 假玩家動作：走路／攻擊／受傷 依裝備武器切換姿勢，跟玩家本人同一套 */
+      const _fa=n.psheet.cls, _now=Date.now(); let _topY=null;
+      { if(n._px===undefined){ n._px=n.x; n._py=n.y; n._lhp=n.hp; }
+        if(Math.abs(n.x-n._px)+Math.abs(n.y-n._py)>0.15){ n._mvT=_now; n._px=n.x; n._py=n.y; }
+        if(n.hp<n._lhp) n._hurtT0=_now; n._lhp=n.hp;
+        let _v=weaponPoseOf(n.equip&&n.equip.weapon); if(_v&&!sheetReady(_fa,n.psheet.gender+_v)) _v='';
+        const _gk=n.psheet.gender+_v, _am=Math.max(28,Math.min(ATK_MS,Math.floor(((WKIND[(n.equip&&n.equip.weapon&&ITEM_DEF[n.equip.weapon]&&ITEM_DEF[n.equip.weapon].kind)||'dagger']||WKIND.dagger).cd)/9)));
+        _topY=drawHiState(ctx,_fa,_gk,gs.x,gs.y,1.5,(DIR8_FRAME[n.dir8||'down']??0),{moving:(_now-(n._mvT||0))<160, atkT0:(n._atkT0&&_now-n._atkT0<_am*9)?n._atkT0:0, atkMs:_am, hurtT0:n._hurtT0||0});
+        n._gk=_gk; }
+      const topY=(_topY!=null)?_topY:drawSheetFrame(ctx,(sheetReady(_fa,n._gk)||img),gs.x,gs.y,1.5,(DIR8_FRAME[n.dir8||'down']??0));
+      if(_fa==='royal' && n.equip && n.equip.weapon && ITEM_DEF[n.equip.weapon]){   // 舊版宗主圖沒有拿武器，才補畫手持武器；其他職業的圖本身已經拿著武器
         const _wk=ITEM_DEF[n.equip.weapon].kind||'dagger';
         const _vis=_wk==='bow'?'bow':_wk==='spear'?'spear':_wk==='staff'?'spear':'sword';
         drawWeaponInHand(_vis, gs.x, gs.y-32, n.dir8==='left'||n.dir8==='right'||n.dir8==='up'?n.dir8:'down', 4);
@@ -11215,7 +11225,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-23';
+const GAME_VER='v80.36-24';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
