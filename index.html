@@ -2969,8 +2969,10 @@ function buildWorld(){
     _lm.push({id:'pavilion',name:'望海亭',x:tipX,y:tipY}); }
   /* 2) 村莊的不規則外形（原本是方方正正的圍牆）：用「圓角方形＋起伏」做出外形，再保證所有房屋都在裡面 */
   const V=byId.village, vx0=V.cx-27, vy0=V.cy-24;
-  const hsList=[[8,8,7,4,true],[17,8,5,3,false],[34,8,5,3,false],[43,8,7,4,true],[8,38,7,4,true],[17,40,5,3,false],[34,40,5,3,false],[43,38,7,4,true],[9,19,5,3,false],[43,26,5,3,false],[9,29,5,3,false],[43,16,5,3,false]];
-  const houseRects=hsList.map(function(a){ const x=a[0],y=a[1],w=a[2],d=a[3],big=a[4]; const cx2=x+w/2, cy2=y+d/2, nw=big?4:3, nd=big?3:2; return {x:Math.round(cx2-nw/2), y:Math.round(cy2-nd/2), w:nw, d:nd, big:big}; });
+  /* 桃源村房屋：不再是左右對稱的方格，而是大小、款式不同的木屋，沿著蜿蜒小路自然聚成幾個聚落；[x,y,寬,深,種類] */
+  const hsList=[[20,5,4,3,'elder'],[34,6,3,2,'home'],[9,9,3,2,'farm'],[42,8,3,2,'smith'],[14,11,3,2,'home'],[44,12,3,2,'farm'],[6,19,3,2,'home'],[18,16,3,2,'shop'],
+    [35,18,4,3,'inn'],[7,27,3,2,'medic'],[11,29,3,2,'farm'],[44,27,3,2,'home'],[44,33,2,2,'granary'],[8,35,3,2,'home'],[14,38,3,2,'shop'],[22,41,3,2,'smith'],[33,41,3,2,'home'],[40,38,3,2,'farm'],[28,10,2,2,'granary']];
+  const houseRects=hsList.map(function(a){ return {x:a[0], y:a[1], w:a[2], d:a[3], big:a[2]>=4, kind:a[4]}; });
   const VLOBES=[1.10,0.86,1.14,0.90,1.16,0.84,1.12,0.88,1.08,0.92,1.14,0.86];
   const inside=new Uint8Array(W*H);
   const forceHouses=function(){ houseRects.forEach(function(h){ for(let y=h.y-2;y<h.y+h.d+2;y++)for(let x=h.x-2;x<h.x+h.w+2;x++){ const wx=vx0+x, wy=vy0+y; if(wx>=0&&wy>=0&&wx<W&&wy<H) inside[wy*W+wx]=1; } }); };
@@ -3050,14 +3052,23 @@ function buildWorld(){
   const wset=function(lx,ly,t){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1) g[y][x]=t; };
   const wget=function(lx,ly){ const x=vx0+lx, y=vy0+ly; return (x>0&&y>0&&x<W-1&&y<H-1)?g[y][x]:T_WATER; };
   for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){ const x=vx0+lx, y=vy0+ly; if(x>0&&y>0&&x<W-1&&y<H-1&&inside[y*W+x]) g[y][x]=T_GRASS; }
-  for(let ly=18;ly<=31;ly++)for(let lx=20;lx<=36;lx++){                  // 中央廣場：橢圓形泥地
-    const ex=(lx-27.5)/5.6, ey=(ly-24.5)/3.7; if(ex*ex+ey*ey<1+0.35*(2*N((vx0+lx)*0.3,(vy0+ly)*0.3,22)-1) && inside[(vy0+ly)*W+vx0+lx]) wset(lx,ly,T_DIRT); }
-  for(let ly=-4;ly<=52;ly++){ if(!inside[(vy0+ly)*W+vx0+27]) continue; wset(27,ly,T_PATH); wset(28,ly,T_PATH); }      // 南北大道
-  for(let lx=-4;lx<=58;lx++){ if(!inside[(vy0+24)*W+vx0+lx]) continue; wset(lx,24,T_PATH); wset(lx,25,T_PATH); }      // 東西大道
+  /* 蜿蜒小路：從四個城門各一條石板主路彎進中央廣場，再分出泥土小徑通到每棟房子的門口，沒有筆直的十字大道 */
+  const vset=function(lx,ly,t){ const x=vx0+lx, y=vy0+ly; if(x<1||y<1||x>=W-1||y>=H-1||!inside[y*W+x]) return; const c=g[y][x]; if(c===T_HOUSE||c===T_WELL||c===T_BIGTREE||c===T_PATH&&t===T_DIRT) return; g[y][x]=t; };
+  const vlane=function(ax,ay,bx,by,seed,rad,tile,amp){ const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len, steps=Math.ceil(len*2.5);
+    for(let k=0;k<=steps;k++){ const t=k/steps, wob=(N(t*len*0.06+seed,seed*1.7,31)-0.5)*2*amp*Math.sin(Math.PI*t), px=ax+dx*t+nx*wob, py=ay+dy*t+ny*wob;
+      for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++){ if(Math.hypot(ox,oy)<=rad) vset(Math.round(px)+ox,Math.round(py)+oy,tile); } } };
+  for(let ly=15;ly<=34;ly++)for(let lx=18;lx<=38;lx++){                  // 中央廣場：不規則橢圓泥地，中央一圈石板，正中是水井
+    const ex=(lx-28)/7, ey=(ly-24.5)/4.6, wv=0.28*(2*N((vx0+lx)*0.27,(vy0+ly)*0.27,22)-1); if(ex*ex+ey*ey<1+wv) vset(lx,ly,T_DIRT); }
+  [[27.5,-3,28,18,2.4],[28,52,28,31,-1.8],[-3,24.5,21,24.5,2.2],[58,24.5,35,24.5,-2.0]].forEach(function(l,i){ vlane(l[0],l[1],l[2],l[3],200+i,1.15,T_PATH,3.4); });
+  for(let ly=19;ly<=30;ly++)for(let lx=23;lx<=33;lx++){ const ex=(lx-28)/3.6, ey=(ly-24.5)/2.5; if(ex*ex+ey*ey<1+0.2*(2*N((vx0+lx)*0.4,(vy0+ly)*0.4,24)-1)) vset(lx,ly,T_PATH); }
   const houses=_houses2.slice();
-  houseRects.forEach(function(h){ houses.push({x:vx0+h.x,y:vy0+h.y,w:h.w,d:h.d,big:h.big}); for(let j=0;j<h.d;j++)for(let i2=0;i2<h.w;i2++) wset(h.x+i2,h.y+j,T_HOUSE); });
-  wset(40,26,T_WELL); wset(40,21,T_BIGTREE); wset(26,23,T_BIGTREE);
-  [[19,15],[45,15],[19,35],[45,35]].forEach(function(p){ if(wget(p[0],p[1])===T_GRASS) wset(p[0],p[1],T_FLOWER); });
+  houseRects.forEach(function(h){ houses.push({x:vx0+h.x,y:vy0+h.y,w:h.w,d:h.d,big:h.big,kind:h.kind}); });
+  houseRects.forEach(function(h){ for(let j=0;j<h.d;j++)for(let i2=0;i2<h.w;i2++) wset(h.x+i2,h.y+j,T_HOUSE); });
+  const hubs=[[28,24.5],[27.5,9],[27.5,15],[28,35],[28,41],[8,24.5],[15,24.5],[40,24.5],[47,24.5]];
+  houseRects.forEach(function(h,i){ const dx0=h.x+Math.floor(h.w/2), dy0=h.y+h.d; let best=hubs[0], bd=1e9; hubs.forEach(function(q){ const dd=Math.hypot(q[0]-dx0,q[1]-dy0); if(dd<bd){ bd=dd; best=q; } });
+    vlane(dx0,dy0,best[0],best[1],300+i,0.55,T_DIRT,1.6); vset(dx0,dy0,T_DIRT); });
+  wset(28,24,T_WELL); wset(11,23,T_BIGTREE); wset(41,23,T_BIGTREE); wset(24,33,T_BIGTREE); wset(16,6,T_BIGTREE); wset(41,42,T_BIGTREE);
+  for(let ly=-4;ly<=52;ly++)for(let lx=-4;lx<=58;lx++){ const x=vx0+lx, y=vy0+ly; if(x>1&&y>1&&x<W-2&&y<H-2&&inside[y*W+x]&&g[y][x]===T_GRASS&&N(x*0.2,y*0.2,25)>0.62&&tileRand(x,y,26)<0.5) g[y][x]=T_FLOWER; }   // 院落邊成叢的野花
   /* 城牆：圍牆內側與外側相鄰的格子(八方向)＝牆，這樣斜角也不會留縫 */
   const isIn=function(x,y){ return x>=0&&y>=0&&x<W&&y<H&&inside[y*W+x]===1; };
   const wallTiles=[];
@@ -3830,9 +3841,24 @@ function faceLines(cx,cy,h,col,step){ const Lx=cx-HW,Ly=cy,Bx=cx,By=cy+HH,Rx=cx+
 function poly(pts,fill,stroke){ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y); ctx.closePath();
   if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();} }
+/* 中式木屋美術(assets/objects/houses)：每種都有固定的地基格數(w x d)，錨點＝圖內「最靠近鏡頭的前角」落地點；樣式=農舍/民宅/商鋪/鐵匠/藥鋪/客棧/長老屋/倉房/仙觀/涼亭 */
+const HOUSE_META={"farm0": {"w": 272, "h": 228, "ax": 152, "ay": 202}, "farm1": {"w": 272, "h": 228, "ax": 152, "ay": 202}, "farm2": {"w": 272, "h": 228, "ax": 152, "ay": 202}, "home0": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "home1": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "home2": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "shop0": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "shop1": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "smith0": {"w": 272, "h": 230, "ax": 152, "ay": 204}, "medic0": {"w": 272, "h": 232, "ax": 152, "ay": 206}, "inn0": {"w": 336, "h": 278, "ax": 184, "ay": 252}, "inn1": {"w": 336, "h": 278, "ax": 184, "ay": 252}, "elder0": {"w": 336, "h": 276, "ax": 184, "ay": 250}, "granary0": {"w": 240, "h": 206, "ax": 120, "ay": 180}, "temple0": {"w": 368, "h": 338, "ax": 216, "ay": 312}, "pavilion0": {"w": 240, "h": 208, "ax": 120, "ay": 182}};
+const HOUSE_KIND_VARS={farm:3,home:3,shop:2,smith:1,medic:1,inn:2,elder:1,granary:1,temple:1,pavilion:1};
+const HOUSE_KIND_SIZE={farm:[3,2],home:[3,2],shop:[3,2],smith:[3,2],medic:[3,2],inn:[4,3],elder:[4,3],granary:[2,2],temple:[5,3],pavilion:[2,2]};
+const HOUSE_IMGS={}; Object.keys(HOUSE_META).forEach(function(k){ const im=new Image(); im.src="assets/objects/houses/"+k+".png"; HOUSE_IMGS[k]=im; });
+function houseSprite(h){                                            // 依房屋種類/大小挑出美術；沒指定種類的(舊地圖、市集攤位)依大小隨機挑一款，同一棟每次畫都一樣
+  let kind=h.kind;
+  if(!kind||!HOUSE_KIND_SIZE[kind]||HOUSE_KIND_SIZE[kind][0]!==h.w||HOUSE_KIND_SIZE[kind][1]!==h.d){
+    const pool=(h.w===3&&h.d===2)?['home','farm','shop','home','medic']:(h.w===4&&h.d===3)?['inn','elder','inn']:(h.w===2&&h.d===2)?['granary']:(h.w===5&&h.d===3)?['temple']:null;
+    if(!pool) return null; kind=pool[Math.floor(tileRand(h.x,h.y,92)*pool.length)%pool.length]; }
+  const v=Math.floor(tileRand(h.x,h.y,91)*HOUSE_KIND_VARS[kind])%HOUSE_KIND_VARS[kind], key=kind+v, im=HOUSE_IMGS[key];
+  return (im&&im.complete&&im.naturalWidth)?{im:im,m:HOUSE_META[key]}:null;
+}
 const HOUSE_TEX=new Image(); HOUSE_TEX.src="assets/objects/house.png";   // PixelLab生成的小木屋美術，96x96px，圖片內(46,83)是正面石座落地點(最靠近鏡頭的那個角)
 function drawHouse(h){
   const {x,y,w,d,big}=h;
+  const _sp=houseSprite(h);
+  if(_sp){ const g0=groundScreen((x+w)*TS,(y+d)*TS); ctx.drawImage(_sp.im, g0.x-_sp.m.ax, g0.y-_sp.m.ay); return; }   // 新的中式木屋(圖內已含陰影)
   if(HOUSE_TEX.complete && HOUSE_TEX.naturalWidth){                 // 貼圖已載入：貼上PixelLab生成的小木屋美術，取代程序繪製的方塊屋
     const fwx=(x+w)*TS, fwy=(y+d)*TS;                               // 錨點改用footprint「最靠近鏡頭的前角」，跟圖片裡的正面石座落地點意義才對得上；原本用中心點會讓整張圖被拉向後方，造成碰撞範圍比畫面上的房子更往前凸出一截，玩家會像整個人穿進房子下半部
     const g=groundScreen(fwx,fwy);
@@ -11315,7 +11341,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.37-4';
+const GAME_VER='v80.37-5';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
