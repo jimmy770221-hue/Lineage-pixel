@@ -90,7 +90,7 @@ v80 2026-08-27 （本日開發中）
                或逛街，只有頻道文字顯示「反擊了你」。現在只要玩家鎖定攻擊，假玩家會停下手邊的事、
                轉身面向玩家應戰，反擊命中時角色本身也會有揮擊的閃光效果，不再只是文字訊息
              ・修正假玩家反擊距離判定錯誤的問題：原本誤用玩家自己武器的射程去判斷假玩家能不能
-               反擊，導致近戰武器的假玩家(如武將拿劍)也能在遠距離反擊。現在改成依假玩家自己裝備
+               反擊，導致近戰武器的假玩家(如劍修拿劍)也能在遠距離反擊。現在改成依假玩家自己裝備
                的武器種類決定反擊距離：劍/鈍器/魔杖近戰、矛2格、弓遠距；法師的魔杖武器本身仍是
                近戰，但額外享有跟弓箭同等距離的魔法攻擊，符合法師可遠距離施法的設定
              ・修正法師會配到匕首/劍等不合理武器、卻仍套用遠距魔法攻擊判定的問題：法師的武器
@@ -137,7 +137,7 @@ v79 2026-08-26
                (沿用舊版QUEST_MATS/npc_tas配方的命名)，並補上這次新增的圖示，藥水分類維持不變
              ・新增道具實際效果：
                - 萬能藥(STR/DEX/CON/INT/WIS/CHA)：喝下後永久提升對應的一項六圍屬性1點
-               - 慎重藥水：修士專用，喝下後魔法攻擊傷害+2，持續1200秒（會顯示在狀態列，套用既有buff系統的存讀檔機制）
+               - 慎重藥水：法修專用，喝下後魔法攻擊傷害+2，持續1200秒（會顯示在狀態列，套用既有buff系統的存讀檔機制）
                - 祝福的對武器/防具施法卷軸：必定強化成功+1，且有機率(20%/10%)一次躍升+2或+3，不會摧毀裝備
                - 詛咒的對武器/防具施法卷軸：使用後必定將裝備的強化等級降低1，不會摧毀裝備
                - 畢克斯的沙漏：使用後AC-3，每6分鐘獲得2個畢克斯的羽毛，可連續使用累加時效(10個=10小時)；
@@ -155,7 +155,7 @@ v79 2026-08-26
              ・修正狀態圖示提示框每秒閃爍：改成種類沒變動時只更新時間文字，不重建整個狀態列DOM
              ・修正皮賽爾商店「🪶」羽毛符號無法顯示(該字元字型不支援)：改用畢克斯的羽毛道具本身的圖示
              ・新增一段加速／二段加速狀態圖示：一段加速(加速術/自我加速藥水/強化自我加速藥水)、二段加速
-               (武將-勇敢藥水/獵戶-精靈餅乾/宗主-惡魔之血)使用時即顯示對應狀態圖，兩者各自獨立累加，
+               (劍修-勇敢藥水/弓修-精靈餅乾/宗主-惡魔之血)使用時即顯示對應狀態圖，兩者各自獨立累加，
                上限皆為2小時；使用時累加剩餘時間，超過上限則封頂
              ・巴辛販賣清單依官方參考圖修正金額：燈10、斧50、釘錘650(原11/55/715)
              ・新增項圈與寵物綁定機制：寵物在身邊時，對應的項圈無法存入倉庫，須先將寵物寄放給
@@ -176,7 +176,7 @@ v79 2026-08-26
                的自製確認：第一次按下按鈕文字會變成「再按一次確定」，3秒內再按一次才會真正重置
              ・依參考資料校正琳達的販售清單為固定9項：精靈水晶等級一(世界樹的呼喚/心靈轉換/魔法防禦)
                各500金幣、等級二(淨化精神/屬性防禦)各2000金幣、等級三(單屬性防禦/風之神射/大地防護/
-               火焰武器)各10000金幣，取代原本自動列出全部獵戶魔法的清單
+               火焰武器)各10000金幣，取代原本自動列出全部弓修魔法的清單
              ・設定銀騎士村莊梅林(道具屋)、格林(武器防具屋)的販售清單為固定內容，並依參考資料校正
                金額：與潘朵拉/巴辛共用的物品(如短劍/小盾牌/闊矛等)以潘朵拉、巴辛既有金額為準；
                梅林/格林獨有物品(短統靴330、燈籠110、燈油33、復活卷軸1100、磨刀石155、戰斧770、
@@ -193,10 +193,10 @@ v79 2026-08-26
                沒什麼真正的牆體，改成約6成密度，才會有需要繞路、走錯路的真正迷宮感。
                1樓/2樓皆已驗證：從入口到下樓梯/王房路線仍保證連通，不會走不到
 ========================================
-v78 2026-08-25 小地圖玩家位置即時更新、修士召喚術上線、角色去重疊系統、名條/血條顯示改版、
+v78 2026-08-25 小地圖玩家位置即時更新、法修召喚術上線、角色去重疊系統、名條/血條顯示改版、
              魔法學習等級限制、重開遊戲原地重生、說話之島村莊NPC陣容擴充、商店清單金額校正：
              ・小地圖玩家位置即時更新
-             ・修士「召喚術」上線：召喚食人妖精協助戰鬥，數量＝魅力÷3(無條件進位)，
+             ・法修「召喚術」上線：召喚食人妖精協助戰鬥，數量＝魅力÷3(無條件進位)，
                戰鬥數值對照官方等級22大型怪物數據校正，時效3,600秒，重新施法會解除舊召喚獸再重召一批，
                顯示大小調整為與玩家角色同高
              ・新增角色去重疊系統：玩家/隊友/寵物/召喚獸/假玩家彼此中心點距離過近時會自動互相推開，
@@ -210,8 +210,8 @@ v78 2026-08-25 小地圖玩家位置即時更新、修士召喚術上線、角�
              ・魔法說明改成半透明小視窗：點魔法格子後跳出來的說明樣式改成跟背包物品說明一致，
                魔法視窗底下的說明文字列拿掉，格子改為滿版顯示
              ・補上魔法學習的等級限制：之前用魔法書/技術書/精靈水晶學魔法完全沒有檢查角色等級，
-               現在會依職業檢查——修士每4級解鎖一階(最高10階/40級)、獵戶每8級一階(最高6階/48級)、
-               宗主每10級一階(最高2階/20級)、武將滿50級才能學1階；宗主/武將少數專屬技術書
+               現在會依職業檢查——法修每4級解鎖一階(最高10階/40級)、弓修每8級一階(最高6階/48級)、
+               宗主每10級一階(最高2階/20級)、劍修滿50級才能學1階；宗主/劍修少數專屬技術書
                （呼喚盟友/援護盟友/衝擊之暈/堅固防護等）維持各自原本設定的角色等級門檻
              ・學會魔法時新增光束特效：一道光束籠罩全身，從腳底往上升起，不分學到哪個魔法都是同一種效果
              ・商店內已學會的魔法書/技術書/精靈水晶會用灰暗半透明遮蓋標示，避免買錯
@@ -221,7 +221,7 @@ v78 2026-08-25 小地圖玩家位置即時更新、修士召喚術上線、角�
                (新角色/舊存檔)時，才會沿用地圖原本的預設出生點
              ・修正聊天氣泡換地圖後延遲消失的問題：例如在史萊姆競技場逛一陣子、賭客聊天氣泡疊了一堆，
                回到村莊後這些氣泡會殘留、疊在錯的座標上，直到各自的時間到才消失；現在換地圖時會立刻清空
-             ・說話之島村莊NPC角色定案：詹姆改為修士試煉官(15/30級試煉，內容待補)、甘特為武將試煉環節NPC(夏洛伯之爪/生命的卷軸)
+             ・說話之島村莊NPC角色定案：詹姆改為法修試煉官(15/30級試煉，內容待補)、甘特為劍修試煉環節NPC(夏洛伯之爪/生命的卷軸)
              ・拉達(皮革師父)、連(骷髏藝品師父)正式上線道具製作系統：拉達可製作/購買皮革，並製作皮帽子/皮涼鞋/
                皮背心/皮盾牌/皮長靴/皮頭盔/硬皮背心/皮帶/皮盔甲，共10項(依官方資料，不含銀釘系列)；連可用皮頭盔/
                硬皮背心/銀釘皮盾+骨頭碎片+金幣製作骷髏頭盔/骷髏盔甲/骷髏盾牌
@@ -496,14 +496,14 @@ v73 2026-08-20 依玩家提供的資料，復原怪物出沒分佈並修正變�
                發現MAG_SUBS／MAG_CLS這兩個對照表其實早就存在(原本是給
                「魔法」分頁編輯法術數值用的)，直接沿用同一套職業分類
                規則：renderMobDrops()的頂層書籤新增「魔法」，底下四個
-               子書籤(宗主魔法／武將技術書／精靈水晶／魔法)；
+               子書籤(宗主魔法／劍修技術書／精靈水晶／魔法)；
                itemIdsForSub()新增判斷：cat==='magic'時，篩選
                ITEM_DEF裡cat==='spellbook'(魔法書/技術書/精靈水晶道具
                由法術資料自動生成時都是這個cat)且職業對應的項目，複用
                既有的clsMatch()比對規則。
                已用實際檔案裡的103個法術資料做完整驗證：自動生成的103種
                魔法書/技術書/精靈水晶道具，分進四個書籤後數量分別是
-               宗主魔法5項、武將技術書4項、精靈水晶27項、一般魔法書67項，
+               宗主魔法5項、劍修技術書4項、精靈水晶27項、一般魔法書67項，
                加總剛好103項，沒有遺漏或重複分類。
              ・修正「打倒克特二段/巴風特二段可能不會真的掉落東西」的隱藏
                bug(玩家發現後台編輯的是phase1的掉落物設定，擔心phase2
@@ -1181,7 +1181,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     text-shadow:1px 1px 0 #000,0 0 4px #000;}
   #itemInfoBody,#itemInfoPopup .ttl span{text-shadow:1px 1px 0 rgba(0,0,0,.9);}   /* 文字加深色描邊，半透明底也看得清楚 */
   #itemInfoBody{padding:7px 10px;font-size:15px;line-height:1.6;text-align:left;
-    word-break:keep-all;overflow-wrap:break-word;line-break:strict;}   /* keep-all：中文詞句不逐字拆開，避免「獵戶」被切成兩行 */
+    word-break:keep-all;overflow-wrap:break-word;line-break:strict;}   /* keep-all：中文詞句不逐字拆開，避免「弓修」被切成兩行 */
   /* 一行一項、全部靠左：標籤後面接冒號再接數值，長內容自然接續換行並縮排對齊，不會被擠成窄欄 */
   .iiRow{display:block;text-align:left;padding:2px 0;border-bottom:1px solid rgba(139,106,42,.28);
     padding-left:5.2em;text-indent:-5.2em;}
@@ -2124,20 +2124,20 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 <li><b>商品清單移除「攻X／防X」數值提示</b>：只留名稱＋價格</li>
 <li><b>新增18項道具</b>：卷軸4項(祝福/詛咒的對武器/防具施法卷軸)、藥水7項(慎重藥水、萬能藥STR/DEX/CON/INT/WIS/CHA)、道具7項(加速符咒、消耗品袋子、福袋、紅包、老舊獵人的箭桶、老舊皮革的箭桶、變鈍的武器)</li>
 <li><b>祝福／詛咒強化卷軸上線</b>：祝福卷軸必定強化+1、有機率一次躍升+2或+3且不會摧毀裝備；詛咒卷軸使用後必定將裝備強化等級降低1，同樣不會摧毀裝備</li>
-<li><b>萬能藥／慎重藥水上線</b>：萬能藥喝下後永久提升對應六圍屬性1點；慎重藥水為修士專用，喝下後魔法攻擊傷害+2、持續1200秒</li>
+<li><b>萬能藥／慎重藥水上線</b>：萬能藥喝下後永久提升對應六圍屬性1點；慎重藥水為法修專用，喝下後魔法攻擊傷害+2、持續1200秒</li>
 <li><b>畢克斯的沙漏上線</b>：使用後獲得AC-3的「畢克斯的祝福」狀態，期間每6分鐘獲得2個畢克斯的羽毛；可連續使用累加時效（10個=10小時）；關閉遊戲畫面時效果會暫停，不會離線流失</li>
 <li><b>畢克斯商人皮賽爾上線</b>：可用金幣購買畢克斯的沙漏箱(50000金幣/箱，內含3個畢克斯的沙漏)，也可用畢克斯的羽毛兌換稀有裝備與道具</li>
 </ul>
 <div class="noticeVer">◆ v78（2026-08-25）</div>
 <ul>
 <li><b>小地圖玩家位置即時更新</b>：小地圖上以紅點標示玩家所在位置，開著小地圖視窗時會每 0.25 秒自動跟著玩家移動更新</li>
-<li><b>修士「召喚術」上線</b>：施放後召喚食人妖精（等級22大型怪物，顯示大小與玩家同高）協助戰鬥，數量依魅力÷3（無條件進位）計算，時效3,600秒，重新施法會先解除舊召喚獸再重新召喚一批；召喚獸可在社交視窗「寵物」分頁查看剩餘時效並提前手動解除</li>
+<li><b>法修「召喚術」上線</b>：施放後召喚食人妖精（等級22大型怪物，顯示大小與玩家同高）協助戰鬥，數量依魅力÷3（無條件進位）計算，時效3,600秒，重新施法會先解除舊召喚獸再重新召喚一批；召喚獸可在社交視窗「寵物」分頁查看剩餘時效並提前手動解除</li>
 <li><b>角色不再互相重疊</b>：玩家、隊友、寵物、召喚獸彼此靠太近時會自動互相推開，多人圍攻同一隻怪也不會擠成一團或穿透彼此</li>
 <li><b>名條/血條顯示改版</b>：所有角色（含玩家本身）的名字平常不顯示，滑鼠移過去（或手機鎖定目標時）才會浮現；血條改成只有玩家自己、隊友、寵物、召喚獸固定顯示，怪物血條同樣改為hover/鎖定時才顯示，隊友並新增浮動血條；寵物與召喚獸的名條統一改成只顯示名字、字色統一為白色</li>
-<li><b>魔法系統整理</b>：點魔法格子的說明改成半透明小視窗，樣式跟背包物品說明一致；補上依職業的魔法學習等級限制（修士每4級解鎖一階、獵戶每8級一階、宗主每10級一階、武將滿50級才能學1階）；成功學會魔法時會有光束特效；商店裡已學會的魔法書/技術書/精靈水晶會蓋上灰暗遮罩避免買重複</li>
+<li><b>魔法系統整理</b>：點魔法格子的說明改成半透明小視窗，樣式跟背包物品說明一致；補上依職業的魔法學習等級限制（法修每4級解鎖一階、弓修每8級一階、宗主每10級一階、劍修滿50級才能學1階）；成功學會魔法時會有光束特效；商店裡已學會的魔法書/技術書/精靈水晶會蓋上灰暗遮罩避免買重複</li>
 <li><b>重開遊戲改為原地重生</b>：會記住關遊戲前所在的精確座標，重開後只要進入同一張地圖就會原地重生；只有角色死亡被送回村莊、或存檔沒有座標資料時，才會用地圖原本的出生點</li>
 <li><b>修正聊天氣泡延遲消失</b>：換地圖時會立刻清空殘留的聊天氣泡，不用等各自的時間到才消失</li>
-<li><b>說話之島村莊新增NPC</b>：詹姆(修士試煉官)、甘特(武將試煉相關NPC)、拉達(皮革師父)、連(骷髏藝品師父)</li>
+<li><b>說話之島村莊新增NPC</b>：詹姆(法修試煉官)、甘特(劍修試煉相關NPC)、拉達(皮革師父)、連(骷髏藝品師父)</li>
 <li><b>道具製作系統上線</b>：拉達可製作各種皮製防具，連可用皮製裝備＋骨頭碎片製作骷髏系列裝備；製作清單頁改為只顯示圖示＋名稱，點進去才看詳細材料</li>
 <li><b>商店清單／金額校正</b>：潘朵拉、巴辛改為官方資料的固定販賣清單與金額；吉倫的魔法書售價改為「等級²×100」金幣（一級100／二級400／三級900）</li>
 </ul>
@@ -2169,7 +2169,7 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
 <li><b>掉落系統大改版</b>：怪物依等級保底掉落（1-9等至少1件、10-19等2件，每10等再+1），高等怪更有價值。同時補上史萊姆、人形殭屍、杜賓犬、飄浮之眼、野豬原本完全沒有的掉落表</li>
 <li><b>後台掉落機率設定</b>：每個已勾選的掉落物旁邊可直接修改掉落機率（%），武器、防具、道具、藥水、卷軸、魔法書全部適用</li>
 <li><b>變形卷軸可手動使用</b>：在背包點擊變形卷軸會跳出變身選單，依怪物等級分組，達到等級即可點名字直接變身，持續20分鐘</li>
-<li><b>獵戶屬性魔法</b>：妖精森林的艾利溫可締結屬性契約（地／水／火／風）。締約後只能學習一般精靈水晶與該屬性的水晶，也可選擇「忘記魔法」重新締約</li>
+<li><b>弓修屬性魔法</b>：妖精森林的艾利溫可締結屬性契約（地／水／火／風）。締約後只能學習一般精靈水晶與該屬性的水晶，也可選擇「忘記魔法」重新締約</li>
 <li><b>史萊姆競技場大擴充</b>：選手增為 20 隻並加上編號（「#18 獵鷹」）。三位妖魔執行者各司其職——阿門售票並在開賽前倒數十秒喊「ＧＯ」、梅格在終點宣布優勝者、葛拉公告賽事資訊。巴風特的傳送魔法陣改開在王房內</li>
 <li><b>新增聊天氣泡</b>：角色說話時頭上會冒出對話框。競技場有 30 位各種風格 ID 的虛擬玩家，會在場邊走動並成群聊天，同時約 10～15 人在講話</li>
 <li><b>NPC 名條改版</b>：改成兩行顯示，第一行名字、第二行職稱，例如「艾爾／【倉庫管理員】」</li>
@@ -2317,14 +2317,14 @@ v72 2026-08-19 本日開發彙整（介面優化、隊伍系統大改版、新�
     </svg>
     <div class="wxMist"></div><div id="createBox">
     <div class="ccScroll"><div class="cname" id="ccClsName">請選擇職業</div>
-      <div class="cstory" id="ccStory">點選人物四周的圖示選擇職業：<br>左上 👑 皇冠＝宗主　左下 🛡 盔甲＝武將<br>右上 🕊 翅膀＝獵戶　右下 🕯 蠟燭＝修士</div></div>
+      <div class="cstory" id="ccStory">點選人物四周的圖示選擇職業：<br>左上 👑 皇冠＝宗主　左下 🛡 盔甲＝劍修<br>右上 🕊 翅膀＝弓修　右下 🕯 蠟燭＝法修</div></div>
 
     <canvas id="ccFigure" width="274" height="306"></canvas>
 
     <div class="ccIcon" id="icoRoyal" onclick="pickClass('宗主')"><canvas width="60" height="60"></canvas><span class="lbl">宗主</span></div>
-    <div class="ccIcon" id="icoKnight" onclick="pickClass('武將')"><canvas width="60" height="60"></canvas><span class="lbl">武將</span></div>
-    <div class="ccIcon" id="icoElf" onclick="pickClass('獵戶')"><canvas width="60" height="60"></canvas><span class="lbl">獵戶</span></div>
-    <div class="ccIcon" id="icoMage" onclick="pickClass('修士')"><canvas width="60" height="60"></canvas><span class="lbl">修士</span></div>
+    <div class="ccIcon" id="icoKnight" onclick="pickClass('劍修')"><canvas width="60" height="60"></canvas><span class="lbl">劍修</span></div>
+    <div class="ccIcon" id="icoElf" onclick="pickClass('弓修')"><canvas width="60" height="60"></canvas><span class="lbl">弓修</span></div>
+    <div class="ccIcon" id="icoMage" onclick="pickClass('法修')"><canvas width="60" height="60"></canvas><span class="lbl">法修</span></div>
 
     <div id="ccAlloc">
       <div class="ccRemain">剩餘點數</div>
@@ -2412,7 +2412,7 @@ const ELF=[
  "..KK KK."];
 const ELF_PAL={G:'#c8a030',s:'#e8b98a',S:'#c98a5a',f:'#3a2a15',g:'#3a8a4a',Y:'#8a5a2a',L:'#4a3a1a',K:'#2a1e0e','.':null,' ':null};
 
-/* 武將 */
+/* 劍修 */
 const KNIGHT=[
  "..MMMM..",
  ".MMMMMM.",
@@ -3528,7 +3528,7 @@ function rollPetStats(){
 }
 let pets=[];                                                   // 目前出戰中的寵物(執行期物件)
 let petWarehouse=[];                                           // 詹森寄放中的寵物(純資料，非執行期物件)
-/* ===== 修士召喚術：食人妖精 =====
+/* ===== 法修召喚術：食人妖精 =====
    跟寵物不同，召喚獸是有時效的(配合SPELL_FX['召喚術'].dur到期會自動消失)，且陣亡就直接消失、不會像寵物一樣倒地等復活。
    出戰數量 = 魅力÷3，無條件進位，例如魅力9→3隻，魅力12.6(理論值)→ceil(4.2)=5隻。*/
 let summons=[];                                                // 目前存在的召喚獸(執行期物件)，結構與寵物相同(type/x/y/hp/maxhp/dir8/atkCd/target)方便共用繪製與AI
@@ -3539,11 +3539,11 @@ function summonCount(){ return Math.max(1, Math.ceil((S.cha||8)/3)); }   // 召�
 const SUMMON_OGRE_STATS={lv:22, hp:260, dmgMin:2, dmgMax:32, hitBonus:5};
 function summonDamageRoll(){ var t=SUMMON_OGRE_STATS; return t.dmgMin+Math.floor(Math.random()*(t.dmgMax-t.dmgMin+1)); }
 const PET_LANE_OFFSET = 34;                                    // 寵物列相對於隊友列的側向偏移(px)，避免兩列人擠在一起
-/* 可同時帶的寵物數 = 魅力÷4（無條件捨去），上限8隻；獵戶是馴養取向的職業，保底3隻。
-   對照原版：魅力18→4隻、獵戶最少3隻。*/
+/* 可同時帶的寵物數 = 魅力÷4（無條件捨去），上限8隻；弓修是馴養取向的職業，保底3隻。
+   對照原版：魅力18→4隻、弓修最少3隻。*/
 function petSlots(){
   var n=Math.floor((S.cha||8)/4);
-  if(S.cls==='獵戶') n=Math.max(n,3);
+  if(S.cls==='弓修') n=Math.max(n,3);
   return Math.max(1, Math.min(8, n));
 }
 function petExpNeed(lv){ return Math.round(80*Math.pow(1.12, Math.max(0,lv-1))); }  // 寵物升級所需經驗
@@ -4233,7 +4233,7 @@ function doMorph(key){
   if(typeof persistSaves==='function') persistSaves();
   closeMorph();
 }
-/* ===== 獵戶屬性魔法：向艾利溫選定一種屬性 =====
+/* ===== 弓修屬性魔法：向艾利溫選定一種屬性 =====
    選定後只能學習「一般精靈水晶」＋「該屬性的精靈水晶」，其他屬性的水晶無法學習。
    可以找他「忘記魔法」重新選擇(會清空已學的屬性法術)。*/
 const ELF_ATTRS=[
@@ -4242,7 +4242,7 @@ const ELF_ATTRS=[
   {key:'fire',  name:'火', color:'#e06a4a'},
   {key:'wind',  name:'風', color:'#7ad0a0'},
 ];
-/* 各屬性專屬的精靈水晶法術；沒列在這裡的獵戶法術＝一般精靈水晶，任何屬性都能學。*/
+/* 各屬性專屬的精靈水晶法術；沒列在這裡的弓修法術＝一般精靈水晶，任何屬性都能學。*/
 const ELF_ATTR_SPELLS={
   earth:['封印禁地','大地防護','地面障礙','大地的祝福','大地屏障'],
   water:['鋼鐵防護','酷寒之矛'],
@@ -4253,8 +4253,8 @@ function elfAttrOfSpell(name){                                   // 這個法術
   for(var k in ELF_ATTR_SPELLS) if(ELF_ATTR_SPELLS[k].indexOf(name)>=0) return k;
   return null;
 }
-function canLearnElfSpell(name){                                 // 獵戶能不能學這個法術
-  if(S.cls!=='獵戶') return true;                                // 非獵戶不受屬性限制
+function canLearnElfSpell(name){                                 // 弓修能不能學這個法術
+  if(S.cls!=='弓修') return true;                                // 非弓修不受屬性限制
   var a=elfAttrOfSpell(name);
   if(!a) return true;                                            // 一般精靈水晶：都能學
   return S.elfAttr===a;                                          // 屬性水晶：只能學自己選的屬性
@@ -4266,8 +4266,8 @@ function openElfAttr(){
   var cur=S.elfAttr||null, h='';
   var t=document.querySelector('#morphw h2');
   if(t) t.innerHTML='精靈魔法傳授者 · 艾利溫 <button class="sx" onclick="closeMorph()">關閉</button>';
-  if(S.cls!=='獵戶'){
-    h+='<div class="mnote">艾利溫：「屬性契約是獵戶一族的秘法，你並非獵戶，無法締結。」</div>';
+  if(S.cls!=='弓修'){
+    h+='<div class="mnote">艾利溫：「屬性契約是弓修一族的秘法，你並非弓修，無法締結。」</div>';
     body.innerHTML=h;
     var w0=document.getElementById('morphw'); if(w0) w0.classList.add('on');
     if(typeof navBuildPanel==='function') navBuildPanel('morphw');
@@ -4318,10 +4318,10 @@ const npcs=[
   {name:'潘朵拉', job:'道具武器商人', mob:'潘朵拉', art:'mage', x:22*TS, y:20*TS, shop:'潘朵拉', lines:['潘朵拉：「說話島的道具武器商人之一，各種武器道具應有盡有。」']},
   {name:'巴辛', job:'妖魔族商人', mob:'巴辛', art:'knight', x:34*TS, y:25*TS, shop:'巴辛', lines:['巴辛：「武器、防具，我這兒都有，看看吧。」']},
   {name:'吉倫', job:'魔法商', mob:'吉倫', art:'mage', shop:'吉倫', x:22*TS, y:30*TS, lines:['吉倫：「想學魔法嗎？來看看我的魔法書吧。」']},
-  {name:'詹姆', job:'修士試煉官', mob:'詹姆', art:'mage', x:17*TS, y:33*TS, lines:['詹姆：「修士若想證明自己的實力，15級與30級都有屬於你的試煉……不過詳細內容，我還在準備。」']},
+  {name:'詹姆', job:'法修試煉官', mob:'詹姆', art:'mage', x:17*TS, y:33*TS, lines:['詹姆：「法修若想證明自己的實力，15級與30級都有屬於你的試煉……不過詳細內容，我還在準備。」']},
   {name:'拉達', job:'皮革師父', mob:'拉達', art:'knight', x:38*TS, y:15*TS, craft:'npc_lada', lines:['拉達：「只要你提供足夠的材料，我能幫你製作各種皮製防具。」']},
   {name:'連', job:'骷髏藝品師父', mob:'連', art:'mage', x:14*TS, y:15*TS, craft:'npc_lian', lines:['連：「只要你提供足夠的材料，我能幫你製作各種骨製防具。」']},
-  {name:'甘特', job:'武將試煉官', mob:'甘特', art:'dwarf', x:38*TS, y:33*TS, lines:['甘特：「想通過我的試煉嗎？把夏洛伯之爪拿來給我看看。至於生命的卷軸……我還在等著。」']},
+  {name:'甘特', job:'劍修試煉官', mob:'甘特', art:'dwarf', x:38*TS, y:33*TS, lines:['甘特：「想通過我的試煉嗎？把夏洛伯之爪拿來給我看看。至於生命的卷軸……我還在等著。」']},
   {name:'法林', job:'皮革加工師', mob:'法林', art:'knight', x:30*TS, y:10*TS, craft:'npc_finn', lines:['法林：「只要你提供足夠的材料，我能幫你打造更精良的銀釘系列裝備。」']},
   {name:'詹森', job:'寵物管理員', mob:'詹森', art:'knight', x:45*TS, y:20*TS, petWarehouse:true, lines:['詹森：「不想帶著寵物練功嗎？我可以幫你寄放，只收狼跟狗，迷魅或召喚的怪物我不收。每隻寵物領出時收費70元。」']},
   {name:'多瑪', job:'鐵匠', mob:'多瑪', art:'dwarf', x:26*TS, y:38*TS, lines:['多瑪：「武器防具因戰鬥而損壞了嗎？修復的手藝還在準備中，晚點再來找我吧。」']},
@@ -4488,7 +4488,7 @@ function releaseFakePlayerName(name){ _usedFakeNames.delete(name); }
 
 let FAKE_PLAYERS=[];
 const FP_CLASSES=['royal','knight','elf','mage'];
-const FP_JOB_OF_CLS={royal:'宗主',knight:'武將',elf:'獵戶',mage:'修士'};
+const FP_JOB_OF_CLS={royal:'宗主',knight:'劍修',elf:'弓修',mage:'法修'};
 function fpRandomAlign(){                                       // 隨機性向：約1/3正義(>500)、1/3中立(0~500)、1/3邪惡(<0)，各地圖三種都會出現
   const r=Math.random();
   if(r<0.34) return 600+Math.floor(Math.random()*2000);        // 正義 600~2600
@@ -4512,7 +4512,7 @@ function fpPickItem(cat, jobName, tier){                         // 依職業與
     const d=ITEM_DEF[id];
     if(d.cat!==cat || d._base) return false;                     // 排除已強化的衍生品，只從基礎品項挑
     const job=d.job||'全職業';
-    if(cat==='weapon' && jobName==='修士' && d.kind!=='staff') return false;   // 法師的武器一定要是魔杖，不能隨機配到匕首/劍這類不合理的武器
+    if(cat==='weapon' && jobName==='法修' && d.kind!=='staff') return false;   // 法師的武器一定要是魔杖，不能隨機配到匕首/劍這類不合理的武器
     return job==='全職業' || job.indexOf(jobName)>=0;
   });
   if(!pool.length) return null;
@@ -4750,35 +4750,35 @@ const ITEM_DEF={};
 function DI(name,cat,price,ex){ ITEM_DEF[name]=Object.assign({n:name,cat,price},ex||{}); }
 // ===== 武器（依 PDF 正式資料建立；小/大怪傷害、職業、材質、強化、損傷、效果、掉落%）=====
 // bow
-DI("弓","weapon",110,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"宗主、武將、獵戶、修士",wt:40,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("精靈弓","weapon",120,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"宗主、武將、獵戶、修士",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手，額外攻擊+1",drop:null,two:true});DI("歐西斯弓","weapon",60,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"全職業",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 遠距離傷害 -1",drop:null,two:true});DI("尤米弓","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"獵戶",wt:40,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手。額外攻擊+3",drop:null,two:true});DI("短弓","weapon",110,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"全職業",wt:20,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 遠距離傷害 -1",drop:null,two:true});DI("十字弓","weapon",140,{kind:"bow",dmgS:3,dmgL:2,atk:2,job:"武將、獵戶",wt:50,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手，額外攻擊+2, 武器命中+3",drop:null,two:true});DI("獵人之弓","weapon",120,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"宗主、武將、獵戶、修士",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手，額外攻擊+1, 武器命中+5",drop:null,two:true});DI("沙哈之弓","weapon",160,{kind:"bow",dmgS:4,dmgL:4,atk:4,job:"獵戶",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手, 發動 : 沒有穿戴的弓箭時使用無形箭, 遠距離傷害 +5, 遠距離命中 +2",drop:null,two:true});DI("被遺忘的弩槍","weapon",200,{kind:"bow",dmgS:1,dmgL:1,atk:1,job:"獵戶",wt:50,mat:"木",enh:"無法強化",dur:"損傷",eff:"雙手, 能感受到強烈力量的弓。",drop:null,two:true});DI("古老的弩槍","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"獵戶",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"遠距離傷害 +2, 遠距離命中 +5, 古人曾用過的單手弓，能提升命中率。",drop:null,two:false});DI("赤焰之弓","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"獵戶",wt:30,mat:"銀",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手, 發動 : 火箭, 遠距離傷害 +4, 遠距離命中 +2",drop:null,two:true});DI("熾炎天使弓","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"獵戶",wt:25,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 發動 : 月光地裂術, 遠距離傷害 +4, 遠距離命中 +3",drop:null,two:true});
+DI("弓","weapon",110,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"宗主、劍修、弓修、法修",wt:40,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("精靈弓","weapon",120,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"宗主、劍修、弓修、法修",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手，額外攻擊+1",drop:null,two:true});DI("歐西斯弓","weapon",60,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"全職業",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 遠距離傷害 -1",drop:null,two:true});DI("尤米弓","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"弓修",wt:40,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手。額外攻擊+3",drop:null,two:true});DI("短弓","weapon",110,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"全職業",wt:20,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 遠距離傷害 -1",drop:null,two:true});DI("十字弓","weapon",140,{kind:"bow",dmgS:3,dmgL:2,atk:2,job:"劍修、弓修",wt:50,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手，額外攻擊+2, 武器命中+3",drop:null,two:true});DI("獵人之弓","weapon",120,{kind:"bow",dmgS:2,dmgL:2,atk:2,job:"宗主、劍修、弓修、法修",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手，額外攻擊+1, 武器命中+5",drop:null,two:true});DI("沙哈之弓","weapon",160,{kind:"bow",dmgS:4,dmgL:4,atk:4,job:"弓修",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手, 發動 : 沒有穿戴的弓箭時使用無形箭, 遠距離傷害 +5, 遠距離命中 +2",drop:null,two:true});DI("被遺忘的弩槍","weapon",200,{kind:"bow",dmgS:1,dmgL:1,atk:1,job:"弓修",wt:50,mat:"木",enh:"無法強化",dur:"損傷",eff:"雙手, 能感受到強烈力量的弓。",drop:null,two:true});DI("古老的弩槍","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"弓修",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"遠距離傷害 +2, 遠距離命中 +5, 古人曾用過的單手弓，能提升命中率。",drop:null,two:false});DI("赤焰之弓","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"弓修",wt:30,mat:"銀",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手, 發動 : 火箭, 遠距離傷害 +4, 遠距離命中 +2",drop:null,two:true});DI("熾炎天使弓","weapon",140,{kind:"bow",dmgS:3,dmgL:3,atk:3,job:"弓修",wt:25,mat:"木",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 發動 : 月光地裂術, 遠距離傷害 +4, 遠距離命中 +3",drop:null,two:true});
 // sword
-DI("武士刀","weapon",340,{kind:"sword",dmgS:10,dmgL:12,atk:12,job:"宗主、武將、獵戶",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +1",drop:20,two:false});DI("長劍","weapon",5500,{kind:"sword",dmgS:8,dmgL:12,atk:12,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:70,two:false});DI("闊劍","weapon",140,{kind:"sword",dmgS:4,dmgL:6,atk:6,job:"全職業",wt:70,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:70,two:false});DI("精靈匕首","weapon",150,{kind:"sword",dmgS:4,dmgL:3,atk:3,job:"全職業",wt:10,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2",drop:90,two:false});DI("歐西斯匕首","weapon",10,{kind:"sword",dmgS:2,dmgL:3,atk:3,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2",drop:90,two:false});DI("匕首","weapon",22,{kind:"sword",dmgS:4,dmgL:2,atk:2,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2",drop:100,two:false});DI("彎刀","weapon",2200,{kind:"sword",dmgS:8,dmgL:8,atk:8,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("小侏儒短劍","weapon",190,{kind:"sword",dmgS:7,dmgL:8,atk:8,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:100,two:false});DI("精靈短劍","weapon",200,{kind:"sword",dmgS:8,dmgL:8,atk:8,job:"全職業",wt:20,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("歐西斯短劍","weapon",60,{kind:"sword",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("短劍","weapon",335,{kind:"sword",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("瑟魯基之劍","weapon",820,{kind:"sword",dmgS:16,dmgL:10,atk:10,job:"武將",wt:120,mat:"金屬",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +5",drop:1,two:false});DI("紅騎士之劍","weapon",310,{kind:"sword",dmgS:8,dmgL:12,atk:12,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"STR +1, 提高力量的特殊長劍。",drop:100,two:false});DI("侵略者之劍","weapon",250,{kind:"sword",dmgS:9,dmgL:11,atk:11,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:70,two:false});DI("骰子匕首","weapon",140,{kind:"sword",dmgS:3,dmgL:3,atk:3,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2, 有10%的機率給對方致命一擊",drop:70,two:false});DI("大馬士革刀","weapon",330,{kind:"sword",dmgS:10,dmgL:11,atk:11,job:"宗主、武將、獵戶",wt:45,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"不容易損壞的特殊劍。",drop:60,two:false});DI("短劍的劍身","weapon",50,{kind:"sword",dmgS:2,dmgL:2,atk:2,job:"全職業",wt:20,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("長劍的劍身","weapon",80,{kind:"sword",dmgS:3,dmgL:3,atk:3,job:"全職業",wt:30,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("奧里哈魯根的劍身","weapon",110,{kind:"sword",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:35,mat:"奧里哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("細劍","weapon",220,{kind:"sword",dmgS:11,dmgL:6,atk:6,job:"武將、獵戶",wt:60,mat:"奧里哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:50,two:false});DI("鎖子甲破壞者","weapon",180,{kind:"sword",dmgS:4,dmgL:5,atk:5,job:"全職業",wt:40,mat:"奧里哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +10",drop:40,two:false});DI("銀長劍","weapon",260,{kind:"sword",dmgS:8,dmgL:12,atk:12,job:"全職業",wt:50,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:60,two:false});DI("銀劍","weapon",180,{kind:"sword",dmgS:7,dmgL:7,atk:7,job:"全職業",wt:40,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:60,two:false});DI("被遺忘的劍","weapon",260,{kind:"sword",dmgS:3,dmgL:2,atk:2,job:"宗主、武將、獵戶",wt:40,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"近距離命中 +5",drop:10,two:false});DI("古老的劍","weapon",1700,{kind:"sword",dmgS:40,dmgL:25,atk:25,job:"宗主、武將、獵戶",wt:30,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"近距離命中 +9",drop:5,two:false});DI("黑燄之劍","weapon",650,{kind:"sword",dmgS:16,dmgL:10,atk:10,job:"武將",wt:50,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:5,two:false});DI("赤焰之劍","weapon",620,{kind:"sword",dmgS:14,dmgL:6,atk:6,job:"獵戶",wt:40,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +4",drop:5,two:false});DI("黃金權杖","weapon",820,{kind:"sword",dmgS:14,dmgL:14,atk:14,job:"宗主",wt:50,mat:"金",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +1",drop:5,two:false});DI("雷雨之劍","weapon",740,{kind:"sword",dmgS:13,dmgL:12,atk:12,job:"宗主、武將、獵戶",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +1, 發動 : 電擊, 近距離傷害 +1",drop:5,two:false});
+DI("武士刀","weapon",340,{kind:"sword",dmgS:10,dmgL:12,atk:12,job:"宗主、劍修、弓修",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +1",drop:20,two:false});DI("長劍","weapon",5500,{kind:"sword",dmgS:8,dmgL:12,atk:12,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:70,two:false});DI("闊劍","weapon",140,{kind:"sword",dmgS:4,dmgL:6,atk:6,job:"全職業",wt:70,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:70,two:false});DI("精靈匕首","weapon",150,{kind:"sword",dmgS:4,dmgL:3,atk:3,job:"全職業",wt:10,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2",drop:90,two:false});DI("歐西斯匕首","weapon",10,{kind:"sword",dmgS:2,dmgL:3,atk:3,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2",drop:90,two:false});DI("匕首","weapon",22,{kind:"sword",dmgS:4,dmgL:2,atk:2,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2",drop:100,two:false});DI("彎刀","weapon",2200,{kind:"sword",dmgS:8,dmgL:8,atk:8,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("小侏儒短劍","weapon",190,{kind:"sword",dmgS:7,dmgL:8,atk:8,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:100,two:false});DI("精靈短劍","weapon",200,{kind:"sword",dmgS:8,dmgL:8,atk:8,job:"全職業",wt:20,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("歐西斯短劍","weapon",60,{kind:"sword",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("短劍","weapon",335,{kind:"sword",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("瑟魯基之劍","weapon",820,{kind:"sword",dmgS:16,dmgL:10,atk:10,job:"劍修",wt:120,mat:"金屬",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +5",drop:1,two:false});DI("紅騎士之劍","weapon",310,{kind:"sword",dmgS:8,dmgL:12,atk:12,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"STR +1, 提高力量的特殊長劍。",drop:100,two:false});DI("侵略者之劍","weapon",250,{kind:"sword",dmgS:9,dmgL:11,atk:11,job:"全職業",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:70,two:false});DI("骰子匕首","weapon",140,{kind:"sword",dmgS:3,dmgL:3,atk:3,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +2, 有10%的機率給對方致命一擊",drop:70,two:false});DI("大馬士革刀","weapon",330,{kind:"sword",dmgS:10,dmgL:11,atk:11,job:"宗主、劍修、弓修",wt:45,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"不容易損壞的特殊劍。",drop:60,two:false});DI("短劍的劍身","weapon",50,{kind:"sword",dmgS:2,dmgL:2,atk:2,job:"全職業",wt:20,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("長劍的劍身","weapon",80,{kind:"sword",dmgS:3,dmgL:3,atk:3,job:"全職業",wt:30,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("奧里哈魯根的劍身","weapon",110,{kind:"sword",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:35,mat:"奧里哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:80,two:false});DI("細劍","weapon",220,{kind:"sword",dmgS:11,dmgL:6,atk:6,job:"劍修、弓修",wt:60,mat:"奧里哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:50,two:false});DI("鎖子甲破壞者","weapon",180,{kind:"sword",dmgS:4,dmgL:5,atk:5,job:"全職業",wt:40,mat:"奧里哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +10",drop:40,two:false});DI("銀長劍","weapon",260,{kind:"sword",dmgS:8,dmgL:12,atk:12,job:"全職業",wt:50,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:60,two:false});DI("銀劍","weapon",180,{kind:"sword",dmgS:7,dmgL:7,atk:7,job:"全職業",wt:40,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:60,two:false});DI("被遺忘的劍","weapon",260,{kind:"sword",dmgS:3,dmgL:2,atk:2,job:"宗主、劍修、弓修",wt:40,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"近距離命中 +5",drop:10,two:false});DI("古老的劍","weapon",1700,{kind:"sword",dmgS:40,dmgL:25,atk:25,job:"宗主、劍修、弓修",wt:30,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"近距離命中 +9",drop:5,two:false});DI("黑燄之劍","weapon",650,{kind:"sword",dmgS:16,dmgL:10,atk:10,job:"劍修",wt:50,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:5,two:false});DI("赤焰之劍","weapon",620,{kind:"sword",dmgS:14,dmgL:6,atk:6,job:"弓修",wt:40,mat:"銀",enh:"加6前可以安全強化",dur:"損傷",eff:"近距離命中 +4",drop:5,two:false});DI("黃金權杖","weapon",820,{kind:"sword",dmgS:14,dmgL:14,atk:14,job:"宗主",wt:50,mat:"金",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +1",drop:5,two:false});DI("雷雨之劍","weapon",740,{kind:"sword",dmgS:13,dmgL:12,atk:12,job:"宗主、劍修、弓修",wt:40,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +1, 發動 : 電擊, 近距離傷害 +1",drop:5,two:false});
 // staff
-DI("橡木魔法杖","weapon",90,{kind:"staff",dmgS:3,dmgL:4,atk:4,job:"全職業",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("美基魔法杖","weapon",110,{kind:"staff",dmgS:4,dmgL:5,atk:5,job:"修士",wt:20,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("巫術魔法杖","weapon",120,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"修士",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"SP +1, 魔法加成+1。",drop:null,two:false});DI("力量魔法杖","weapon",280,{kind:"staff",dmgS:9,dmgL:9,atk:9,job:"修士",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"STR +3, SP -2, 近距離傷害 +3, 降低魔法加成，但會提升攻擊力的武器。",drop:null,two:false});DI("瑪那魔杖","weapon",140,{kind:"staff",dmgS:3,dmgL:3,atk:3,job:"修士",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 -3, 魔力吸收, 攻擊對方時，漸漸奪取對方魔力的魔杖。",drop:null,two:false});DI("水晶魔杖","weapon",90,{kind:"staff",dmgS:1,dmgL:1,atk:1,job:"修士",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"魔力回復量 +10, 能快速恢復魔力的魔杖。",drop:null,two:false});DI("冰之女王魔杖","weapon",130,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"修士",wt:20,mat:"龍麟",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +3, 發動 : 冰錐",drop:null,two:false});DI("惡魔魔杖","weapon",90,{kind:"staff",dmgS:1,dmgL:1,atk:1,job:"修士",wt:10,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"未損傷",eff:"SP +5",drop:null,two:false});DI("巴風特魔杖","weapon",120,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"修士",wt:15,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"未損傷",eff:"近距離傷害 +5, 近距離命中 +7, 發動 : 地裂術",drop:null,two:false});DI("巴列斯魔杖","weapon",120,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"修士",wt:15,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"未損傷",eff:"SP +2, 魔力回復量 +10",drop:null,two:false});DI("天使魔杖","weapon",350,{kind:"staff",dmgS:12,dmgL:12,atk:12,job:"修士",wt:20,mat:"銀",enh:"加6前可以安全強化",dur:"未損傷",eff:"INT +1, 魔力回復量 +4, 發動 : 起死回生術",drop:null,two:false});
+DI("橡木魔法杖","weapon",90,{kind:"staff",dmgS:3,dmgL:4,atk:4,job:"全職業",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("美基魔法杖","weapon",110,{kind:"staff",dmgS:4,dmgL:5,atk:5,job:"法修",wt:20,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("巫術魔法杖","weapon",120,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"法修",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"SP +1, 魔法加成+1。",drop:null,two:false});DI("力量魔法杖","weapon",280,{kind:"staff",dmgS:9,dmgL:9,atk:9,job:"法修",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"STR +3, SP -2, 近距離傷害 +3, 降低魔法加成，但會提升攻擊力的武器。",drop:null,two:false});DI("瑪那魔杖","weapon",140,{kind:"staff",dmgS:3,dmgL:3,atk:3,job:"法修",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 -3, 魔力吸收, 攻擊對方時，漸漸奪取對方魔力的魔杖。",drop:null,two:false});DI("水晶魔杖","weapon",90,{kind:"staff",dmgS:1,dmgL:1,atk:1,job:"法修",wt:15,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"魔力回復量 +10, 能快速恢復魔力的魔杖。",drop:null,two:false});DI("冰之女王魔杖","weapon",130,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"法修",wt:20,mat:"龍麟",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +3, 發動 : 冰錐",drop:null,two:false});DI("惡魔魔杖","weapon",90,{kind:"staff",dmgS:1,dmgL:1,atk:1,job:"法修",wt:10,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"未損傷",eff:"SP +5",drop:null,two:false});DI("巴風特魔杖","weapon",120,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"法修",wt:15,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"未損傷",eff:"近距離傷害 +5, 近距離命中 +7, 發動 : 地裂術",drop:null,two:false});DI("巴列斯魔杖","weapon",120,{kind:"staff",dmgS:2,dmgL:3,atk:3,job:"法修",wt:15,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"未損傷",eff:"SP +2, 魔力回復量 +10",drop:null,two:false});DI("天使魔杖","weapon",350,{kind:"staff",dmgS:12,dmgL:12,atk:12,job:"法修",wt:20,mat:"銀",enh:"加6前可以安全強化",dur:"未損傷",eff:"INT +1, 魔力回復量 +4, 發動 : 起死回生術",drop:null,two:false});
 // twohand
-DI("雙手劍","weapon",460,{kind:"twohand",dmgS:14,dmgL:16,atk:16,job:"宗主、武將",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("巨劍","weapon",480,{kind:"twohand",dmgS:17,dmgL:14,atk:14,job:"宗主、武將",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("被遺忘的巨劍","weapon",290,{kind:"twohand",dmgS:2,dmgL:3,atk:3,job:"宗主、武將",wt:80,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"雙手, 近距離命中 +3, 能感受到強烈力量的大劍。",drop:null,two:true});DI("古老的巨劍","weapon",1720,{kind:"twohand",dmgS:25,dmgL:40,atk:40,job:"宗主、武將",wt:70,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"雙手, 近距離命中 +7, 古人曾用過的大劍，無法使用對武器施法的卷軸進行強化。",drop:null,two:true});
+DI("雙手劍","weapon",460,{kind:"twohand",dmgS:14,dmgL:16,atk:16,job:"宗主、劍修",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("巨劍","weapon",480,{kind:"twohand",dmgS:17,dmgL:14,atk:14,job:"宗主、劍修",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("被遺忘的巨劍","weapon",290,{kind:"twohand",dmgS:2,dmgL:3,atk:3,job:"宗主、劍修",wt:80,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"雙手, 近距離命中 +3, 能感受到強烈力量的大劍。",drop:null,two:true});DI("古老的巨劍","weapon",1720,{kind:"twohand",dmgS:25,dmgL:40,atk:40,job:"宗主、劍修",wt:70,mat:"鐵",enh:"無法強化",dur:"損傷",eff:"雙手, 近距離命中 +7, 古人曾用過的大劍，無法使用對武器施法的卷軸進行強化。",drop:null,two:true});
 // spear
-DI("矛","weapon",880,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("巴迪須","weapon",352,{kind:"spear",dmgS:4,dmgL:6,atk:6,job:"宗主、武將",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("柴刀","weapon",280,{kind:"spear",dmgS:4,dmgL:11,atk:11,job:"宗主、武將",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("貝卡合金","weapon",350,{kind:"spear",dmgS:11,dmgL:11,atk:11,job:"武將",wt:100,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 穿透效果",drop:null,two:true});DI("法丘","weapon",320,{kind:"spear",dmgS:10,dmgL:10,atk:10,job:"宗主、武將、獵戶",wt:60,mat:"奧李哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("闊矛","weapon",88,{kind:"spear",dmgS:6,dmgL:10,atk:10,job:"宗主、武將、獵戶",wt:75,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("吉薩","weapon",250,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"宗主、武將、獵戶",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("戟","weapon",300,{kind:"spear",dmgS:10,dmgL:6,atk:6,job:"宗主、武將",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("槍","weapon",220,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"宗主、武將",wt:180,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("露西錘","weapon",340,{kind:"spear",dmgS:9,dmgL:11,atk:11,job:"宗主、武將",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("帕提森","weapon",170,{kind:"spear",dmgS:6,dmgL:6,atk:6,job:"宗主、武將、獵戶",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("精靈之矛","weapon",180,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:30,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("歐西斯之矛","weapon",150,{kind:"spear",dmgS:4,dmgL:6,atk:6,job:"宗主、武將、獵戶",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("三叉戟","weapon",120,{kind:"spear",dmgS:5,dmgL:4,atk:4,job:"宗主、武將、獵戶",wt:25,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("潘的角","weapon",90,{kind:"spear",dmgS:3,dmgL:4,atk:4,job:"全職業",wt:9,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"損傷",eff:"",drop:null,two:false});DI("覆上米索莉的角","weapon",160,{kind:"spear",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:24,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"在潘的角覆上米索莉的槍。",drop:null,two:false});DI("覆上奧里哈魯根的角","weapon",200,{kind:"spear",dmgS:7,dmgL:8,atk:8,job:"全職業",wt:55,mat:"奧李哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("深紅長矛","weapon",460,{kind:"spear",dmgS:15,dmgL:15,atk:15,job:"宗主、武將",wt:150,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 近距離命中 +1, 體力上限+50",drop:null,two:true});DI("酷寒之矛","weapon",440,{kind:"spear",dmgS:15,dmgL:15,atk:15,job:"宗主、武將、獵戶",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"發動 : 冰寒之錐, 近距離傷害 +1",drop:null,two:false});
+DI("矛","weapon",880,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("巴迪須","weapon",352,{kind:"spear",dmgS:4,dmgL:6,atk:6,job:"宗主、劍修",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("柴刀","weapon",280,{kind:"spear",dmgS:4,dmgL:11,atk:11,job:"宗主、劍修",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("貝卡合金","weapon",350,{kind:"spear",dmgS:11,dmgL:11,atk:11,job:"劍修",wt:100,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 穿透效果",drop:null,two:true});DI("法丘","weapon",320,{kind:"spear",dmgS:10,dmgL:10,atk:10,job:"宗主、劍修、弓修",wt:60,mat:"奧李哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("闊矛","weapon",88,{kind:"spear",dmgS:6,dmgL:10,atk:10,job:"宗主、劍修、弓修",wt:75,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("吉薩","weapon",250,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"宗主、劍修、弓修",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("戟","weapon",300,{kind:"spear",dmgS:10,dmgL:6,atk:6,job:"宗主、劍修",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("槍","weapon",220,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"宗主、劍修",wt:180,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("露西錘","weapon",340,{kind:"spear",dmgS:9,dmgL:11,atk:11,job:"宗主、劍修",wt:150,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手",drop:null,two:true});DI("帕提森","weapon",170,{kind:"spear",dmgS:6,dmgL:6,atk:6,job:"宗主、劍修、弓修",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("精靈之矛","weapon",180,{kind:"spear",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:30,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("歐西斯之矛","weapon",150,{kind:"spear",dmgS:4,dmgL:6,atk:6,job:"宗主、劍修、弓修",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("三叉戟","weapon",120,{kind:"spear",dmgS:5,dmgL:4,atk:4,job:"宗主、劍修、弓修",wt:25,mat:"鐵",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("潘的角","weapon",90,{kind:"spear",dmgS:3,dmgL:4,atk:4,job:"全職業",wt:9,mat:"骨頭",enh:"加1開始有失敗的可能性",dur:"損傷",eff:"",drop:null,two:false});DI("覆上米索莉的角","weapon",160,{kind:"spear",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:24,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"在潘的角覆上米索莉的槍。",drop:null,two:false});DI("覆上奧里哈魯根的角","weapon",200,{kind:"spear",dmgS:7,dmgL:8,atk:8,job:"全職業",wt:55,mat:"奧李哈魯根",enh:"加6前可以安全強化",dur:"損傷",eff:"",drop:null,two:false});DI("深紅長矛","weapon",460,{kind:"spear",dmgS:15,dmgL:15,atk:15,job:"宗主、劍修",wt:150,mat:"米索莉",enh:"加6前可以安全強化",dur:"損傷",eff:"雙手, 近距離命中 +1, 體力上限+50",drop:null,two:true});DI("酷寒之矛","weapon",440,{kind:"spear",dmgS:15,dmgL:15,atk:15,job:"宗主、劍修、弓修",wt:80,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"發動 : 冰寒之錐, 近距離傷害 +1",drop:null,two:false});
 // blunt
-DI("亞連","weapon",110,{kind:"blunt",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +2",drop:null,two:false});DI("斧","weapon",50,{kind:"blunt",dmgS:3,dmgL:5,atk:5,job:"全職業",wt:60,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("釘錘","weapon",650,{kind:"blunt",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("戰斧","weapon",770,{kind:"blunt",dmgS:8,dmgL:8,atk:8,job:"宗主, 武將, 獵戶",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("木棒","weapon",120,{kind:"blunt",dmgS:6,dmgL:3,atk:3,job:"全職業",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("弗萊爾","weapon",180,{kind:"blunt",dmgS:6,dmgL:4,atk:4,job:"全職業",wt:15,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("戰錘","weapon",1100,{kind:"blunt",dmgS:7,dmgL:9,atk:9,job:"宗主, 武將, 獵戶",wt:50,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("流星錘","weapon",260,{kind:"blunt",dmgS:9,dmgL:10,atk:10,job:"宗主, 武將, 獵戶",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("侏儒鐵斧","weapon",410,{kind:"blunt",dmgS:8,dmgL:14,atk:14,job:"宗主, 武將",wt:280,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("巨斧","weapon",450,{kind:"blunt",dmgS:10,dmgL:16,atk:16,job:"宗主, 武將",wt:250,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("狂戰士斧","weapon",340,{kind:"blunt",dmgS:9,dmgL:9,atk:9,job:"武將",wt:200,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手, 加速效果",drop:null,two:true});DI("銀斧","weapon",390,{kind:"blunt",dmgS:7,dmgL:14,atk:14,job:"宗主, 武將",wt:270,mat:"銀",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});
+DI("亞連","weapon",110,{kind:"blunt",dmgS:4,dmgL:4,atk:4,job:"全職業",wt:10,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"近距離命中 +2",drop:null,two:false});DI("斧","weapon",50,{kind:"blunt",dmgS:3,dmgL:5,atk:5,job:"全職業",wt:60,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("釘錘","weapon",650,{kind:"blunt",dmgS:6,dmgL:8,atk:8,job:"全職業",wt:30,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("戰斧","weapon",770,{kind:"blunt",dmgS:8,dmgL:8,atk:8,job:"宗主, 劍修, 弓修",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("木棒","weapon",120,{kind:"blunt",dmgS:6,dmgL:3,atk:3,job:"全職業",wt:30,mat:"木",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("弗萊爾","weapon",180,{kind:"blunt",dmgS:6,dmgL:4,atk:4,job:"全職業",wt:15,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("戰錘","weapon",1100,{kind:"blunt",dmgS:7,dmgL:9,atk:9,job:"宗主, 劍修, 弓修",wt:50,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("流星錘","weapon",260,{kind:"blunt",dmgS:9,dmgL:10,atk:10,job:"宗主, 劍修, 弓修",wt:120,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"",drop:null,two:false});DI("侏儒鐵斧","weapon",410,{kind:"blunt",dmgS:8,dmgL:14,atk:14,job:"宗主, 劍修",wt:280,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("巨斧","weapon",450,{kind:"blunt",dmgS:10,dmgL:16,atk:16,job:"宗主, 劍修",wt:250,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});DI("狂戰士斧","weapon",340,{kind:"blunt",dmgS:9,dmgL:9,atk:9,job:"劍修",wt:200,mat:"鐵",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手, 加速效果",drop:null,two:true});DI("銀斧","weapon",390,{kind:"blunt",dmgS:7,dmgL:14,atk:14,job:"宗主, 劍修",wt:270,mat:"銀",enh:"加6前可以安全強化",dur:"未損傷",eff:"雙手",drop:null,two:true});
 // 箭矢（彈藥）
 DI("箭","ammo",1,{kind:"bow",dmgS:6,dmgL:5,job:"全職業",wt:0.03,mat:"木",buyQty:10});DI("銀箭","ammo",1,{kind:"bow",dmgS:7,dmgL:6,job:"全職業",wt:0.04,mat:"銀",eff:"對不死族追加傷害",buyQty:5});DI("米索莉箭","ammo",5,{kind:"bow",dmgS:10,dmgL:9,job:"全職業",wt:0,mat:"米索莉",buyQty:5});
 DI("說話之島卷軸","tool",0,{teleport:true,permanent:true});
 // ===== 防具（依 PDF 正式資料建立；防禦力=PDF 原值(越低越強)、職業/重量/材質/強化/效果；MR 自動帶入引擎）=====
 // 頭盔
-DI("精靈皮盔","armor",40,{slot:"helmet",def:-1,job:"獵戶、修士",wt:3,mat:"皮",enh:"加6前可以安全強化",eff:"",drop:null});DI("歐西斯頭盔","armor",150,{slot:"helmet",def:-1,job:"全職業",wt:30,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("侏儒鐵盔","armor",90,{slot:"helmet",def:-2,job:"全職業",wt:40,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("頭盔","armor",50,{slot:"helmet",def:-1,job:"全職業",wt:30,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("騎士面甲","armor",130,{slot:"helmet",def:-3,job:"武將",wt:40,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("抗魔法頭盔","armor",170,{slot:"helmet",def:-2,job:"全職業",wt:35,mat:"鐵",enh:"加4前可以安全強化",eff:"MR +4, 提高魔法抵抗力的頭盔。魔法施的越多魔法抵抗力越高。",drop:null,mr:4});DI("艾爾穆的祝福","armor",160,{slot:"helmet",def:-2,job:"獵戶",wt:13,mat:"皮",enh:"加6前可以安全強化",eff:"DEX +1, 古代精靈族的頭盔。敏捷+1。",drop:null});DI("治癒魔法頭盔","armor",130,{slot:"helmet",def:-1,job:"宗主、武將",wt:50,mat:"米索莉",enh:"加4前可以安全強化",eff:"使武將或宗主可使用治療魔法的特殊頭盔。使用此頭盔耗的魔力省一半。",drop:null});DI("敏捷魔法頭盔","armor",130,{slot:"helmet",def:-1,job:"宗主、武將",wt:50,mat:"米索莉",enh:"加4前可以安全強化",eff:"使武將或宗主能使用迅速魔法的特殊頭盔。使用此頭盔耗的魔力省一半。",drop:null});DI("力量魔法頭盔","armor",130,{slot:"helmet",def:-1,job:"宗主、武將",wt:50,mat:"米索莉",enh:"加4前可以安全強化",eff:"使武將或宗主能使用力量魔法的特殊頭盔。使用此頭盔耗的魔力省一半。",drop:null});DI("皮帽子","armor",10,{slot:"helmet",def:0,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮帽","armor",80,{slot:"helmet",def:-2,job:"全職業",wt:20,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮頭盔","armor",50,{slot:"helmet",def:-1,job:"全職業",wt:30,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("骷髏頭盔","armor",130,{slot:"helmet",def:-3,job:"全職業",wt:30,mat:"骨頭",enh:"加1開始有失敗的可能性",eff:"",drop:null});DI("鋼鐵頭盔","armor",220,{slot:"helmet",def:-3,job:"全職業",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("法師之帽","armor",80,{slot:"helmet",def:-2,job:"修士",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("死亡騎士頭盔","armor",130,{slot:"helmet",def:-3,job:"武將",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("精靈敏捷頭盔","armor",120,{slot:"helmet",def:-1,job:"獵戶",wt:13,mat:"皮",enh:"加6前可以安全強化",eff:"DEX +1",drop:null});DI("精靈體質頭盔","armor",120,{slot:"helmet",def:-1,job:"獵戶",wt:13,mat:"皮",enh:"加6前可以安全強化",eff:"CON +1",drop:null});DI("騎士頭巾","armor",240,{slot:"helmet",def:-1,job:"武將",wt:0,mat:"布",enh:"無法強化",eff:"瑞奇在武將時期所使用的頭巾。銀騎士村莊的鐵匠亞南可以把頭巾變得更強。",drop:null});DI("紅騎士頭巾","armor",80,{slot:"helmet",def:-2,job:"武將",wt:20,mat:"布",enh:"加6前可以安全強化",eff:"",drop:null});DI("巴土瑟之帽","armor",160,{slot:"helmet",def:-2,job:"修士",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"魔力回復量 +5",drop:null});DI("卡士柏之帽","armor",160,{slot:"helmet",def:-2,job:"修士",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"魔力上限 +25",drop:null});DI("馬庫爾之帽","armor",160,{slot:"helmet",def:-2,job:"修士",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"INT +1",drop:null});DI("西瑪之帽","armor",160,{slot:"helmet",def:-2,job:"修士",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"魔力上限 +15, 魔力回復量 +2",drop:null});DI("克特頭盔","armor",260,{slot:"helmet",def:-3,job:"武將",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("淨化頭飾","armor",160,{slot:"helmet",def:0,job:"獵戶",wt:0,mat:"寶石",enh:"無法強化",eff:"迷幻森林之母所借的特殊裝備。穿戴時，就可以看到污染的風精靈。",drop:null});
+DI("精靈皮盔","armor",40,{slot:"helmet",def:-1,job:"弓修、法修",wt:3,mat:"皮",enh:"加6前可以安全強化",eff:"",drop:null});DI("歐西斯頭盔","armor",150,{slot:"helmet",def:-1,job:"全職業",wt:30,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("侏儒鐵盔","armor",90,{slot:"helmet",def:-2,job:"全職業",wt:40,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("頭盔","armor",50,{slot:"helmet",def:-1,job:"全職業",wt:30,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("騎士面甲","armor",130,{slot:"helmet",def:-3,job:"劍修",wt:40,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("抗魔法頭盔","armor",170,{slot:"helmet",def:-2,job:"全職業",wt:35,mat:"鐵",enh:"加4前可以安全強化",eff:"MR +4, 提高魔法抵抗力的頭盔。魔法施的越多魔法抵抗力越高。",drop:null,mr:4});DI("艾爾穆的祝福","armor",160,{slot:"helmet",def:-2,job:"弓修",wt:13,mat:"皮",enh:"加6前可以安全強化",eff:"DEX +1, 古代精靈族的頭盔。敏捷+1。",drop:null});DI("治癒魔法頭盔","armor",130,{slot:"helmet",def:-1,job:"宗主、劍修",wt:50,mat:"米索莉",enh:"加4前可以安全強化",eff:"使劍修或宗主可使用治療魔法的特殊頭盔。使用此頭盔耗的魔力省一半。",drop:null});DI("敏捷魔法頭盔","armor",130,{slot:"helmet",def:-1,job:"宗主、劍修",wt:50,mat:"米索莉",enh:"加4前可以安全強化",eff:"使劍修或宗主能使用迅速魔法的特殊頭盔。使用此頭盔耗的魔力省一半。",drop:null});DI("力量魔法頭盔","armor",130,{slot:"helmet",def:-1,job:"宗主、劍修",wt:50,mat:"米索莉",enh:"加4前可以安全強化",eff:"使劍修或宗主能使用力量魔法的特殊頭盔。使用此頭盔耗的魔力省一半。",drop:null});DI("皮帽子","armor",10,{slot:"helmet",def:0,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮帽","armor",80,{slot:"helmet",def:-2,job:"全職業",wt:20,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮頭盔","armor",50,{slot:"helmet",def:-1,job:"全職業",wt:30,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("骷髏頭盔","armor",130,{slot:"helmet",def:-3,job:"全職業",wt:30,mat:"骨頭",enh:"加1開始有失敗的可能性",eff:"",drop:null});DI("鋼鐵頭盔","armor",220,{slot:"helmet",def:-3,job:"全職業",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("法師之帽","armor",80,{slot:"helmet",def:-2,job:"法修",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("死亡騎士頭盔","armor",130,{slot:"helmet",def:-3,job:"劍修",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("精靈敏捷頭盔","armor",120,{slot:"helmet",def:-1,job:"弓修",wt:13,mat:"皮",enh:"加6前可以安全強化",eff:"DEX +1",drop:null});DI("精靈體質頭盔","armor",120,{slot:"helmet",def:-1,job:"弓修",wt:13,mat:"皮",enh:"加6前可以安全強化",eff:"CON +1",drop:null});DI("騎士頭巾","armor",240,{slot:"helmet",def:-1,job:"劍修",wt:0,mat:"布",enh:"無法強化",eff:"瑞奇在劍修時期所使用的頭巾。銀騎士村莊的鐵匠亞南可以把頭巾變得更強。",drop:null});DI("紅騎士頭巾","armor",80,{slot:"helmet",def:-2,job:"劍修",wt:20,mat:"布",enh:"加6前可以安全強化",eff:"",drop:null});DI("巴土瑟之帽","armor",160,{slot:"helmet",def:-2,job:"法修",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"魔力回復量 +5",drop:null});DI("卡士柏之帽","armor",160,{slot:"helmet",def:-2,job:"法修",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"魔力上限 +25",drop:null});DI("馬庫爾之帽","armor",160,{slot:"helmet",def:-2,job:"法修",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"INT +1",drop:null});DI("西瑪之帽","armor",160,{slot:"helmet",def:-2,job:"法修",wt:20,mat:"布",enh:"加4前可以安全強化",eff:"魔力上限 +15, 魔力回復量 +2",drop:null});DI("克特頭盔","armor",260,{slot:"helmet",def:-3,job:"劍修",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("淨化頭飾","armor",160,{slot:"helmet",def:0,job:"弓修",wt:0,mat:"寶石",enh:"無法強化",eff:"迷幻森林之母所借的特殊裝備。穿戴時，就可以看到污染的風精靈。",drop:null});
 // 盔甲
-DI("金屬盔甲","armor",370,{slot:"body",def:-7,job:"宗主、武將",wt:450,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("水晶盔甲","armor",390,{slot:"body",def:-8,job:"宗主、武將、獵戶",wt:350,mat:"寶石",enh:"加4前可以安全強化",eff:"",drop:null});DI("青銅盔甲","armor",330,{slot:"body",def:-6,job:"宗主、武將",wt:450,mat:"銅",enh:"加4前可以安全強化",eff:"",drop:null});DI("藤甲","armor",320,{slot:"body",def:-6,job:"宗主、武將",wt:400,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮甲","armor",310,{slot:"body",def:-6,job:"宗主、武將",wt:350,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("鏈甲","armor",6600,{slot:"body",def:-5,job:"宗主、武將、獵戶",wt:300,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("歐西斯鏈甲","armor",800,{slot:"body",def:-4,job:"宗主、武將、獵戶",wt:300,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("鱗甲","armor",2200,{slot:"body",def:-4,job:"宗主、武將、獵戶",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮甲","armor",330,{slot:"body",def:-3,job:"全職業",wt:150,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("環甲","armor",550,{slot:"body",def:-3,job:"全職業",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("歐西斯環甲","armor",200,{slot:"body",def:-2,job:"全職業",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("小藤甲","armor",110,{slot:"body",def:-2,job:"全職業",wt:70,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮夾克","armor",22,{slot:"body",def:-1,job:"全職業",wt:30,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("抗魔法鏈甲","armor",340,{slot:"body",def:-5,job:"宗主、武將、獵戶",wt:300,mat:"鐵",enh:"加4前可以安全強化",eff:"MR +4, 提高魔法抵抗力的鏈甲。魔法施的越多魔法抵抗力越高。",drop:null,mr:4});DI("綿質長袍","armor",1100,{slot:"body",def:-2,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"MR +4, 提升一點魔法抵抗力。",drop:null,mr:4});DI("木甲","armor",140,{slot:"body",def:-3,job:"全職業",wt:80,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("精靈護胸金屬板","armor",180,{slot:"body",def:-4,job:"宗主、武將、獵戶",wt:100,mat:"米索莉",enh:"加6前可以安全強化",eff:"",drop:null});DI("精靈金屬盔甲","armor",290,{slot:"body",def:-6,job:"武將、獵戶",wt:250,mat:"奧里哈魯根",enh:"加6前可以安全強化",eff:"",drop:null});DI("精靈鏈甲","armor",230,{slot:"body",def:-5,job:"宗主、武將、獵戶",wt:150,mat:"米索莉",enh:"加6前可以安全強化",eff:"",drop:null});DI("木製的夾克","armor",50,{slot:"body",def:-1,job:"全職業",wt:40,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮背心","armor",50,{slot:"body",def:-1,job:"全職業",wt:30,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮盔甲","armor",130,{slot:"body",def:-3,job:"全職業",wt:50,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮背心","armor",110,{slot:"body",def:-2,job:"全職業",wt:130,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("硬皮背心","armor",150,{slot:"body",def:-3,job:"全職業",wt:150,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("骷髏盔甲","armor",230,{slot:"body",def:-5,job:"全職業",wt:150,mat:"骨頭",enh:"加1開始有失敗的可能性",eff:"",drop:null});DI("鋼鐵金屬盔甲","armor",370,{slot:"body",def:-7,job:"武將",wt:470,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("法師長袍","armor",130,{slot:"body",def:-3,job:"修士",wt:60,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("水龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"水屬性抗性增加 +20, 以水龍鱗製作的盔甲，能增加對水屬性魔法的抵抗力。",drop:null});DI("地龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"地屬性抗性增加 +20, 以地龍鱗製作的盔甲，能增加對地屬性魔法的抵抗力。",drop:null});DI("火龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"火屬性抗性增加 +20, 以火龍鱗製作的盔甲，能增加對火屬性魔法的抵抗力。",drop:null});DI("風龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"風屬性抗性增加 +20, 以風龍鱗製作的盔甲，能增加對風屬性魔法的抵抗力。",drop:null});DI("死亡騎士盔甲","armor",330,{slot:"body",def:-7,job:"武將",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("被遺忘的金屬盔甲","armor",360,{slot:"body",def:-1,job:"武將",wt:300,mat:"鐵",enh:"無法強化",eff:"圍著強烈氣息的金屬盔甲。",drop:null});DI("被遺忘的皮盔甲","armor",320,{slot:"body",def:-1,job:"獵戶",wt:200,mat:"皮",enh:"無法強化",eff:"圍著強烈氣息的皮甲。",drop:null});DI("被遺忘的長袍","armor",260,{slot:"body",def:-1,job:"修士",wt:50,mat:"布",enh:"無法強化",eff:"圍著強烈氣息的長袍。",drop:null});DI("被遺忘的鱗甲","armor",340,{slot:"body",def:-1,job:"宗主",wt:250,mat:"龍麟",enh:"無法強化",eff:"圍著強烈氣息的鱗甲。",drop:null});DI("古老的金屬盔甲","armor",1550,{slot:"body",def:-16,job:"武將",wt:280,mat:"鐵",enh:"無法強化",eff:"體力回復量 +1, 古代武將曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("古老的皮盔甲","armor",1350,{slot:"body",def:-14,job:"獵戶",wt:180,mat:"皮",enh:"無法強化",eff:"體力回復量 +3, 魔力回復量 +5, 古代獵戶曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("古老的長袍","armor",1130,{slot:"body",def:-12,job:"修士",wt:30,mat:"布",enh:"無法強化",eff:"魔力回復量 +8, 古代修士曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("古老的鱗甲","armor",1360,{slot:"body",def:-14,job:"宗主",wt:200,mat:"龍麟",enh:"無法強化",eff:"體力回復量 +5, 魔力回復量 +3, 古代宗主曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("黑長者長袍","armor",290,{slot:"body",def:-5,job:"修士",wt:30,mat:"布",enh:"加4前可以安全強化",eff:"魔力上限 +50, 魔力回復量 +5",drop:null});DI("克特盔甲","armor",660,{slot:"body",def:-7,job:"武將",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});
+DI("金屬盔甲","armor",370,{slot:"body",def:-7,job:"宗主、劍修",wt:450,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("水晶盔甲","armor",390,{slot:"body",def:-8,job:"宗主、劍修、弓修",wt:350,mat:"寶石",enh:"加4前可以安全強化",eff:"",drop:null});DI("青銅盔甲","armor",330,{slot:"body",def:-6,job:"宗主、劍修",wt:450,mat:"銅",enh:"加4前可以安全強化",eff:"",drop:null});DI("藤甲","armor",320,{slot:"body",def:-6,job:"宗主、劍修",wt:400,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮甲","armor",310,{slot:"body",def:-6,job:"宗主、劍修",wt:350,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("鏈甲","armor",6600,{slot:"body",def:-5,job:"宗主、劍修、弓修",wt:300,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("歐西斯鏈甲","armor",800,{slot:"body",def:-4,job:"宗主、劍修、弓修",wt:300,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("鱗甲","armor",2200,{slot:"body",def:-4,job:"宗主、劍修、弓修",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮甲","armor",330,{slot:"body",def:-3,job:"全職業",wt:150,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("環甲","armor",550,{slot:"body",def:-3,job:"全職業",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("歐西斯環甲","armor",200,{slot:"body",def:-2,job:"全職業",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("小藤甲","armor",110,{slot:"body",def:-2,job:"全職業",wt:70,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮夾克","armor",22,{slot:"body",def:-1,job:"全職業",wt:30,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("抗魔法鏈甲","armor",340,{slot:"body",def:-5,job:"宗主、劍修、弓修",wt:300,mat:"鐵",enh:"加4前可以安全強化",eff:"MR +4, 提高魔法抵抗力的鏈甲。魔法施的越多魔法抵抗力越高。",drop:null,mr:4});DI("綿質長袍","armor",1100,{slot:"body",def:-2,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"MR +4, 提升一點魔法抵抗力。",drop:null,mr:4});DI("木甲","armor",140,{slot:"body",def:-3,job:"全職業",wt:80,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("精靈護胸金屬板","armor",180,{slot:"body",def:-4,job:"宗主、劍修、弓修",wt:100,mat:"米索莉",enh:"加6前可以安全強化",eff:"",drop:null});DI("精靈金屬盔甲","armor",290,{slot:"body",def:-6,job:"劍修、弓修",wt:250,mat:"奧里哈魯根",enh:"加6前可以安全強化",eff:"",drop:null});DI("精靈鏈甲","armor",230,{slot:"body",def:-5,job:"宗主、劍修、弓修",wt:150,mat:"米索莉",enh:"加6前可以安全強化",eff:"",drop:null});DI("木製的夾克","armor",50,{slot:"body",def:-1,job:"全職業",wt:40,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮背心","armor",50,{slot:"body",def:-1,job:"全職業",wt:30,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮盔甲","armor",130,{slot:"body",def:-3,job:"全職業",wt:50,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮背心","armor",110,{slot:"body",def:-2,job:"全職業",wt:130,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("硬皮背心","armor",150,{slot:"body",def:-3,job:"全職業",wt:150,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("骷髏盔甲","armor",230,{slot:"body",def:-5,job:"全職業",wt:150,mat:"骨頭",enh:"加1開始有失敗的可能性",eff:"",drop:null});DI("鋼鐵金屬盔甲","armor",370,{slot:"body",def:-7,job:"劍修",wt:470,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("法師長袍","armor",130,{slot:"body",def:-3,job:"法修",wt:60,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("水龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"水屬性抗性增加 +20, 以水龍鱗製作的盔甲，能增加對水屬性魔法的抵抗力。",drop:null});DI("地龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"地屬性抗性增加 +20, 以地龍鱗製作的盔甲，能增加對地屬性魔法的抵抗力。",drop:null});DI("火龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"火屬性抗性增加 +20, 以火龍鱗製作的盔甲，能增加對火屬性魔法的抵抗力。",drop:null});DI("風龍鱗盔甲","armor",1000,{slot:"body",def:-9,job:"全職業",wt:300,mat:"龍麟",enh:"加4前可以安全強化",eff:"風屬性抗性增加 +20, 以風龍鱗製作的盔甲，能增加對風屬性魔法的抵抗力。",drop:null});DI("死亡騎士盔甲","armor",330,{slot:"body",def:-7,job:"劍修",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("被遺忘的金屬盔甲","armor",360,{slot:"body",def:-1,job:"劍修",wt:300,mat:"鐵",enh:"無法強化",eff:"圍著強烈氣息的金屬盔甲。",drop:null});DI("被遺忘的皮盔甲","armor",320,{slot:"body",def:-1,job:"弓修",wt:200,mat:"皮",enh:"無法強化",eff:"圍著強烈氣息的皮甲。",drop:null});DI("被遺忘的長袍","armor",260,{slot:"body",def:-1,job:"法修",wt:50,mat:"布",enh:"無法強化",eff:"圍著強烈氣息的長袍。",drop:null});DI("被遺忘的鱗甲","armor",340,{slot:"body",def:-1,job:"宗主",wt:250,mat:"龍麟",enh:"無法強化",eff:"圍著強烈氣息的鱗甲。",drop:null});DI("古老的金屬盔甲","armor",1550,{slot:"body",def:-16,job:"劍修",wt:280,mat:"鐵",enh:"無法強化",eff:"體力回復量 +1, 古代劍修曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("古老的皮盔甲","armor",1350,{slot:"body",def:-14,job:"弓修",wt:180,mat:"皮",enh:"無法強化",eff:"體力回復量 +3, 魔力回復量 +5, 古代弓修曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("古老的長袍","armor",1130,{slot:"body",def:-12,job:"法修",wt:30,mat:"布",enh:"無法強化",eff:"魔力回復量 +8, 古代法修曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("古老的鱗甲","armor",1360,{slot:"body",def:-14,job:"宗主",wt:200,mat:"龍麟",enh:"無法強化",eff:"體力回復量 +5, 魔力回復量 +3, 古代宗主曾用過的盔甲，無法使用對盔甲施法的卷軸進行強化。",drop:null});DI("黑長者長袍","armor",290,{slot:"body",def:-5,job:"法修",wt:30,mat:"布",enh:"加4前可以安全強化",eff:"魔力上限 +50, 魔力回復量 +5",drop:null});DI("克特盔甲","armor",660,{slot:"body",def:-7,job:"劍修",wt:250,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});
 // T恤
-DI("T恤","armor",80,{slot:"tshirt",def:0,job:"全職業",wt:5,mat:"布",enh:"加4前可以安全強化",eff:"可穿在盔甲裡面。",drop:null});DI("精靈T恤","armor",10,{slot:"tshirt",def:0,job:"獵戶",wt:5,mat:"",enh:"加6前可以安全強化",eff:"",drop:null});
+DI("T恤","armor",80,{slot:"tshirt",def:0,job:"全職業",wt:5,mat:"布",enh:"加4前可以安全強化",eff:"可穿在盔甲裡面。",drop:null});DI("精靈T恤","armor",10,{slot:"tshirt",def:0,job:"弓修",wt:5,mat:"",enh:"加6前可以安全強化",eff:"",drop:null});
 // 斗篷
-DI("精靈斗篷","armor",120,{slot:"cloak",def:-1,job:"獵戶",wt:10,mat:"布",enh:"加6前可以安全強化",eff:"獵戶裝備時 體力回復量 +1, 妖精製作的斗篷，獵戶穿時體力恢復的速度變快。",drop:null});DI("歐西斯斗篷","armor",50,{slot:"cloak",def:0,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("侏儒斗篷","armor",10,{slot:"cloak",def:0,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("保護者斗篷","armor",120,{slot:"cloak",def:-3,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("隱身斗篷","armor",120,{slot:"cloak",def:-1,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"穿了後怪物和其他玩家看不到。不主動攻擊或行為才會有效果。",drop:null});DI("抗魔法斗篷","armor",120,{slot:"cloak",def:-1,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"MR +10, 針對魔法提高抵抗力的斗篷。施魔法時抵抗力更有效。",drop:null,mr:10});DI("紅色斗篷","armor",160,{slot:"cloak",def:-2,job:"宗主",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"CHA +1",drop:null});DI("君主的威嚴","armor",160,{slot:"cloak",def:-2,job:"宗主",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"DEX +1, STR +1, CHA +1, INT +1, CON +1, WIS +1",drop:null});DI("瑪那斗篷","armor",160,{slot:"cloak",def:-2,job:"修士",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"魔力回復量 +5, 相當快速恢復MP的斗篷。",drop:null});DI("藍海賊斗篷","armor",160,{slot:"cloak",def:-2,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"CHA +1",drop:null});
+DI("精靈斗篷","armor",120,{slot:"cloak",def:-1,job:"弓修",wt:10,mat:"布",enh:"加6前可以安全強化",eff:"弓修裝備時 體力回復量 +1, 妖精製作的斗篷，弓修穿時體力恢復的速度變快。",drop:null});DI("歐西斯斗篷","armor",50,{slot:"cloak",def:0,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("侏儒斗篷","armor",10,{slot:"cloak",def:0,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("保護者斗篷","armor",120,{slot:"cloak",def:-3,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"",drop:null});DI("隱身斗篷","armor",120,{slot:"cloak",def:-1,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"穿了後怪物和其他玩家看不到。不主動攻擊或行為才會有效果。",drop:null});DI("抗魔法斗篷","armor",120,{slot:"cloak",def:-1,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"MR +10, 針對魔法提高抵抗力的斗篷。施魔法時抵抗力更有效。",drop:null,mr:10});DI("紅色斗篷","armor",160,{slot:"cloak",def:-2,job:"宗主",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"CHA +1",drop:null});DI("君主的威嚴","armor",160,{slot:"cloak",def:-2,job:"宗主",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"DEX +1, STR +1, CHA +1, INT +1, CON +1, WIS +1",drop:null});DI("瑪那斗篷","armor",160,{slot:"cloak",def:-2,job:"法修",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"魔力回復量 +5, 相當快速恢復MP的斗篷。",drop:null});DI("藍海賊斗篷","armor",160,{slot:"cloak",def:-2,job:"全職業",wt:10,mat:"布",enh:"加4前可以安全強化",eff:"CHA +1",drop:null});
 // 長靴
-DI("短統靴","armor",330,{slot:"boots",def:-1,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("長靴","armor",80,{slot:"boots",def:-2,job:"全職業",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮涼鞋","armor",10,{slot:"boots",def:0,job:"全職業",wt:8,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮涼鞋","armor",40,{slot:"boots",def:-1,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮長靴","armor",80,{slot:"boots",def:-2,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("鋼鐵長靴","armor",130,{slot:"boots",def:-3,job:"全職業",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("深水長靴","armor",160,{slot:"boots",def:-2,job:"全職業",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"可在水中呼吸, 魔力回復量 +1",drop:null});DI("死亡騎士長靴","armor",120,{slot:"boots",def:-3,job:"武將",wt:15,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("黑長者涼鞋","armor",160,{slot:"boots",def:-2,job:"修士",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"魔力上限 +25, 魔力回復量 +5",drop:null});DI("克特長靴","armor",250,{slot:"boots",def:-3,job:"武將",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("神意長靴","armor",200,{slot:"boots",def:-3,job:"宗主",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"CHA +1",drop:null});DI("勇氣長靴","armor",200,{slot:"boots",def:-3,job:"武將",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"近距離命中 +1",drop:null});DI("賽菲亞長靴","armor",200,{slot:"boots",def:-3,job:"獵戶",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"遠距離命中 +1",drop:null});DI("瑪那長靴","armor",200,{slot:"boots",def:-3,job:"修士",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"魔力回復量 +2",drop:null});
+DI("短統靴","armor",330,{slot:"boots",def:-1,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("長靴","armor",80,{slot:"boots",def:-2,job:"全職業",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮涼鞋","armor",10,{slot:"boots",def:0,job:"全職業",wt:8,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮涼鞋","armor",40,{slot:"boots",def:-1,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("皮長靴","armor",80,{slot:"boots",def:-2,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("鋼鐵長靴","armor",130,{slot:"boots",def:-3,job:"全職業",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("深水長靴","armor",160,{slot:"boots",def:-2,job:"全職業",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"可在水中呼吸, 魔力回復量 +1",drop:null});DI("死亡騎士長靴","armor",120,{slot:"boots",def:-3,job:"劍修",wt:15,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("黑長者涼鞋","armor",160,{slot:"boots",def:-2,job:"法修",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"魔力上限 +25, 魔力回復量 +5",drop:null});DI("克特長靴","armor",250,{slot:"boots",def:-3,job:"劍修",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("神意長靴","armor",200,{slot:"boots",def:-3,job:"宗主",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"CHA +1",drop:null});DI("勇氣長靴","armor",200,{slot:"boots",def:-3,job:"劍修",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"近距離命中 +1",drop:null});DI("賽菲亞長靴","armor",200,{slot:"boots",def:-3,job:"弓修",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"遠距離命中 +1",drop:null});DI("瑪那長靴","armor",200,{slot:"boots",def:-3,job:"法修",wt:15,mat:"皮",enh:"加4前可以安全強化",eff:"魔力回復量 +2",drop:null});
 // 手套
-DI("手套","armor",10,{slot:"gloves",def:0,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("腕甲","armor",80,{slot:"gloves",def:0,job:"武將、獵戶",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"遠距離命中 +2",drop:null});DI("力量手套","armor",80,{slot:"gloves",def:0,job:"全職業",wt:18,mat:"皮",enh:"加4前可以安全強化",eff:"STR +2, 含歐吉的血的手套。穿戴時會增加力量。",drop:null});DI("鋼鐵手套","armor",50,{slot:"gloves",def:-1,job:"全職業",wt:40,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("石製手套","armor",210,{slot:"gloves",def:-3,job:"全職業",wt:50,mat:"礦石",enh:"加4前可以安全強化",eff:"傷害減少 +1",drop:null});DI("水晶手套","armor",120,{slot:"gloves",def:-3,job:"武將",wt:20,mat:"寶石",enh:"加4前可以安全強化",eff:"",drop:null});DI("死亡騎士手套","armor",80,{slot:"gloves",def:-2,job:"武將",wt:15,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("保護者手套","armor",80,{slot:"gloves",def:0,job:"獵戶",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"體力上限 +20, 魔力上限 +10, 擁有強烈氣息的手套",drop:null});DI("克特手套","armor",170,{slot:"gloves",def:-2,job:"武將",wt:15,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});
+DI("手套","armor",10,{slot:"gloves",def:0,job:"全職業",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("腕甲","armor",80,{slot:"gloves",def:0,job:"劍修、弓修",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"遠距離命中 +2",drop:null});DI("力量手套","armor",80,{slot:"gloves",def:0,job:"全職業",wt:18,mat:"皮",enh:"加4前可以安全強化",eff:"STR +2, 含歐吉的血的手套。穿戴時會增加力量。",drop:null});DI("鋼鐵手套","armor",50,{slot:"gloves",def:-1,job:"全職業",wt:40,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("石製手套","armor",210,{slot:"gloves",def:-3,job:"全職業",wt:50,mat:"礦石",enh:"加4前可以安全強化",eff:"傷害減少 +1",drop:null});DI("水晶手套","armor",120,{slot:"gloves",def:-3,job:"劍修",wt:20,mat:"寶石",enh:"加4前可以安全強化",eff:"",drop:null});DI("死亡騎士手套","armor",80,{slot:"gloves",def:-2,job:"劍修",wt:15,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("保護者手套","armor",80,{slot:"gloves",def:0,job:"弓修",wt:10,mat:"皮",enh:"加4前可以安全強化",eff:"體力上限 +20, 魔力上限 +10, 擁有強烈氣息的手套",drop:null});DI("克特手套","armor",170,{slot:"gloves",def:-2,job:"劍修",wt:15,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});
 // 盾牌
-DI("小盾牌","armor",66,{slot:"shield",def:-1,job:"全職業",wt:30,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("精靈盾牌","armor",170,{slot:"shield",def:-2,job:"全職業",wt:50,mat:"銀",enh:"加6前可以安全強化",eff:"獵戶裝備時 MR加成 +5, 妖精製作的盾牌。對魔法的抵抗力提高。",drop:null});DI("阿克海盾牌","armor",90,{slot:"shield",def:-1,job:"全職業",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("大盾牌","armor",1325,{slot:"shield",def:-2,job:"宗主、武將、獵戶",wt:100,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("侏儒圓盾","armor",100,{slot:"shield",def:-2,job:"宗主、武將、獵戶",wt:100,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("反射之盾","armor",170,{slot:"shield",def:-2,job:"宗主、武將、獵戶",wt:50,mat:"銀",enh:"加4前可以安全強化",eff:"反射效果, 像針對光箭型魔法擁有相當高的防禦力。",drop:null});DI("伊娃之盾","armor",210,{slot:"shield",def:-3,job:"全職業",wt:50,mat:"銀",enh:"加4前可以安全強化",eff:"體力上限 +20, 加速效果",drop:null});DI("塔盾","armor",140,{slot:"shield",def:-3,job:"武將",wt:120,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("木盾","armor",40,{slot:"shield",def:-1,job:"全職業",wt:25,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀騎士之盾","armor",180,{slot:"shield",def:-2,job:"武將",wt:100,mat:"銀",enh:"加4前可以安全強化",eff:"MR +4, 提高魔法抵抗力的盾牌。",drop:null,mr:4});DI("皮盾牌","armor",40,{slot:"shield",def:-1,job:"全職業",wt:25,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮盾","armor",90,{slot:"shield",def:-2,job:"全職業",wt:35,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("骷髏盾牌","armor",130,{slot:"shield",def:-3,job:"全職業",wt:30,mat:"骨頭",enh:"加1開始有失敗的可能性",eff:"",drop:null});DI("鋼鐵盾牌","armor",150,{slot:"shield",def:-3,job:"武將",wt:140,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("受詛咒的魔法書","armor",240,{slot:"shield",def:-1,job:"修士",wt:0,mat:"紙",enh:"無法強化",eff:"魔力不足而不完整狀態的魔法書。說話之島的詹姆可以注入魔力變成完整的樣貌。",drop:null});DI("魔法能量之書","armor",160,{slot:"shield",def:-2,job:"修士",wt:20,mat:"紙",enh:"加4前可以安全強化",eff:"INT +1",drop:null});DI("紅騎士盾牌","armor",170,{slot:"shield",def:-2,job:"武將",wt:50,mat:"銀",enh:"加6前可以安全強化",eff:"反射效果, 具有紅眼的盾牌。對於光線型魔法具有相當的防禦力。",drop:null});DI("瑪那水晶球","armor",170,{slot:"shield",def:-2,job:"修士",wt:50,mat:"玻璃",enh:"加4前可以安全強化",eff:"INT +1, 魔力上限 +100",drop:null});
+DI("小盾牌","armor",66,{slot:"shield",def:-1,job:"全職業",wt:30,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("精靈盾牌","armor",170,{slot:"shield",def:-2,job:"全職業",wt:50,mat:"銀",enh:"加6前可以安全強化",eff:"弓修裝備時 MR加成 +5, 妖精製作的盾牌。對魔法的抵抗力提高。",drop:null});DI("阿克海盾牌","armor",90,{slot:"shield",def:-1,job:"全職業",wt:50,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("大盾牌","armor",1325,{slot:"shield",def:-2,job:"宗主、劍修、弓修",wt:100,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("侏儒圓盾","armor",100,{slot:"shield",def:-2,job:"宗主、劍修、弓修",wt:100,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("反射之盾","armor",170,{slot:"shield",def:-2,job:"宗主、劍修、弓修",wt:50,mat:"銀",enh:"加4前可以安全強化",eff:"反射效果, 像針對光箭型魔法擁有相當高的防禦力。",drop:null});DI("伊娃之盾","armor",210,{slot:"shield",def:-3,job:"全職業",wt:50,mat:"銀",enh:"加4前可以安全強化",eff:"體力上限 +20, 加速效果",drop:null});DI("塔盾","armor",140,{slot:"shield",def:-3,job:"劍修",wt:120,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("木盾","armor",40,{slot:"shield",def:-1,job:"全職業",wt:25,mat:"木",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀騎士之盾","armor",180,{slot:"shield",def:-2,job:"劍修",wt:100,mat:"銀",enh:"加4前可以安全強化",eff:"MR +4, 提高魔法抵抗力的盾牌。",drop:null,mr:4});DI("皮盾牌","armor",40,{slot:"shield",def:-1,job:"全職業",wt:25,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("銀釘皮盾","armor",90,{slot:"shield",def:-2,job:"全職業",wt:35,mat:"皮",enh:"加4前可以安全強化",eff:"",drop:null});DI("骷髏盾牌","armor",130,{slot:"shield",def:-3,job:"全職業",wt:30,mat:"骨頭",enh:"加1開始有失敗的可能性",eff:"",drop:null});DI("鋼鐵盾牌","armor",150,{slot:"shield",def:-3,job:"劍修",wt:140,mat:"鐵",enh:"加4前可以安全強化",eff:"",drop:null});DI("受詛咒的魔法書","armor",240,{slot:"shield",def:-1,job:"法修",wt:0,mat:"紙",enh:"無法強化",eff:"魔力不足而不完整狀態的魔法書。說話之島的詹姆可以注入魔力變成完整的樣貌。",drop:null});DI("魔法能量之書","armor",160,{slot:"shield",def:-2,job:"法修",wt:20,mat:"紙",enh:"加4前可以安全強化",eff:"INT +1",drop:null});DI("紅騎士盾牌","armor",170,{slot:"shield",def:-2,job:"劍修",wt:50,mat:"銀",enh:"加6前可以安全強化",eff:"反射效果, 具有紅眼的盾牌。對於光線型魔法具有相當的防禦力。",drop:null});DI("瑪那水晶球","armor",170,{slot:"shield",def:-2,job:"法修",wt:50,mat:"玻璃",enh:"加4前可以安全強化",eff:"INT +1, 魔力上限 +100",drop:null});
 // 項鍊
 DI("力量項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"STR +1, 提升力量的項鍊。",drop:null});DI("敏捷項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"DEX +1, 提升敏捷的項鍊。",drop:null});DI("體質項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"CON +1, 提升體力的項鍊。",drop:null});DI("智力項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"INT +1, 提升智力的項鍊。",drop:null});DI("精神項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"WIS +1, 提升精神的項鍊。",drop:null});DI("魅力項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"CHA +1, 提升魅力的項鍊。",drop:null});DI("妖魔戰士項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"體力上限 +20, 提昇體力20點的項鍊。",drop:null});DI("老舊的力量項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"DEX -2, STR +1",drop:null});DI("老舊的敏捷項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"DEX +1, CON -2",drop:null});DI("老舊的體質項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"STR -2, CON +1",drop:null});DI("老舊的智力項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"INT +1, WIS -2",drop:null});DI("老舊的精神項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"CHA -2, WIS +1",drop:null});DI("老舊的魅力項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:5,mat:"寶石",enh:"無法強化",eff:"CHA +1, INT -2",drop:null});DI("守護項鍊","armor",80,{slot:"necklace",def:-1,job:"全職業",wt:3,mat:"金",enh:"無法強化",eff:"",drop:null});DI("長老項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:3,mat:"木",enh:"無法強化",eff:"魔力上限 +30, 魔力回復量 +1",drop:null});DI("抗魔項鍊","armor",160,{slot:"necklace",def:0,job:"全職業",wt:3,mat:"金",enh:"無法強化",eff:"MR +5",drop:null,mr:5});
 // 戒指
@@ -4786,8 +4786,8 @@ DI("傳送控制戒指","armor",160,{slot:"ring",def:0,job:"全職業",wt:3,mat:
 // 腰帶
 DI("老舊的身體皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"體力上限 +30",drop:null});DI("老舊的精神腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"魔力上限 +30",drop:null});DI("老舊的靈魂皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"魔力上限 +15, 體力上限 +15",drop:null});DI("身體腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"體力上限 +50",drop:null});DI("精神腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"魔力上限 +50",drop:null});DI("靈魂腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"魔力上限 +25, 體力上限 +25",drop:null});DI("多羅皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"增加負重 +500",drop:null});DI("歐吉皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"增加負重 +1000",drop:null});DI("勇敢皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"體力上限 +30, 擁有強烈力量與氣息的腰飾",drop:null});DI("光明身體腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"體力上限 +50, 體力回復量 +1",drop:null});DI("光明精神腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"魔力上限 +50, 魔力回復量 +1",drop:null});DI("光明靈魂腰帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"體力上限 +20, 體力回復量 +1, 魔力上限 +20, 魔力回復量 +1",drop:null});DI("火精靈的皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"增加負重 +500, 火屬性抗性增加 +10",drop:null});DI("水精靈的皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"水屬性抗性增加 +10, 增加負重 +500",drop:null});DI("地精靈的皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"地屬性抗性增加 +10, 增加負重 +500",drop:null});DI("風精靈的皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"皮",enh:"無法強化",eff:"風屬性抗性增加 +10, 增加負重 +500",drop:null});DI("守護皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"金",enh:"無法強化",eff:"增加負重 +400",drop:null});DI("抗魔皮帶","armor",180,{slot:"belt",def:0,job:"全職業",wt:50,mat:"金",enh:"無法強化",eff:"增加負重 +400",drop:null});
 // 雜貨：藥水/卷軸/食物/照明
-DI('紅色藥水','potion',40,{wt:5,price:40,hpMin:6,hpMax:27,eff:'恢復HP 6~27',desc:'喝下時恢復一點體力。'});DI('橙色藥水','potion',138,{wt:7,price:138,hpMin:26,hpMax:68,eff:'恢復HP 26~68',desc:'喝下時恢復多一點體力。'});DI('黑色藥水','potion',60,{wt:15,price:60,eff:'暫時失明／防視覺危害',desc:'喝完之後暫時失明。但也可以保護喝下的人免受盯著看就有害的各種危險。'});DI('自我加速藥水','potion',220,{wt:4,price:220,haste:true,hasteTier:1,hasteMs:300000,eff:'持續時間+300秒，全職業一段加速',desc:'行走以及攻擊、施法速度上升',note:'全職業'});DI('精靈餅乾','potion',120,{wt:4,price:120,haste:true,hasteTier:2,hasteMs:480000,eff:'持續時間+480秒，獵戶二段加速',desc:'行走以及攻擊、施法速度上升',note:'獵戶才可使用',job:'獵戶'});DI('翡翠藥水','potion',77,{wt:7,price:77,cure:true,eff:'治療所有毒',desc:'治療所有毒。'});DI('白色藥水','potion',220,{wt:8,price:220,hpMin:44,hpMax:107,eff:'恢復HP 44~107',desc:'喝下時恢復更多的體力。'});DI('安特的樹枝','potion',40,{wt:0,price:40,cure:true,eff:'治療所有毒',desc:'安特的樹枝，含有治療所有毒的成分。',note:'也可做為製作道具'});DI('安特的水果','potion',150,{wt:5,price:150,hpMin:44,hpMax:107,eff:'恢復HP 44~107',desc:'安特的水果。吃完後恢復很多體力。',note:'也可做為製作道具'});DI('勇敢藥水','potion',120,{wt:9,price:120,haste:true,hasteTier:2,hasteMs:300000,brave:true,eff:'持續時間+300秒，武將二段加速',desc:'行走以及攻擊、施法速度上升',note:'武將才可使用',job:'武將'});DI('伊娃的祝福','potion',100,{wt:2,price:100,eff:'持續時間+1800秒，水中呼吸',desc:'由於蘊含著伊娃的祝福，可以在水中進行呼吸。'});DI('人魚之鱗','potion',60,{wt:3,price:60,eff:'持續時間+600秒，水中呼吸',desc:'可以在水中進行呼吸。'});DI('藍色藥水','potion',40,{wt:7,price:40,mp:30,eff:'增加魔法恢復量6，持續時間+1200秒',desc:'增加一段時間內的魔力恢復量。'});DI('強化自我加速藥水','potion',180,{wt:14,price:180,haste:true,hasteTier:1,hasteMs:1800000,eff:'持續時間+1800秒，全職業一段加速',desc:'行走以及攻擊、施法速度上升',note:'全職業'});DI('惡魔之血','potion',200,{wt:3,price:200,haste:true,hasteTier:2,hasteMs:600000,eff:'持續時間+600秒，宗主二段加速',desc:'行走以及攻擊、施法速度上升',note:'宗主才可以使用',job:'宗主'});
-DI('慎重藥水','potion',0,{wt:5,price:0,job:'修士',eff:'魔法攻擊傷害+2，持續時間+1200秒',desc:'修士專用藥水。喝下後可暫時提升魔法攻擊的傷害。',note:'修士才可使用'});
+DI('紅色藥水','potion',40,{wt:5,price:40,hpMin:6,hpMax:27,eff:'恢復HP 6~27',desc:'喝下時恢復一點體力。'});DI('橙色藥水','potion',138,{wt:7,price:138,hpMin:26,hpMax:68,eff:'恢復HP 26~68',desc:'喝下時恢復多一點體力。'});DI('黑色藥水','potion',60,{wt:15,price:60,eff:'暫時失明／防視覺危害',desc:'喝完之後暫時失明。但也可以保護喝下的人免受盯著看就有害的各種危險。'});DI('自我加速藥水','potion',220,{wt:4,price:220,haste:true,hasteTier:1,hasteMs:300000,eff:'持續時間+300秒，全職業一段加速',desc:'行走以及攻擊、施法速度上升',note:'全職業'});DI('精靈餅乾','potion',120,{wt:4,price:120,haste:true,hasteTier:2,hasteMs:480000,eff:'持續時間+480秒，弓修二段加速',desc:'行走以及攻擊、施法速度上升',note:'弓修才可使用',job:'弓修'});DI('翡翠藥水','potion',77,{wt:7,price:77,cure:true,eff:'治療所有毒',desc:'治療所有毒。'});DI('白色藥水','potion',220,{wt:8,price:220,hpMin:44,hpMax:107,eff:'恢復HP 44~107',desc:'喝下時恢復更多的體力。'});DI('安特的樹枝','potion',40,{wt:0,price:40,cure:true,eff:'治療所有毒',desc:'安特的樹枝，含有治療所有毒的成分。',note:'也可做為製作道具'});DI('安特的水果','potion',150,{wt:5,price:150,hpMin:44,hpMax:107,eff:'恢復HP 44~107',desc:'安特的水果。吃完後恢復很多體力。',note:'也可做為製作道具'});DI('勇敢藥水','potion',120,{wt:9,price:120,haste:true,hasteTier:2,hasteMs:300000,brave:true,eff:'持續時間+300秒，劍修二段加速',desc:'行走以及攻擊、施法速度上升',note:'劍修才可使用',job:'劍修'});DI('伊娃的祝福','potion',100,{wt:2,price:100,eff:'持續時間+1800秒，水中呼吸',desc:'由於蘊含著伊娃的祝福，可以在水中進行呼吸。'});DI('人魚之鱗','potion',60,{wt:3,price:60,eff:'持續時間+600秒，水中呼吸',desc:'可以在水中進行呼吸。'});DI('藍色藥水','potion',40,{wt:7,price:40,mp:30,eff:'增加魔法恢復量6，持續時間+1200秒',desc:'增加一段時間內的魔力恢復量。'});DI('強化自我加速藥水','potion',180,{wt:14,price:180,haste:true,hasteTier:1,hasteMs:1800000,eff:'持續時間+1800秒，全職業一段加速',desc:'行走以及攻擊、施法速度上升',note:'全職業'});DI('惡魔之血','potion',200,{wt:3,price:200,haste:true,hasteTier:2,hasteMs:600000,eff:'持續時間+600秒，宗主二段加速',desc:'行走以及攻擊、施法速度上升',note:'宗主才可以使用',job:'宗主'});
+DI('慎重藥水','potion',0,{wt:5,price:0,job:'法修',eff:'魔法攻擊傷害+2，持續時間+1200秒',desc:'法修專用藥水。喝下後可暫時提升魔法攻擊的傷害。',note:'法修才可使用'});
 DI('萬能藥(STR)','potion',0,{wt:5,price:0,desc:'喝下後可永久提升1點力量(STR)。'});
 DI('萬能藥(DEX)','potion',0,{wt:5,price:0,desc:'喝下後可永久提升1點敏捷(DEX)。'});
 DI('萬能藥(CON)','potion',0,{wt:5,price:0,desc:'喝下後可永久提升1點體質(CON)。'});
@@ -4803,7 +4803,7 @@ DI('詛咒的對武器施法卷軸','scroll',0,{price:0,desc:'對武器施法，
 DI('詛咒的對防具施法卷軸','scroll',0,{price:0,desc:'對防具施法，會將防具的強化等級降低1，不會摧毀防具。'});
 DI('燈','tool',10,{light:6});DI('金幣','gold',1,{});DI('新手裝備箱','etc',0,{box:['骷髏頭盔','骷髏盔甲','骷髏盾牌'],desc:'開啟後獲得骷髏頭盔、骷髏盔甲、骷髏盾牌。'});DI('新手戒指箱','etc',0,{box:['守護戒指'],desc:'開啟後獲得守護戒指。'});DI('新手武器箱','etc',0,{box:['獵人之弓','銀長劍'],desc:'開啟後獲得獵人之弓、銀長劍。'});DI('燈籠','tool',110,{light:4});DI('燈油','tool',33,{});DI('蠟燭','tool',2,{light:2});
 // ===== 綜合道具（道具.pdf；材料/任務物/寶石/鑰匙等，cat=etc）=====
-DI('漂浮之眼肉','etc',0,{desc:'是漂浮之眼厚厚的殼裡面的嫩肉。吃完後會提高靈敏的能力。通常作為魔法材料。'});DI('松木魔杖','etc',0,{desc:'使用時將創造任意怪物。部分怪物無法用魔杖創造。'});DI('楓木魔杖','etc',0,{eff:'持續時間+7200秒',desc:'使用時會變成任意怪物。若與「變形控制戒指」一起使用時，可將自己的角色變身為想要的怪物。'});DI('烏木魔杖','etc',0,{desc:'可召喚雷電攻擊怪物。'});DI('胡蘿蔔','etc',0,{});DI('蛋','etc',0,{});DI('黃金鑰匙','etc',0,{desc:'可以打開說話之島地監2樓封印的那個地方的鑰匙。'});DI('銀鑰匙','etc',0,{desc:'可以打開說話之島地監2樓封印的那個地方的鑰匙。'});DI('檸檬','etc',0,{});DI('橘子','etc',0,{});DI('烤薄餅','etc',0,{});DI('蘋果','etc',0,{});DI('香蕉','etc',0,{});DI('夏洛伯之爪','etc',0,{desc:'拿給說話之島的甘特的話，就可以通過他的試煉。'});DI('往古魯丁的船票','etc',0,{desc:'在說話之島港口為了搭船所需的船票。'});DI('往說話之島的船票','etc',0,{desc:'在古魯丁村莊港口為了搭船所需的船票。'});DI('阿吐巴圖騰','etc',0,{desc:'把阿吐巴圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('那魯加圖騰','etc',0,{desc:'把那魯加圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('都達瑪拉圖騰','etc',0,{desc:'把都達瑪拉圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('甘地圖騰','etc',0,{desc:'把甘地圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('羅孚圖騰','etc',0,{desc:'把羅孚圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('魔法寶石','etc',0,{});DI('鑽石','etc',0,{});DI('品質鑽石','etc',0,{});DI('高品質鑽石','etc',0,{});DI('綠寶石','etc',0,{});DI('品質綠寶石','etc',0,{});DI('高品質綠寶石','etc',0,{});DI('紅寶石','etc',0,{});DI('品質紅寶石','etc',0,{});DI('高品質紅寶石','etc',0,{});DI('藍寶石','etc',0,{});DI('品質藍寶石','etc',0,{});DI('高品質藍寶石','etc',0,{});DI('信紙','etc',37,{});DI('潘的鬃毛','etc',0,{});DI('粗糙的米索莉塊','etc',0,{});DI('元素石','etc',0,{});DI('蘑菇汁','etc',0,{desc:'是蘑菇汁。可當在各魔法或毒性之原料。'});DI('食人巨魔的血','etc',0,{desc:'歐吉的血。是歐吉的力量之源。'});DI('線','etc',0,{});DI('純粹的米索莉塊','etc',0,{});DI('精靈粉末','etc',0,{});DI('芮克妮的網','etc',0,{});DI('安特的樹皮','etc',0,{});DI('奧里哈魯根','etc',0,{desc:'精靈女皇製作的高貴金屬。使用於損壞的武器或防具上時，可減少損壞程度。'});DI('米索莉線','etc',0,{});DI('芮克妮的蛻皮','etc',0,{});DI('魔法笛子','etc',0,{desc:'在潘的附近演奏時，潘就會靠近。'});DI('米索莉金屬板','etc',0,{});DI('奧里哈魯根金屬板','etc',0,{});DI('皮革','etc',0,{});DI('金屬塊','etc',0,{});DI('皮帶','etc',0,{});DI('高級皮革','etc',0,{});DI('骨頭碎片','etc',0,{});DI('哨子','etc',550,{desc:'吹哨子時，馴服的寵物會聚集到自己周邊。'});DI('磨刀石','etc',155,{desc:'能夠復原武器防具損害的道具。'});DI('血盟信紙','etc',1200,{desc:'可以將同一個內容的信件寄到所有血盟成員的魔法信件。'});DI('項圈','etc',0,{desc:'代表已經馴養的寵物的項圈，與該寵物綁定。寵物在身邊時，項圈無法存入倉庫；須先將寵物寄放給寵物管理員，項圈才能存放。向寵物管理員領回寵物時，必須持有項圈才能領出。'});DI('糖果','etc',5,{});DI('藍色布料','etc',0,{});DI('紅色布料','etc',0,{});DI('白色布料','etc',0,{});DI('鋼鐵原石','etc',0,{});DI('水龍鱗','etc',0,{});DI('地龍鱗','etc',0,{});DI('火龍鱗','etc',0,{});DI('風龍鱗','etc',0,{});DI('阿西塔基奧的灰燼','etc',0,{});DI('精靈玉','etc',0,{});DI('古老的交易文件','etc',0,{desc:'為了查明反王勢力的武器製造術，銀騎士村莊的鐵匠亞南正在尋找這份文件。'});DI('搜索狀','etc',0,{desc:'黑騎士搜索隊在偵察肯特城周邊時留下的文件。肯特村莊的傑羅正在等待這份文件。'});DI('黑騎士的誓約','etc',0,{desc:'對反王組織發誓絕對忠誠的證據。因為記錄著反王的計畫，銀騎士村莊的瑞奇正在尋找這份契約書。'});DI('都達瑪拉妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('那魯加妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('甘地妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('阿吐巴妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('骷髏頭','etc',0,{desc:'從骷髏身上掉下來，把這個拿給說話之島的詹姆的話，就可以在詛咒的魔法書注入魔力。'});DI('食屍鬼的指甲','etc',0,{desc:'塗著能使身體麻痹的有毒腳爪。說話之島的詹姆為了研究靈魂魔法的秘密正在等待著這種材料。'});DI('食屍鬼的牙齒','etc',0,{desc:'卡著腐爛的屍塊，使被啃咬的人引發麻痺的牙齒。說話之島的詹姆為了研究靈魂魔法的秘密正在等待著這種材料。'});DI('龍龜甲','etc',0,{desc:'用龍龜的巨大外殼堅持了幾十年的防禦象徵。由於加工困難，只有銀騎士村莊的鐵匠亞南才能製作裝備。'});DI('古代的卷軸','etc',0,{});DI('生命的卷軸','etc',0,{desc:'記載著藏在石頭高崙中的生命祕密的卷軸。說話之島的甘特正在等待這個卷軸。'});DI('蛇女之鱗','etc',0,{desc:'從蛇女頭目身上掉下來的藍色鱗片。拿給銀騎士村的傑瑞德的話，就可以通過他的試煉。'});DI('返生藥水','etc',0,{desc:'給予紅騎士的唯一一個特別的藥水。它擁有強大的力量，甚至可以解開邪惡神格蘭肯的詛咒。'});DI('感謝信','etc',0,{desc:'因詛咒變成骷髏的吉姆懷著感恩的心留下的信。如果拿給銀騎士村的傑瑞德，作為犧牲和獻身的憑證會給予認可。'});DI('村民的遺物','etc',0,{desc:'在變異巨蟻女皇的肚子裏發現的遺物。風木村莊的艾莉亞正在等待從螞蟻洞窟中消失的居民和父親的消息。'});DI('不死族的骨頭','etc',0,{desc:'偷走復活中的死亡騎士的骨頭後，逃跑的不死族背叛者所留下的骨頭。說話之島的吉倫為了完成研究，正在尋找這個。'});DI('受詛咒的精靈書','etc',0,{desc:'黑暗獵戶修士達克馬勒，從妖精森林偷走的精靈書。妖精森林的迷幻森林之母希望重新回收精靈書。'});DI('不死族的鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。只要跟說話之島地監1樓的迪隆搭話就可以進去不死族地監。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('殭屍鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('骷髏鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('密室鑰匙','etc',0,{desc:'可以在古魯丁地監深處，修士歐林附近使用的老舊鑰匙。據說，祕密房間裏藏著被詛咒的人。'});DI('神秘水晶球','etc',0,{desc:'從古魯丁地監的歐林得到的凝聚著魔力的水晶球。拿給說話之島的吉倫的話，就可以用來完成神秘的魔杖。'});DI('神秘魔杖','etc',0,{desc:'缺少魔力根源神祕水晶球的魔杖。若要尋找水晶球，必須找到地監深處進行交易的修士歐林。'});DI('蛇女房間鑰匙','etc',0,{desc:'這是傑瑞德為了試煉，打開關著蛇女頭目房間的鑰匙。如果順利完成了傑瑞德的試煉，就不用再保留了。'});DI('黑色血痕','etc',0,{});DI('光明的鱗片','etc',0,{});DI('月光之氣息','etc',0,{desc:'蘊含象牙塔月光而凝聚的精氣。'});DI('神聖獨角獸之角','etc',0,{desc:'長出新的角而掉落的神聖獨角獸的痕跡。'});DI('畢克斯的羽毛','etc',0,{desc:'對獲得特別優惠的勇士發送的特別道具。'});DI('畢克斯的沙漏','etc',0,{eff:'AC-3，持續時間+3600秒(可累加)',desc:'使用後獲得AC-3的祝福效果，效果期間每360秒可獲得2個「畢克斯的羽毛」。可連續使用多個來累加持續時間；關閉遊戲畫面時效果會暫停，重新開啟才會繼續計算。'});DI('贖罪聖書','etc',0,{desc:'寫著贖罪內容的聖書。透過和平神女可進行朗讀。'});DI('贖罪聖書箱','etc',0,{desc:'使用時，可獲得10張贖罪聖書。'});DI('畢克斯的沙漏箱','etc',50000,{price:50000,box:['畢克斯的沙漏','畢克斯的沙漏','畢克斯的沙漏'],desc:'使用時，可獲得3個畢克斯的沙漏。'});DI('解除封印卷軸箱子','etc',0,{desc:'使用時，可獲得10張解除封印卷軸。必須在可使用時間內使用。'});DI('摺紙傳令鳥','etc',0,{desc:'使用後刻上不當之人的名稱時，就會傳送到追逐真相的人。'});DI('摺紙傳令鳥箱','etc',0,{});DI('被偷的項鍊','etc',0,{desc:'竊賊偷走的貴重品，奇岩村的艾歐拉正焦急地在尋找。'});DI('被偷的戒指','etc',0,{desc:'竊賊偷走的貴重品，奇岩村的艾歐拉正焦急地在尋找。'});DI('獨眼巨人的血','etc',0,{desc:'消滅獨眼巨人的憑證。拿給銀騎士村的皮革加工師朱利的話，就能製作特別的裝備。'});DI('污染的精靈水晶(水)','etc',0,{desc:'消滅污染的水精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(火)','etc',0,{desc:'消滅污染的火精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(地)','etc',0,{desc:'消滅污染的地精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(風)','etc',0,{desc:'消滅污染的風精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('邪惡蜥蜴之鱗','etc',0,{desc:'消滅邪惡蜥蜴的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('神秘魔力恢復藥水','etc',0,{desc:'歐林販售的特殊藥水。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('神秘慎重藥水','etc',0,{desc:'部分長者攜帶的特殊藥水。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('思克巴女皇的神祕魔杖','etc',0,{desc:'部分思克巴女皇攜帶的特殊魔杖。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('說話之島的回憶','etc',0,{eff:'獲得時負重+500',desc:'為了重新回到說話之島的勇士們準備的GM的禮物。持有時，能感覺到負重變輕。'});DI('遺忘之島的回憶','etc',0,{eff:'獲得時負重+500',desc:'是一本記載著通往遺忘之島航線的書。持有時，能感覺到負重變輕。'});DI('回憶蠟燭','scroll',10000,{wt:5,mat:'蠟',desc:'點燃時會喚醒創角當下的記憶，讓角色的六圍屬性重置回未配點的初始狀態，取回全部曾經獲得的屬性點數以供重新分配。不影響等級、經驗、裝備與背包道具。'});DI('凱莉紗的記憶水晶','etc',0,{desc:'可以將我的記憶保存到水晶中。'});
+DI('漂浮之眼肉','etc',0,{desc:'是漂浮之眼厚厚的殼裡面的嫩肉。吃完後會提高靈敏的能力。通常作為魔法材料。'});DI('松木魔杖','etc',0,{desc:'使用時將創造任意怪物。部分怪物無法用魔杖創造。'});DI('楓木魔杖','etc',0,{eff:'持續時間+7200秒',desc:'使用時會變成任意怪物。若與「變形控制戒指」一起使用時，可將自己的角色變身為想要的怪物。'});DI('烏木魔杖','etc',0,{desc:'可召喚雷電攻擊怪物。'});DI('胡蘿蔔','etc',0,{});DI('蛋','etc',0,{});DI('黃金鑰匙','etc',0,{desc:'可以打開說話之島地監2樓封印的那個地方的鑰匙。'});DI('銀鑰匙','etc',0,{desc:'可以打開說話之島地監2樓封印的那個地方的鑰匙。'});DI('檸檬','etc',0,{});DI('橘子','etc',0,{});DI('烤薄餅','etc',0,{});DI('蘋果','etc',0,{});DI('香蕉','etc',0,{});DI('夏洛伯之爪','etc',0,{desc:'拿給說話之島的甘特的話，就可以通過他的試煉。'});DI('往古魯丁的船票','etc',0,{desc:'在說話之島港口為了搭船所需的船票。'});DI('往說話之島的船票','etc',0,{desc:'在古魯丁村莊港口為了搭船所需的船票。'});DI('阿吐巴圖騰','etc',0,{desc:'把阿吐巴圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('那魯加圖騰','etc',0,{desc:'把那魯加圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('都達瑪拉圖騰','etc',0,{desc:'把都達瑪拉圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('甘地圖騰','etc',0,{desc:'把甘地圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('羅孚圖騰','etc',0,{desc:'把羅孚圖騰拿給燃柳村的萊拉的話，就可以換取金幣。'});DI('魔法寶石','etc',0,{});DI('鑽石','etc',0,{});DI('品質鑽石','etc',0,{});DI('高品質鑽石','etc',0,{});DI('綠寶石','etc',0,{});DI('品質綠寶石','etc',0,{});DI('高品質綠寶石','etc',0,{});DI('紅寶石','etc',0,{});DI('品質紅寶石','etc',0,{});DI('高品質紅寶石','etc',0,{});DI('藍寶石','etc',0,{});DI('品質藍寶石','etc',0,{});DI('高品質藍寶石','etc',0,{});DI('信紙','etc',37,{});DI('潘的鬃毛','etc',0,{});DI('粗糙的米索莉塊','etc',0,{});DI('元素石','etc',0,{});DI('蘑菇汁','etc',0,{desc:'是蘑菇汁。可當在各魔法或毒性之原料。'});DI('食人巨魔的血','etc',0,{desc:'歐吉的血。是歐吉的力量之源。'});DI('線','etc',0,{});DI('純粹的米索莉塊','etc',0,{});DI('精靈粉末','etc',0,{});DI('芮克妮的網','etc',0,{});DI('安特的樹皮','etc',0,{});DI('奧里哈魯根','etc',0,{desc:'精靈女皇製作的高貴金屬。使用於損壞的武器或防具上時，可減少損壞程度。'});DI('米索莉線','etc',0,{});DI('芮克妮的蛻皮','etc',0,{});DI('魔法笛子','etc',0,{desc:'在潘的附近演奏時，潘就會靠近。'});DI('米索莉金屬板','etc',0,{});DI('奧里哈魯根金屬板','etc',0,{});DI('皮革','etc',0,{});DI('金屬塊','etc',0,{});DI('皮帶','etc',0,{});DI('高級皮革','etc',0,{});DI('骨頭碎片','etc',0,{});DI('哨子','etc',550,{desc:'吹哨子時，馴服的寵物會聚集到自己周邊。'});DI('磨刀石','etc',155,{desc:'能夠復原武器防具損害的道具。'});DI('血盟信紙','etc',1200,{desc:'可以將同一個內容的信件寄到所有血盟成員的魔法信件。'});DI('項圈','etc',0,{desc:'代表已經馴養的寵物的項圈，與該寵物綁定。寵物在身邊時，項圈無法存入倉庫；須先將寵物寄放給寵物管理員，項圈才能存放。向寵物管理員領回寵物時，必須持有項圈才能領出。'});DI('糖果','etc',5,{});DI('藍色布料','etc',0,{});DI('紅色布料','etc',0,{});DI('白色布料','etc',0,{});DI('鋼鐵原石','etc',0,{});DI('水龍鱗','etc',0,{});DI('地龍鱗','etc',0,{});DI('火龍鱗','etc',0,{});DI('風龍鱗','etc',0,{});DI('阿西塔基奧的灰燼','etc',0,{});DI('精靈玉','etc',0,{});DI('古老的交易文件','etc',0,{desc:'為了查明反王勢力的武器製造術，銀騎士村莊的鐵匠亞南正在尋找這份文件。'});DI('搜索狀','etc',0,{desc:'黑騎士搜索隊在偵察肯特城周邊時留下的文件。肯特村莊的傑羅正在等待這份文件。'});DI('黑騎士的誓約','etc',0,{desc:'對反王組織發誓絕對忠誠的證據。因為記錄著反王的計畫，銀騎士村莊的瑞奇正在尋找這份契約書。'});DI('都達瑪拉妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('那魯加妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('甘地妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('阿吐巴妖魔魔法書','etc',0,{desc:'記錄著妖魔們使用的魔法悠久歷史的魔法書。為了研究妖魔的魔法，燃柳村的歐斯正在尋找這本魔法書。'});DI('骷髏頭','etc',0,{desc:'從骷髏身上掉下來，把這個拿給說話之島的詹姆的話，就可以在詛咒的魔法書注入魔力。'});DI('食屍鬼的指甲','etc',0,{desc:'塗著能使身體麻痹的有毒腳爪。說話之島的詹姆為了研究靈魂魔法的秘密正在等待著這種材料。'});DI('食屍鬼的牙齒','etc',0,{desc:'卡著腐爛的屍塊，使被啃咬的人引發麻痺的牙齒。說話之島的詹姆為了研究靈魂魔法的秘密正在等待著這種材料。'});DI('龍龜甲','etc',0,{desc:'用龍龜的巨大外殼堅持了幾十年的防禦象徵。由於加工困難，只有銀騎士村莊的鐵匠亞南才能製作裝備。'});DI('古代的卷軸','etc',0,{});DI('生命的卷軸','etc',0,{desc:'記載著藏在石頭高崙中的生命祕密的卷軸。說話之島的甘特正在等待這個卷軸。'});DI('蛇女之鱗','etc',0,{desc:'從蛇女頭目身上掉下來的藍色鱗片。拿給銀騎士村的傑瑞德的話，就可以通過他的試煉。'});DI('返生藥水','etc',0,{desc:'給予紅騎士的唯一一個特別的藥水。它擁有強大的力量，甚至可以解開邪惡神格蘭肯的詛咒。'});DI('感謝信','etc',0,{desc:'因詛咒變成骷髏的吉姆懷著感恩的心留下的信。如果拿給銀騎士村的傑瑞德，作為犧牲和獻身的憑證會給予認可。'});DI('村民的遺物','etc',0,{desc:'在變異巨蟻女皇的肚子裏發現的遺物。風木村莊的艾莉亞正在等待從螞蟻洞窟中消失的居民和父親的消息。'});DI('不死族的骨頭','etc',0,{desc:'偷走復活中的死亡騎士的骨頭後，逃跑的不死族背叛者所留下的骨頭。說話之島的吉倫為了完成研究，正在尋找這個。'});DI('受詛咒的精靈書','etc',0,{desc:'黑暗獵戶修士達克馬勒，從妖精森林偷走的精靈書。妖精森林的迷幻森林之母希望重新回收精靈書。'});DI('不死族的鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。只要跟說話之島地監1樓的迪隆搭話就可以進去不死族地監。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('殭屍鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('骷髏鑰匙','etc',0,{desc:'打開不死族地監被魔法封印的門所需的鑰匙。如果順利完成了吉倫的委託，就沒有必要再保留了。'});DI('密室鑰匙','etc',0,{desc:'可以在古魯丁地監深處，法修歐林附近使用的老舊鑰匙。據說，祕密房間裏藏著被詛咒的人。'});DI('神秘水晶球','etc',0,{desc:'從古魯丁地監的歐林得到的凝聚著魔力的水晶球。拿給說話之島的吉倫的話，就可以用來完成神秘的魔杖。'});DI('神秘魔杖','etc',0,{desc:'缺少魔力根源神祕水晶球的魔杖。若要尋找水晶球，必須找到地監深處進行交易的法修歐林。'});DI('蛇女房間鑰匙','etc',0,{desc:'這是傑瑞德為了試煉，打開關著蛇女頭目房間的鑰匙。如果順利完成了傑瑞德的試煉，就不用再保留了。'});DI('黑色血痕','etc',0,{});DI('光明的鱗片','etc',0,{});DI('月光之氣息','etc',0,{desc:'蘊含象牙塔月光而凝聚的精氣。'});DI('神聖獨角獸之角','etc',0,{desc:'長出新的角而掉落的神聖獨角獸的痕跡。'});DI('畢克斯的羽毛','etc',0,{desc:'對獲得特別優惠的勇士發送的特別道具。'});DI('畢克斯的沙漏','etc',0,{eff:'AC-3，持續時間+3600秒(可累加)',desc:'使用後獲得AC-3的祝福效果，效果期間每360秒可獲得2個「畢克斯的羽毛」。可連續使用多個來累加持續時間；關閉遊戲畫面時效果會暫停，重新開啟才會繼續計算。'});DI('贖罪聖書','etc',0,{desc:'寫著贖罪內容的聖書。透過和平神女可進行朗讀。'});DI('贖罪聖書箱','etc',0,{desc:'使用時，可獲得10張贖罪聖書。'});DI('畢克斯的沙漏箱','etc',50000,{price:50000,box:['畢克斯的沙漏','畢克斯的沙漏','畢克斯的沙漏'],desc:'使用時，可獲得3個畢克斯的沙漏。'});DI('解除封印卷軸箱子','etc',0,{desc:'使用時，可獲得10張解除封印卷軸。必須在可使用時間內使用。'});DI('摺紙傳令鳥','etc',0,{desc:'使用後刻上不當之人的名稱時，就會傳送到追逐真相的人。'});DI('摺紙傳令鳥箱','etc',0,{});DI('被偷的項鍊','etc',0,{desc:'竊賊偷走的貴重品，奇岩村的艾歐拉正焦急地在尋找。'});DI('被偷的戒指','etc',0,{desc:'竊賊偷走的貴重品，奇岩村的艾歐拉正焦急地在尋找。'});DI('獨眼巨人的血','etc',0,{desc:'消滅獨眼巨人的憑證。拿給銀騎士村的皮革加工師朱利的話，就能製作特別的裝備。'});DI('污染的精靈水晶(水)','etc',0,{desc:'消滅污染的水精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(火)','etc',0,{desc:'消滅污染的火精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(地)','etc',0,{desc:'消滅污染的地精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('污染的精靈水晶(風)','etc',0,{desc:'消滅污染的風精靈的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('邪惡蜥蜴之鱗','etc',0,{desc:'消滅邪惡蜥蜴的憑證。向迷幻森林之母證明自己實力的物品之一。'});DI('神秘魔力恢復藥水','etc',0,{desc:'歐林販售的特殊藥水。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('神秘慎重藥水','etc',0,{desc:'部分長者攜帶的特殊藥水。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('思克巴女皇的神祕魔杖','etc',0,{desc:'部分思克巴女皇攜帶的特殊魔杖。說話之島的詹姆為了研究有效恢復魔力的方法正在等待著這個材料。'});DI('說話之島的回憶','etc',0,{eff:'獲得時負重+500',desc:'為了重新回到說話之島的勇士們準備的GM的禮物。持有時，能感覺到負重變輕。'});DI('遺忘之島的回憶','etc',0,{eff:'獲得時負重+500',desc:'是一本記載著通往遺忘之島航線的書。持有時，能感覺到負重變輕。'});DI('回憶蠟燭','scroll',10000,{wt:5,mat:'蠟',desc:'點燃時會喚醒創角當下的記憶，讓角色的六圍屬性重置回未配點的初始狀態，取回全部曾經獲得的屬性點數以供重新分配。不影響等級、經驗、裝備與背包道具。'});DI('凱莉紗的記憶水晶','etc',0,{desc:'可以將我的記憶保存到水晶中。'});
 DI('加速符咒','etc',0,{desc:'貼身攜帶的符咒，據說能在關鍵時刻帶來加速的效果。'});
 DI('消耗品袋子','etc',0,{desc:'可收納消耗性道具的特製袋子。'});
 DI('福袋','etc',0,{desc:'開啟後可隨機獲得道具的福袋。'});
@@ -4866,28 +4866,28 @@ function itemName(id){ return (ITEM_DEF[id]&&ITEM_DEF[id].n)||id; }
 const CLASSES={
   宗主:{base:{str:13,dex:10,con:10,int:10,wis:11,cha:13},bonus:8,
     desc:'唯一能創建血盟；狩獵/PvP較弱。可用多數單手劍/雙手劍/鈍器/矛與部分弓，可用盾。魔法至2階。'},
-  武將:{base:{str:16,dex:12,con:14,int:8,wis:9,cha:12},bonus:4,
-    desc:'HP最高、攻防平均以上，可用便宜的2段加速。幾乎所有武器防具皆可穿戴。50級可學武將技術與魔法1階。'},
-  獵戶:{base:{str:11,dex:12,con:12,int:12,wis:12,cha:9},bonus:7,
+  劍修:{base:{str:16,dex:12,con:14,int:8,wis:9,cha:12},bonus:4,
+    desc:'HP最高、攻防平均以上，可用便宜的2段加速。幾乎所有武器防具皆可穿戴。50級可學劍修技術與魔法1階。'},
+  弓修:{base:{str:11,dex:12,con:12,int:12,wis:12,cha:9},bonus:7,
     desc:'最多樣化，擅長弓箭遠距離、前期最輕鬆。一般魔法6階＋地水火風精靈魔法。'},
-  修士:{base:{str:8,dex:7,con:12,int:12,wis:12,cha:8},bonus:16,
+  法修:{base:{str:8,dex:7,con:12,int:12,wis:12,cha:8},bonus:16,
     desc:'魔法劍士，INT高魔法強；HP低。主用魔杖與單手劍。一般魔法最高10階。'}
 };
-const HPBASE={宗主:34,武將:45,獵戶:30,修士:24}, HPLV={宗主:10,武將:14,獵戶:9,修士:7};
-const MPBASE={宗主:14,武將:10,獵戶:16,修士:22}, MPLV={宗主:3,武將:2,獵戶:4,修士:6};
-const MAGMAX={宗主:2,武將:1,獵戶:6,修士:10};
-const CLS_WPN={武將:['sword','dagger','blunt','spear','bow','staff'],宗主:['sword','dagger','blunt','spear','bow'],獵戶:['bow','sword','dagger'],修士:['staff','sword','dagger']};
-function attrCap(cls,a){ return (cls==='武將'&&a==='str')?20:18; }
+const HPBASE={宗主:34,劍修:45,弓修:30,法修:24}, HPLV={宗主:10,劍修:14,弓修:9,法修:7};
+const MPBASE={宗主:14,劍修:10,弓修:16,法修:22}, MPLV={宗主:3,劍修:2,弓修:4,法修:6};
+const MAGMAX={宗主:2,劍修:1,弓修:6,法修:10};
+const CLS_WPN={劍修:['sword','dagger','blunt','spear','bow','staff'],宗主:['sword','dagger','blunt','spear','bow'],弓修:['bow','sword','dagger'],法修:['staff','sword','dagger']};
+function attrCap(cls,a){ return (cls==='劍修'&&a==='str')?20:18; }
 /* 各職業「魔法階級」規則：MAGIC_TIER_LVSTEP＝每隔幾個角色等級可以多學一階，MAGIC_TIER_CAP＝最高能點到第幾階。
-   修士每4級一階、最高10階；獵戶每8級一階、最高6階；宗主每10級一階、最高2階；武將每50級一階、最高1階。*/
-const MAGIC_TIER_LVSTEP={'宗主':10,'武將':50,'獵戶':8,'修士':4};
-const MAGIC_TIER_CAP={'宗主':2,'武將':1,'獵戶':6,'修士':10};
+   法修每4級一階、最高10階；弓修每8級一階、最高6階；宗主每10級一階、最高2階；劍修每50級一階、最高1階。*/
+const MAGIC_TIER_LVSTEP={'宗主':10,'劍修':50,'弓修':8,'法修':4};
+const MAGIC_TIER_CAP={'宗主':2,'劍修':1,'弓修':6,'法修':10};
 function magicTierCharLevel(cls,tier){ return (MAGIC_TIER_LVSTEP[cls]||4)*Math.max(1,tier); }   // 換算「學會第N階魔法」所需的角色等級
 function classMagicLevel(){ const c=S.cls,lv=S.lv;
   const step=MAGIC_TIER_LVSTEP[c], cap=MAGIC_TIER_CAP[c]; if(!step) return 0;
   return Math.min(cap, Math.floor(lv/step)); }
 /* ===== 移植自放置版天堂：六大屬性數值系統（力量/敏捷/體質/智力/精神/魅力 → 各項數值＋成長）===== */
-function idleCls(c){ return c==='武將'?'knight':c==='修士'?'mage':c==='獵戶'?'elf':'royal'; }
+function idleCls(c){ return c==='劍修'?'knight':c==='法修'?'mage':c==='弓修'?'elf':'royal'; }
 const HPBASE2={knight:16,elf:15,mage:12,royal:15}, HPINC={knight:8.5,elf:7.3,mage:4.3,royal:7.0};
 const MPBASE2={knight:1,elf:5,mage:6,royal:4}, MPINC={knight:1,elf:2.83,mage:4.5,royal:3.0};
 function lookupStep(val, table, def) {
@@ -5019,7 +5019,7 @@ function getIntMpReduce(int) {
 
 // ---------- 體質 CON：HP成長 / HP自然恢復量上限 / 藥水額外恢復% ----------
 function getConGrowth(con, cls) {
-    // 體質8 = 0；武將每+1體質 +1.5；黑暗獵戶每+1體質 +0.5；法師/獵戶每+1體質 +0.8
+    // 體質8 = 0；劍修每+1體質 +1.5；黑暗弓修每+1體質 +0.5；法師/弓修每+1體質 +0.8
     let per = (cls === 'knight') ? 1.5 : (cls === 'dark' ? 0.5 : 0.8);
     return Math.max(0, con - 8) * per;
 }
@@ -5085,7 +5085,7 @@ function getWisMR(wis) {
     if (wis <= 10) return 0;
     return (Math.min(wis, 60) - 10) * 4;
 }
-function deriveStats(){ const c=S.cls||'武將', k=idleCls(c);
+function deriveStats(){ const c=S.cls||'劍修', k=idleCls(c);
   const conG=getConGrowth(S.con,k), wisG=getWisGrowth(S.wis);
   S.maxhp=Math.max(1, Math.floor(HPBASE2[k] + (S.lv-1)*(HPINC[k]+conG)));       // 體質→HP成長
   S.maxmp=Math.max(0, Math.floor(MPBASE2[k] + (S.lv-1)*(MPINC[k]+wisG)));       // 精神→MP成長
@@ -5114,7 +5114,7 @@ var EFF_STAT_MAP={'STR':'str','DEX':'dex','CON':'con','INT':'int','WIS':'wis','C
 var EFF_STAT_KEYS=Object.keys(EFF_STAT_MAP).sort(function(a,b){return b.length-a.length;});   // 長的關鍵字優先比對（例如"MR加成"要比"MR"先比對到，避免"加成"被漏掉、也避免跟中文重複的敏捷/力量等字樣誤加總）
 var EFF_STAT_RE=new RegExp('('+EFF_STAT_KEYS.map(function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}).join('|')+')\\s*([+\uFF0B\u2212-]\\s*\\d+)','g');
 function effClassGate(effText){                          // 偵測「XX裝備時／XX專用／XX限定」這類職業限定寫法
-  var classes=['宗主','武將','獵戶','修士'];
+  var classes=['宗主','劍修','弓修','法修'];
   for(var i=0;i<classes.length;i++){ if(effText.indexOf(classes[i]+'裝備時')>=0||effText.indexOf(classes[i]+'專用')>=0||effText.indexOf(classes[i]+'限定')>=0) return classes[i]; }
   return null; }
 function parseEffBonuses(effText, forCls){                // 解析裝備eff文字裡的屬性加成，只認STR/DEX/CON/INT/WIS/CHA/MR/體力上限/魔力上限（英文縮寫為主，避免中文重複用語重複計算）
@@ -5129,7 +5129,7 @@ function parseEffBonuses(effText, forCls){                // 解析裝備eff文�
     if(!isNaN(val)) out[stat]=(out[stat]||0)+val;
   }
   return out; }
-function recalcStats(){ const c=S.cls||'武將', k=idleCls(c);
+function recalcStats(){ const c=S.cls||'劍修', k=idleCls(c);
   if(!S._eqEffBonus) S._eqEffBonus={str:0,dex:0,con:0,int:0,wis:0,cha:0,mr:0,hp:0,mp:0,hitAll:0,hitMelee:0,hitRanged:0,dmgMelee:0,dmgRanged:0,extraAtk:0,dmgReduce:0,hpRegenBonus:0,mpRegenBonus:0,wtCap:0,magicBonus:0,resEarth:0,resWater:0,resFire:0,resWind:0};
   S.str-=S._eqEffBonus.str; S.dex-=S._eqEffBonus.dex; S.con-=S._eqEffBonus.con; S.int-=S._eqEffBonus.int; S.wis-=S._eqEffBonus.wis; S.cha-=S._eqEffBonus.cha;
   if(S.maxhp!=null) S.maxhp-=S._eqEffBonus.hp; if(S.maxmp!=null) S.maxmp-=S._eqEffBonus.mp;   // 先扣掉上次套用的裝備效果加成，避免每次重算都疊加
@@ -5162,8 +5162,8 @@ function recalcStats(){ const c=S.cls||'武將', k=idleCls(c);
     S.maxmp+=(_sMp-(S._setMpA||0)); S._setMpA=_sMp; }
   ac += getDexAC(S.dex);                          // 敏捷降低 AC（getDexAC 回負值）
   mr += getWisMR(S.wis);                          // 精神→魔防
-  if(k==='knight'){ ac-=Math.floor(S.lv/5); mr+=Math.floor(S.lv/8); }        // 武將每5級 AC-1
-  else if(k==='elf'){ ac-=Math.floor(S.lv/4); }                            // 獵戶每4級 AC-1
+  if(k==='knight'){ ac-=Math.floor(S.lv/5); mr+=Math.floor(S.lv/8); }        // 劍修每5級 AC-1
+  else if(k==='elf'){ ac-=Math.floor(S.lv/4); }                            // 弓修每4級 AC-1
   else if(k==='royal'||k==='mage'){ ac-=Math.floor(S.lv/6); }              // 宗主/法師每6級 AC-1
   S.ac=ac; S.mr=mr;
   S.er=getDexER(S.dex)+(k==='knight'?Math.floor(S.lv/10):0);            // 敏捷→迴避
@@ -5174,7 +5174,7 @@ function recalcStats(){ const c=S.cls||'武將', k=idleCls(c);
 }
 function canEquip(id){ const d=ITEM_DEF[id]; if(!d)return false;
   if(d.cat==='ammo') return true;
-  if(d.cat==='weapon'){ const ok=(CLS_WPN[S.cls]||CLS_WPN.武將).includes(d.kind);
+  if(d.cat==='weapon'){ const ok=(CLS_WPN[S.cls]||CLS_WPN.劍修).includes(d.kind);
     if(!ok){ sysMsg('你的職業無法使用「'+id+'」'); return false; }
     if(!jobAllows(d.job, S.cls)){ sysMsg('你的職業無法使用「'+id+'」'); return false; }
     return true; }
@@ -5593,7 +5593,7 @@ function updateParty(dt){
       const dx=(tgt.x+16)-(p.x+16), dy=(tgt.y+16)-(p.y+16), d=Math.hypot(dx,dy)||1;   // 一律用角色中心點計算距離，跟移動/視線判定的基準一致
       const _pa=(typeof allyAts==='function')?allyAts(p.slot):null;
       const hasActiveSpell=!!(_pa&&_pa.act&&_pa.act.on&&_pa.act.skill&&_pa.act.skill!=='（不使用）');
-      const ranged=(p.cls==='獵戶')||(p.cls==='修士')||hasActiveSpell;
+      const ranged=(p.cls==='弓修')||(p.cls==='法修')||hasActiveSpell;
       const engageR=ranged?170:44;
       const hm=(typeof partyHasteMult==='function')?partyHasteMult(p):1;
       const hasLos=(typeof hasLineOfSight==='function')?hasLineOfSight(p.x+16,p.y+16,tgt.x+16,tgt.y+16):true;   // 隔牆看不到目標就不能出手攻擊，要自己找路靠近才行
@@ -5651,7 +5651,7 @@ function partyGainExp(p, n){                              // 隊友協助狩獵�
   // 同步寫回該隊友自己的存檔，離隊/登出後等級與經驗值依然保留
   if(d){ d.lv=p.lv; d.exp=p.exp; d.maxhp=p.maxhp; d.maxmp=p.maxmp; d.hp=p.hp; d.mp=p.mp; }
 }
-function partyClassGlyph(cls){ return cls==='宗主'?'👑':cls==='武將'?'🛡️':cls==='獵戶'?'🏹':cls==='修士'?'🔮':'❔'; }
+function partyClassGlyph(cls){ return cls==='宗主'?'👑':cls==='劍修'?'🛡️':cls==='弓修'?'🏹':cls==='法修'?'🔮':'❔'; }
 function partyHeadHTML(p){ var key=(p.cls||'')+'_'+(p.gender||'male');
   var b64=(typeof PARTY_HEAD!=='undefined')?PARTY_HEAD[key]:null;
   if(b64) return '<img src="'+b64+'" style="width:100%;height:100%;object-fit:cover;image-rendering:pixelated;border-radius:4px;">';
@@ -6251,7 +6251,7 @@ function fpAttackRange(fp){                                       // 假玩家�
   const wd=fp.equip && fp.equip.weapon && ITEM_DEF[fp.equip.weapon];
   const kind=wd?(wd.kind||'dagger'):'dagger';
   const base=(typeof WKIND!=='undefined' && WKIND[kind])?WKIND[kind].range:34;
-  if(fp.job==='修士' && kind==='staff' && typeof WKIND!=='undefined') return Math.max(base, WKIND.bow.range);   // 只有實際拿著魔杖的法師才有遠距魔法攻擊，拿其他武器就只是近戰
+  if(fp.job==='法修' && kind==='staff' && typeof WKIND!=='undefined') return Math.max(base, WKIND.bow.range);   // 只有實際拿著魔杖的法師才有遠距魔法攻擊，拿其他武器就只是近戰
   return base;
 }
 function fpAttackPower(fp){                                       // 假玩家反擊的傷害：依自己的武器強化值與等級計算，裝備愈強、等級愈高打愈痛
@@ -6368,11 +6368,11 @@ function checkQuest(){ if(S.quest && S.kills>=S.questGoal && !S.questDone){ S.qu
 function talkNpc(n){
   if(n.shop){ openShop(n.shop, (n.lines&&n.lines[0])||'要購買，還是要販售呢？'); return; }
   if(n.warehouse){ openWarehouse(); return; }
-  if(n.elfAttr){ openElfAttr(); return; }                    // 艾利溫：選擇獵戶屬性魔法
+  if(n.elfAttr){ openElfAttr(); return; }                    // 艾利溫：選擇弓修屬性魔法
   if(n.craft){ openCraft(n.craft); return; }
   if(n.petWarehouse){ openPetWarehouse(); return; }
   if(n.pyxShop){ openPyxShop(); return; }
-  if(n.motherTrial){ if(S.cls!=='獵戶'){ openDialog(n.name,['迷幻森林之母：「我的孩子，只有精靈的血脈才能聆聽我的呼喚。」']); } else { openCraft('npc_mother'); } return; }
+  if(n.motherTrial){ if(S.cls!=='弓修'){ openDialog(n.name,['迷幻森林之母：「我的孩子，只有精靈的血脈才能聆聽我的呼喚。」']); } else { openCraft('npc_mother'); } return; }
   if(n.quest50){ openTrial50(); return; }
   if(n.redquest){ openRedQuest(); return; }
   const lines=n.lines.slice();
@@ -7080,7 +7080,7 @@ function alignNameColor(a){ a=a||0;
   if(a>500){ const t=Math.min(1,(a-500)/(32767-500)); return lerpColor('#8ecbff','#0d1a5c',t); }
   if(a<0){ const t=Math.min(1,(-a)/32768); return lerpColor('#ffb0a0','#5c0a0a',t); }
   return '#ffffff'; }
-const CLASS_ART={武將:'knight',宗主:'royal',獵戶:'elf',修士:'mage'};
+const CLASS_ART={劍修:'knight',宗主:'royal',弓修:'elf',法修:'mage'};
 const ART={
   hero:{type:'human',hair:'#6a4526',skin:'#e8c19a',cloth:'#2f6fd0',trim:'#e0c040',pants:'#28406e',boots:'#3a2a15'},
   knight:{type:'human',armor:true,openhelm:true,plume:'#c53a2c',hair:'#8a6a44',skin:'#eccaa4',cloth:'#c2ccd8',trim:'#7a8698',pants:'#7c8695',boots:'#454e5e'},
@@ -7128,8 +7128,8 @@ function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
   if(st.hurtT0 && now-st.hurtT0<HURT_MS*2){ const im=animReady(HURT_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.hurtT0)/HURT_MS)); }
   if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%8); }
   return null; }
-const CREATE_PORTRAIT={"宗主":{male:"assets/portraits/royal_male.png",female:"assets/portraits/royal_female.png"},"武將":{male:"assets/portraits/knight_male.png",female:"assets/portraits/knight_female.png"},"獵戶":{male:"assets/portraits/elf_male.png",female:"assets/portraits/elf_female.png"},"修士":{male:"assets/portraits/mage_male.png",female:"assets/portraits/mage_female.png"}};
-const PARTY_HEAD={"宗主_male":"assets/portraits/party_head_royal_male.png","宗主_female":"assets/portraits/party_head_royal_female.png","武將_male":"assets/portraits/party_head_knight_male.png","武將_female":"assets/portraits/party_head_knight_female.png","獵戶_male":"assets/portraits/party_head_elf_male.png","獵戶_female":"assets/portraits/party_head_elf_female.png","修士_male":"assets/portraits/party_head_mage_male.png","修士_female":"assets/portraits/party_head_mage_female.png"};
+const CREATE_PORTRAIT={"宗主":{male:"assets/portraits/royal_male.png",female:"assets/portraits/royal_female.png"},"劍修":{male:"assets/portraits/knight_male.png",female:"assets/portraits/knight_female.png"},"弓修":{male:"assets/portraits/elf_male.png",female:"assets/portraits/elf_female.png"},"法修":{male:"assets/portraits/mage_male.png",female:"assets/portraits/mage_female.png"}};
+const PARTY_HEAD={"宗主_male":"assets/portraits/party_head_royal_male.png","宗主_female":"assets/portraits/party_head_royal_female.png","劍修_male":"assets/portraits/party_head_knight_male.png","劍修_female":"assets/portraits/party_head_knight_female.png","弓修_male":"assets/portraits/party_head_elf_male.png","弓修_female":"assets/portraits/party_head_elf_female.png","法修_male":"assets/portraits/party_head_mage_male.png","法修_female":"assets/portraits/party_head_mage_female.png"};
 const CREATE_PORTRAIT_IMG={};
 for(const c in CREATE_PORTRAIT) for(const g in CREATE_PORTRAIT[c]){ const im=new Image(); im.src=CREATE_PORTRAIT[c][g]; CREATE_PORTRAIT_IMG[c+"_"+g]=im; im.onload=()=>{ const w=document.getElementById("createw"); if(w&&w.classList.contains("on")) drawFigure(cc.cls); }; }
 const MOB_SHEETS={"吉倫":"assets/monsters/吉倫.png","妖魔商人":"assets/monsters/妖魔商人.png","潘朵拉":"assets/monsters/潘朵拉.png","人形殭屍":"assets/monsters/人形殭屍.png","石頭高崙":"assets/monsters/石頭高崙.png","克特":"assets/monsters/克特.png","侏儒":"assets/monsters/侏儒.png","長老":"assets/monsters/長老.png","夏洛柏":"assets/monsters/夏洛柏.png","黑騎士":"assets/monsters/黑騎士.png","骷髏":"assets/monsters/骷髏.png","飄浮之眼":"assets/monsters/飄浮之眼.png","史萊姆":"assets/monsters/史萊姆.png","地靈":"assets/monsters/地靈.png","狼":"assets/monsters/狼.png","狼人":"assets/monsters/狼人.png","牧羊犬":"assets/monsters/牧羊犬.png","杜賓犬":"assets/monsters/杜賓犬.png","野豬":"assets/monsters/野豬.png","goblinG":"assets/monsters/goblinG.png","goblinR":"assets/monsters/goblinR.png","妖魔":"assets/monsters/妖魔.png","妖魔鬥士":"assets/monsters/妖魔鬥士.png","妖魔弓箭手":"assets/monsters/妖魔弓箭手.png"};
@@ -7299,7 +7299,7 @@ function drawHumanoid(g,P,cx,fy,s,moving){
   R(6.6,hy+4.6,2.8,.5,shade(sk,.62));                                           // 嘴
 
   // 髮／盔／帽／冠
-  if(P.openhelm){                                                               // 武將開面盔
+  if(P.openhelm){                                                               // 劍修開面盔
     R(4.6,hy-1.4,6.8,2.2,cL); R(4.6,hy-1.4,6.8,.7,cRim);                        // 額盔
     R(4.4,hy+.4,1.3,4,cl); R(10.3,hy+.4,1.3,4,cD);                              // 兩頰護甲
     R(6.4,hy-2.6,3.2,1.2,shade(trim,1.1));                                      // 盔冠飾
@@ -7717,7 +7717,7 @@ function jobAllows(job, cls){ if(!job || job==='全職業') return true;
 function jobBracket(job){ if(!job)return '無';
   if(job==='全職業')return '【全職業】';
   // 用零寬空格(U+200B)當分隔：畫面上看不到，但允許在「】【」之間換行，
-  // 這樣配合 word-break:keep-all，就不會把「獵戶」這種詞從中間切斷
+  // 這樣配合 word-break:keep-all，就不會把「弓修」這種詞從中間切斷
   return job.split(/[、,，]/).map(x=>x.trim()).filter(Boolean).map(x=>'【'+x+'】').join('\u200B'); }
 function itemInfoHTML(id){
   const d=ITEM_DEF[id]; if(!d) return '';
@@ -7909,7 +7909,7 @@ function useItem(id){ invMove=null;
     refreshUI(); if(typeof refreshInv==='function')refreshInv(); return;
   }
   if(id==='慎重藥水'){                                            // 法師專用：暫時提升魔法攻擊傷害
-    if(!jobAllows('修士', S.cls)){ sysMsg('這是修士專用的藥水，你的職業無法使用（可賣回商店）。'); return; }
+    if(!jobAllows('法修', S.cls)){ sysMsg('這是法修專用的藥水，你的職業無法使用（可賣回商店）。'); return; }
     removeItem(id,1); if(!S.buffs)S.buffs={};
     S.buffs['慎重藥水']={until:Date.now()+1200000, cast:Date.now(), d:null};
     goldMsg('喝下慎重藥水，魔法攻擊傷害暫時提升！（持續1200秒）');
@@ -7931,12 +7931,12 @@ function useItem(id){ invMove=null;
     if(_cl.length&&_cl.indexOf(S.cls)<0){ sysMsg('職業不符，無法學習「'+d.spell+'」（可賣回商店）'); return; }
     if(_sp && _sp.lv!=null){
       // 判斷這張書的lv欄位是「魔法階級」還是直接寫死的角色等級門檻：
-      // 數字沒超過該職業的最高階數上限，就當成階級用公式換算；超過的話代表原本就是直接寫死的角色等級需求(宗主/武將部分專屬技術書)。
+      // 數字沒超過該職業的最高階數上限，就當成階級用公式換算；超過的話代表原本就是直接寫死的角色等級需求(宗主/劍修部分專屬技術書)。
       var _cap=MAGIC_TIER_CAP[S.cls];
       var _needLv=(_cap!=null && _sp.lv<=_cap) ? magicTierCharLevel(S.cls,_sp.lv) : _sp.lv;
       if((S.lv||1)<_needLv){ sysMsg('等級不足，無法學習'); return; }
     }
-    if(typeof canLearnElfSpell==='function' && !canLearnElfSpell(d.spell)){   // 獵戶：屬性水晶只能學自己締結的那一系
+    if(typeof canLearnElfSpell==='function' && !canLearnElfSpell(d.spell)){   // 弓修：屬性水晶只能學自己締結的那一系
       var _a=elfAttrOfSpell(d.spell);
       if(!S.elfAttr) sysMsg('這是「'+elfAttrName(_a)+'」屬性的精靈水晶。請先找妖精森林的艾利溫締結屬性契約。');
       else sysMsg('你締結的是「'+elfAttrName(S.elfAttr)+'」屬性，無法學習「'+elfAttrName(_a)+'」屬性的精靈水晶。');
@@ -8330,7 +8330,7 @@ function castSpell(sp){ if(!sp) return;
   refreshUI(); }
 function spellIcon(n){ if(typeof ATLAS_ICON!=='undefined'&&ATLAS_ICON[n]&&typeof itemIcon==='function') return itemIcon(n); return '📖'; }
 let magicTab='all';
-function clsMagicLabel(){ return ({'宗主':'宗主魔法','武將':'武將技術','獵戶':'精靈魔法'})[S.cls]||null; }
+function clsMagicLabel(){ return ({'宗主':'宗主魔法','劍修':'劍修技術','弓修':'精靈魔法'})[S.cls]||null; }
 function isClsExclusive(name){ var sp=(typeof MAGE_SPELLS!=='undefined')?MAGE_SPELLS.find(function(x){return x.name===name;}):null;
   if(!sp) return false; var p=String(sp.cls||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
   return p.length===1 && p[0]===S.cls; }
@@ -8853,7 +8853,7 @@ const INTRO=[
  {a:'📱',t:'【現代 · 深夜】\n你賴在床上滑手機，追著最新的穿越短劇……'},
  {a:'💭',t:'「唉～要是我也能穿越、還帶個系統，\n那該有多爽啊……」'},
  {a:'🌀',t:'一陣天旋地轉，眼前的畫面\n忽然像老電視般化成粗粗的像素點……'},
- {a:'🏰',t:'【桃源村】\n你睜開眼，站在桃花島一座紅瓦木屋的村莊中央。\n村民、守衛、獵戶來來往往。'},
+ {a:'🏰',t:'【桃源村】\n你睜開眼，站在桃花島一座紅瓦木屋的村莊中央。\n村民、守衛、弓修來來往往。'},
  {a:'🗡️',t:'你低頭一看——身上竟穿著冒險者的裝束，\n手裡還握著一把長劍！'},
  {a:'📜',t:'（提示）點擊地面移動、點擊怪物攻擊，\n空白鍵可朝面前揮擊。先去找雜貨商接任務吧！'}
 ];
@@ -9152,13 +9152,13 @@ function previewDerived(){ const c=cc.cls,a=cc.attrs;
     er:2+Math.max(0,Math.floor((a.dex-10)/2)), mMax:MAGMAX[c] }; }
 const CC_STORY={
  宗主:'召集志同道合的弟兄，歷經險惡與逆境，只為開創屬於自己的門派基業。若能為這份遠大的志向犧牲一切，你就具備了宗主最重要的『心』。\n\n『宗主』是非常特別的職業，江湖中只有『宗主』才能開宗立派、創立血盟。雖然宗主在戰鬥上沒有任何一個職業的專長，但若想在江湖中成就一番大業，唯有宗主辦得到。宗主必須聚集懷抱相同志向的同伴，建立屬於自己的山門。',
- 武將:'沒有什麼特別突出的才能，只有默默地不間斷地修練，奮勇地擋在前端面對危險，就像主角一樣。\n\n武將剛開始以『自由武將』的身份出發，自由地到各地旅遊冒險。武將是戰鬥最基本的職業，能使用多種武器與盔甲，強大的攻擊力與優越的防禦是其他職業無法比擬的，尤其在近距離戰鬥時。但對魔法的耐性不足，受到的魔法傷害比其他職業高。',
- 獵戶:'獵戶擁有比人類更長的壽命與美麗的外貌，順應自然、追求安定的生活，對事物較為保守，因此不喜與人類接觸，在『森林之母』的保護下建立獨自的文化。\n\n獵戶能用的武器比武將少，但可用大部分武器，尤其擅長遠距離弓箭，比其他武器更有優勢，而且能使用法師的多種魔法，可謂最均衡的職業。',
- 修士:'將世界的神秘現象體制地處理、並在現實中完成的人，被尊稱為『賢者』。他們利用『瑪那』釋放神般的力量，甚至能導致世界滅亡，是最具威脅又最受尊崇的對象。\n\n法師優先於精神上的發展與學習，能使用多種魔法。因此剛開始看似非常軟弱，但透過冒險成長後，最終必受所有人肯定。戰鬥時總在後方給予多種魔法協助。'
+ 劍修:'沒有什麼特別突出的才能，只有默默地不間斷地修練，奮勇地擋在前端面對危險，就像主角一樣。\n\n劍修剛開始以『自由劍修』的身份出發，自由地到各地旅遊冒險。劍修是戰鬥最基本的職業，能使用多種武器與盔甲，強大的攻擊力與優越的防禦是其他職業無法比擬的，尤其在近距離戰鬥時。但對魔法的耐性不足，受到的魔法傷害比其他職業高。',
+ 弓修:'弓修擁有比人類更長的壽命與美麗的外貌，順應自然、追求安定的生活，對事物較為保守，因此不喜與人類接觸，在『森林之母』的保護下建立獨自的文化。\n\n弓修能用的武器比劍修少，但可用大部分武器，尤其擅長遠距離弓箭，比其他武器更有優勢，而且能使用法師的多種魔法，可謂最均衡的職業。',
+ 法修:'將世界的神秘現象體制地處理、並在現實中完成的人，被尊稱為『賢者』。他們利用『瑪那』釋放神般的力量，甚至能導致世界滅亡，是最具威脅又最受尊崇的對象。\n\n法師優先於精神上的發展與學習，能使用多種魔法。因此剛開始看似非常軟弱，但透過冒險成長後，最終必受所有人肯定。戰鬥時總在後方給予多種魔法協助。'
 };
 function renderCreate(){
   drawClassIcons();
-  const map={宗主:'icoRoyal',武將:'icoKnight',獵戶:'icoElf',修士:'icoMage'};
+  const map={宗主:'icoRoyal',劍修:'icoKnight',弓修:'icoElf',法修:'icoMage'};
   Object.keys(map).forEach(c=>document.getElementById(map[c]).classList.toggle('on',cc.cls===c));
   drawFigure(cc.cls);
   { const gm=document.getElementById('gM'), gf=document.getElementById('gF');
@@ -9170,7 +9170,7 @@ function renderCreate(){
     document.getElementById('ccStory').innerHTML=CC_STORY[cc.cls].replace(/\n/g,'<br>')
       +'<div class="cpick">── 屬性預覽 ──<br>最大 HP '+p.hp+'　最大 MP '+p.mp+'<br>負重上限 '+p.wcap+'　魔法階上限 '+p.mMax+'　ER '+p.er+'</div>';
   } else { document.getElementById('ccClsName').textContent='請選擇職業';
-    document.getElementById('ccStory').innerHTML='點選人物四周的圖示選擇職業：<br><br>左下 🛡 盔甲＝武將<br>右上 🕊 翅膀＝獵戶<br>右下 🕯 蠟燭＝法師'; }
+    document.getElementById('ccStory').innerHTML='點選人物四周的圖示選擇職業：<br><br>左下 🛡 盔甲＝劍修<br>右上 🕊 翅膀＝弓修<br>右下 🕯 蠟燭＝法師'; }
   ['str','dex','con','int','wis','cha'].forEach(a=>{ document.getElementById('av_'+a).textContent = cc.cls? cc.attrs[a] : '-'; });
   document.getElementById('ccBonus').textContent = cc.cls? cc.bonus : '-';
   document.getElementById('ccStart').disabled = !(cc.cls && cc.gender && cc.bonus===0);
@@ -9231,9 +9231,9 @@ function startGame(){ if(!cc.cls) return;
   if(typeof loadSharedWarehouse==='function') S.warehouse=loadSharedWarehouse(); else S.warehouse={};   // 倉庫改為跨角色共用
   applyClass(cc.cls, cc.attrs);
   S.name=(document.getElementById('ccName').value||'勇者').slice(0,10); S.gender=cc.gender||'male';
-  const startWpn = cc.cls==='獵戶' ? '弓' : '匕首';
+  const startWpn = cc.cls==='弓修' ? '弓' : '匕首';
   S.inv={'金幣':200,'新手裝備箱':1,'新手戒指箱':1,'新手武器箱':1,[startWpn]:1,'皮夾克':1,'蠟燭':2,'說話之島卷軸':1};
-  if(cc.cls==='獵戶') S.inv['箭']=30;               // 獵戶附帶一些箭矢
+  if(cc.cls==='弓修') S.inv['箭']=30;               // 弓修附帶一些箭矢
   equipItem(startWpn); equipItem('皮夾克'); recalcStats();
   S.mapId = 'village';  // 出生地：所有職業都從桃源村開始
   buildHotbar();
@@ -9248,8 +9248,8 @@ function startGame(){ if(!cc.cls) return;
 
 /* ============ 存檔 / 登入 / 選角 ============ */
 const SAVE_KEY='lineage_saves_v2';
-/* 武俠改版：舊存檔的職業名稱換成新名字(騎士/劍客→武將、妖精→獵戶、魔法師/修仙→修士、王族→宗主) */
-const CLS_RENAME={'騎士':'武將','劍客':'武將','妖精':'獵戶','魔法師':'修士','修仙':'修士','王族':'宗主'};
+/* 武俠改版：舊存檔的職業名稱換成新名字(騎士/劍客→劍修、妖精→弓修、魔法師/修仙→法修、王族→宗主) */
+const CLS_RENAME={'騎士':'劍修','劍客':'劍修','武將':'劍修','妖精':'弓修','獵戶':'弓修','魔法師':'法修','修仙':'法修','修士':'法修','王族':'宗主'};
 let SAVES=loadSaves(), selPage=0, selIndex=-1, pendingSlot=-1;
 function loadSaves(){ try{ const r=localStorage.getItem(SAVE_KEY); if(r){ const a=JSON.parse(r); if(Array.isArray(a)&&a.length===9){ a.forEach(d=>{ if(d&&CLS_RENAME[d.cls]) d.cls=CLS_RENAME[d.cls]; }); return a; } } }catch(e){} return new Array(9).fill(null); }
 function persistSaves(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(SAVES)); }catch(e){} }
@@ -9281,7 +9281,7 @@ function ATS(){ if(!S.ats){S.ats=atsDefault();} var a=S.ats,d=atsDefault(); for(
   if(!a.buff || typeof a.buff!=='object') a.buff={};
   return a; }
 function hasSpell(n){ return !!(S.spells&&S.spells.some(function(x){return x.name===n;})); }
-var ATS_H2={'宗主':'惡魔之血','武將':'勇敢藥水','獵戶':'精靈餅乾'};
+var ATS_H2={'宗主':'惡魔之血','劍修':'勇敢藥水','弓修':'精靈餅乾'};
 var ATS_CONV={'心靈轉換':{hp:8,mp:2},'魂體轉換':{hp:50,mp:15}};   // 放置版真實值
 var AOE_SPELLS={                                    // 大範圍魔法：範圍內所有怪物都會受到傷害，不限單一目標
   '寒冰氣息':{r:160,center:'target'}, '燃燒的火球':{r:160,center:'target'}, '岩牢':{r:160,center:'target'},
@@ -9290,7 +9290,7 @@ var AOE_SPELLS={                                    // 大範圍魔法：範圍�
   '地裂術':{r:160,center:'target'}, '烈炎術':{r:160,center:'target'}, '雷霆風暴':{r:9999,center:'self'} };
 function spellDef(n){ return (typeof MAGE_SPELLS!=='undefined')?MAGE_SPELLS.find(function(x){return x.name===n;}):null; }
 function spellLevelOf(name){ var sp=spellDef(name); var lv=sp?sp.lv:1;
-  return lv>10 ? Math.min(10,Math.max(1,Math.round(lv/5))) : lv; }   // 宗主/武將技能等級跳號(30/40/50)換算成對應強度階層(1~10)
+  return lv>10 ? Math.min(10,Math.max(1,Math.round(lv/5))) : lv; }   // 宗主/劍修技能等級跳號(30/40/50)換算成對應強度階層(1~10)
 function intMagicMult(intVal){                                       // 智力乘數：1~98平均分成9階(前8階每階11格、第9階10格)，每階從整數起跳平滑漲到接近下一階；智力99單獨封頂x10
   var i=Math.max(1,Math.min(99,Math.round(intVal||1)));
   if(i>=99) return 10;
@@ -9344,7 +9344,7 @@ function atsRun(){ var a=ATS(); if(!a.on||!S||S.hp<=0||typeof player==='undefine
   var h2=ATS_H2[S.cls];
   if(a.h2.on && h2 && hT()<2) atsDrink(h2, a.h2.buy, 1);
   if(a.haste.on && hT()<1) atsDrink(a.haste.potion||'自我加速藥水', a.haste.buy, 1);
-  if(a.mana.on && S.cls==='獵戶' && a.mana.spell && hasSpell(a.mana.spell) && S.mp<S.maxmp){
+  if(a.mana.on && S.cls==='弓修' && a.mana.spell && hasSpell(a.mana.spell) && S.mp<S.maxmp){
     var p2=S.hp/S.maxhp*100, cv=ATS_CONV[a.mana.spell];
     if(cv && p2>(a.mana.hpPct||60) && S.hp>cv.hp+5){ S.hp-=cv.hp; S.mp=Math.min(S.maxmp,S.mp+cv.mp); } }
   if(a.heal.on && a.heal.spell && hasSpell(a.heal.spell)){
@@ -9506,7 +9506,7 @@ function renderPetInfo(){
       h+='<div class="prow"><span class="plbl">命中加成</span><span class="pval">+'+(SUMMON_OGRE_STATS.hitBonus||0)+'</span></div>';
       h+='<div class="prow"><span class="plbl">攻擊力</span><span class="pval">'+SUMMON_OGRE_STATS.dmgMin+' ~ '+SUMMON_OGRE_STATS.dmgMax+'</span></div>';
     }
-    h+='<div style="font-size:12px;color:#7a8a6a;margin:6px 2px 12px">修士「召喚術」召喚出來的怪物，屬於寵物的一種，但沒有項圈、無法改名，時效結束或被擊倒就會消失。</div>';
+    h+='<div style="font-size:12px;color:#7a8a6a;margin:6px 2px 12px">法修「召喚術」召喚出來的怪物，屬於寵物的一種，但沒有項圈、無法改名，時效結束或被擊倒就會消失。</div>';
     h+='<button class="pbtn danger" style="width:100%" onclick="summonDismiss()">解除召喚</button>';
     body.innerHTML=h;
     return;
@@ -9684,7 +9684,7 @@ function renderPmAts(slot,d){
     +'<div class="atsRow">'+_pchk('haste','buy',a.haste.buy,'自動購買（用主角的金幣，一次×1）')+'</div></div>';
   var h2i=ATS_H2[d.cls], noH2=!h2i;
   h+='<div class="atsSec'+(noH2?' atsDis':'')+'"><div class="atsHead">自動二段加速 '+_ptog('h2',a.h2.on,noH2)+'</div>'
-    +'<div class="atsRow">道具：'+(h2i?(h2i+'（'+d.cls+'）'):'修士無二段加速道具')+'</div>'
+    +'<div class="atsRow">道具：'+(h2i?(h2i+'（'+d.cls+'）'):'法修無二段加速道具')+'</div>'
     +'<div class="atsRow">'+_pchk('h2','buy',a.h2.buy,'自動購買（用主角的金幣，一次×1）')+'</div></div>';
   var atkSpells=(d.spells||[]).filter(function(s){ var fx=(typeof SPELL_FX!=='undefined')?SPELL_FX[s.name]:null; return fx && fx.type==='atk'; }).map(function(s){return s.name;});
   var aOpts=['（不使用）'].concat(atkSpells);
@@ -9861,9 +9861,9 @@ function renderATS(){ var el=document.getElementById('atsBody'); if(!el)return; 
     +'<div class="atsRow">'+_chk('haste','buy',a.haste.buy,'自動購買（一次 ×1）')+'</div></div>';
   var h2i=ATS_H2[S.cls], noH2=!h2i;
   h+='<div class="atsSec'+(noH2?' atsDis':'')+'"><div class="atsHead">3. 自動二段加速 '+_tog('h2',a.h2.on,noH2)+'</div>'
-    +'<div class="atsRow">道具：'+(h2i?(h2i+'（'+S.cls+'）'):'修士無二段加速道具')+'</div>'
+    +'<div class="atsRow">道具：'+(h2i?(h2i+'（'+S.cls+'）'):'法修無二段加速道具')+'</div>'
     +'<div class="atsRow">'+_chk('h2','buy',a.h2.buy,'自動購買（一次 ×1）')+'</div></div>';
-  var convL=['心靈轉換','魂體轉換'].filter(hasSpell), elf=(S.cls==='獵戶'), manaDis=(!elf||!convL.length);
+  var convL=['心靈轉換','魂體轉換'].filter(hasSpell), elf=(S.cls==='弓修'), manaDis=(!elf||!convL.length);
   if(convL.length&&!a.mana.spell)a.mana.spell=convL[0];
   h+='<div class="atsSec'+(manaDis?' atsDis':'')+'"><div class="atsHead">4. 自動回魔 '+_tog('mana',a.mana.on,manaDis)+'</div>'
     +'<div class="atsRow">HP 大於 '+_num('mana','hpPct',a.mana.hpPct)+' % 施放 '+(convL.length?_sel('mana','spell',convL,a.mana.spell,manaDis):'<span class="atsNote">尚未學會轉換技能</span>')+'</div></div>';
@@ -9913,7 +9913,7 @@ setInterval(autoSave, 8000);                                   // 每 8 秒自�
 window.addEventListener('beforeunload', ()=>{ if(curSlot>=0){ try{ SAVES[curSlot]=snapshot(); persistSaves(); }catch(e){} } });
 function alignNameOf(a){ return a>500?'正義':a<0?'邪惡':'中立'; }
 
-const MAGE_SPELLS=[{lv:1,name:'初級治癒術',cls:'宗主,武將,獵戶,修士',cost:'MP4',dur:'瞬間',desc:'恢復目標少量體力（對不死系給予少量傷害）'},{lv:1,name:'日光術',cls:'宗主,武將,獵戶,修士',cost:'MP4',dur:'7,200秒',desc:'持續期間製造光源照亮施法者周圍'},{lv:1,name:'保護罩',cls:'宗主,武將,獵戶,修士',cost:'MP2',dur:'1,200秒',desc:'強化防禦力（增加防禦2點）'},{lv:1,name:'光箭',cls:'宗主,武將,獵戶,修士',cost:'MP3',dur:'瞬間',desc:'壓縮射出魔法能量，讓對方受到些許傷害'},{lv:1,name:'傳送術',cls:'宗主,武將,獵戶,修士',cost:'MP5',dur:'瞬間',desc:'傳送到任意場所，或用傳送控制戒指傳送到記憶場所'},{lv:1,name:'冰箭',cls:'宗主,武將,獵戶,修士',cost:'MP3',dur:'瞬間',desc:'利用冰短劍，讓對方受到些許傷害'},{lv:1,name:'風刃',cls:'宗主,武將,獵戶,修士',cost:'MP3',dur:'瞬間',desc:'利用風鋸齒，讓對方受到些許傷害'},{lv:1,name:'神聖武器',cls:'宗主,武將,獵戶,修士',cost:'MP10',dur:'1,200秒',desc:'在武器上賦予神聖咒語（追加傷害+1、近距離命中+1、不死族追加傷害）'},{lv:2,name:'解毒術',cls:'宗主,獵戶,修士',cost:'MP8',dur:'瞬間',desc:'中和對象所中的毒'},{lv:2,name:'寒冷戰慄',cls:'宗主,獵戶,修士',cost:'MP9',dur:'瞬間',desc:'奪走對象一些體力'},{lv:2,name:'毒咒',cls:'宗主,獵戶,修士',cost:'MP10',dur:'30秒',desc:'使對象中毒，緩慢減少體力'},{lv:2,name:'擬似魔法武器',cls:'宗主,獵戶,修士',cost:'MP20',dur:'1,800秒',desc:'在武器上賦予魔法（追加傷害+2）'},{lv:2,name:'無所遁形術',cls:'宗主,獵戶,修士',cost:'MP8',dur:'瞬間',desc:'找出隱身的對象'},{lv:2,name:'負重強化',cls:'宗主,獵戶,修士',cost:'MP10',dur:'1,800秒',desc:'減少持有道具的重量'},{lv:2,name:'火箭',cls:'宗主,獵戶,修士',cost:'MP3',dur:'瞬間',desc:'利用火炎箭，讓對方受到些許傷害'},{lv:2,name:'地獄之牙',cls:'宗主,獵戶,修士',cost:'MP3',dur:'瞬間',desc:'利用石柱，讓對方受到些許傷害'},{lv:3,name:'極光雷電',cls:'獵戶,修士',cost:'MP13',dur:'瞬間',desc:'射出閃電傷害前方敵人'},{lv:3,name:'起死回生術',cls:'獵戶,修士',cost:'MP15',dur:'瞬間',desc:'一定機率破壞不死系怪物（也有機率引起狂暴憤怒）'},{lv:3,name:'中級治癒術',cls:'獵戶,修士',cost:'MP11',dur:'瞬間',desc:'恢復對象較多體力（對不死族給予一定傷害）'},{lv:3,name:'闇盲咒術',cls:'獵戶,修士',cost:'MP20',dur:'10秒',desc:'一定機率使敵人盲目'},{lv:3,name:'鎧甲護持',cls:'獵戶,修士',cost:'MP20',dur:'1,800秒',desc:'在盔甲上賦予魔法（增加防禦3點）'},{lv:3,name:'寒冰氣息',cls:'獵戶,修士',cost:'MP9',dur:'瞬間',desc:'利用冰雲給予範圍傷害'},{lv:3,name:'能量感測',cls:'獵戶,修士',cost:'MP8',dur:'瞬間',desc:'查看對象弱點屬性（地、火、風、水）'},{lv:4,name:'燃燒的火球',cls:'獵戶,修士',cost:'MP16',dur:'瞬間',desc:'給予投擲火球範圍內所有敵人傷害'},{lv:4,name:'通暢氣脈術',cls:'獵戶,修士',cost:'MP35',dur:'1,200秒',desc:'提升敏捷（敏捷+5）'},{lv:4,name:'壞物術',cls:'獵戶,修士',cost:'MP25',dur:'瞬間',desc:'損害對象角色的武器'},{lv:4,name:'吸血鬼之吻',cls:'獵戶,修士',cost:'MP13',dur:'瞬間',desc:'吸取攻擊對象的體力'},{lv:4,name:'緩速術',cls:'獵戶,修士',cost:'MP20',dur:'30秒',desc:'降低對象的移動及攻擊速度'},{lv:4,name:'岩牢',cls:'獵戶,修士',cost:'MP11',dur:'瞬間',desc:'利用刺藤蔓給予範圍傷害'},{lv:4,name:'魔法屏障',cls:'獵戶,修士',cost:'MP20・HP40',dur:'16秒',desc:'使魔法傷害無效化1次（部分除外）'},{lv:4,name:'冥想術',cls:'獵戶,修士',cost:'MP10',dur:'600秒',desc:'透過冥想集中精神（服用魔力回復藥水時增幅）'},{lv:5,name:'木乃伊的詛咒',cls:'獵戶,修士',cost:'MP35',dur:'4秒',desc:'一定機率麻痺對象使其無法動彈（石化狀態）'},{lv:5,name:'極道落雷',cls:'獵戶,修士',cost:'MP25',dur:'瞬間',desc:'從天空呼叫閃電在對象上施以嚴重損害'},{lv:5,name:'高級治癒術',cls:'獵戶,修士',cost:'MP20',dur:'瞬間',desc:'恢復施法者體力（對不死系給予一定傷害）'},{lv:5,name:'迷魅術',cls:'獵戶,修士',cost:'MP30',dur:'3,600秒',desc:'一定機率迷惑對象使其跟隨施法者命令'},{lv:5,name:'聖潔之光',cls:'獵戶,修士',cost:'MP10',dur:'瞬間',desc:'解除詛咒'},{lv:5,name:'冰錐',cls:'獵戶,修士',cost:'MP21',dur:'瞬間',desc:'用冰圓錐給予大傷害'},{lv:5,name:'魔力奪取',cls:'獵戶,修士',cost:'HP50',dur:'瞬間',desc:'吸收對象的魔力'},{lv:5,name:'黑闇之影',cls:'獵戶,修士',cost:'MP25',dur:'20秒',desc:'施放魔法使其失明（暗黑狀態）'},{lv:6,name:'造屍術',cls:'獵戶,修士',cost:'MP35',dur:'3,600秒',desc:'從對象屍體創造人形殭屍，依施法者等級決定殭屍強度'},{lv:6,name:'體魄強健術',cls:'獵戶,修士',cost:'MP40',dur:'1,200秒',desc:'提高力量5點'},{lv:6,name:'加速術',cls:'獵戶,修士',cost:'MP40',dur:'1,200秒',desc:'對象的移動及攻擊速度上升'},{lv:6,name:'魔法相消術',cls:'獵戶,修士',cost:'MP40',dur:'瞬間',desc:'消除對象身上所有魔法效果（部分除外）'},{lv:6,name:'地裂術',cls:'獵戶,修士',cost:'MP25',dur:'瞬間',desc:'崩裂地塊撞擊對象施以損害'},{lv:6,name:'烈炎術',cls:'獵戶,修士',cost:'MP30',dur:'瞬間',desc:'透過凝聚的爆炸給予大傷害'},{lv:6,name:'弱化術',cls:'獵戶,修士',cost:'MP25',dur:'30秒',desc:'施放詛咒使其弱化（近距離傷害-4、近距離命中-2）'},{lv:6,name:'祝福魔法武器',cls:'獵戶,修士',cost:'MP20',dur:'1,200秒',desc:'在武器上賦予魔法（追加傷害+2、近距離命中+2）'},{lv:7,name:'體力回復術',cls:'修士',cost:'MP35',dur:'瞬間',desc:'除施展者外同時恢復隊員體力'},{lv:7,name:'冰矛圍籬',cls:'修士',cost:'MP30',dur:'瞬間',desc:'對目標給予水屬性魔法傷害（一定機率冰凍）'},{lv:7,name:'召喚術',cls:'修士',cost:'MP50',dur:'3,600秒',desc:'依魅力召喚複數怪物（依等級可召喚怪物不同）'},{lv:7,name:'神聖疾走',cls:'修士',cost:'MP15',dur:'64秒',desc:'提升移動速度'},{lv:7,name:'龍捲風',cls:'修士',cost:'MP45',dur:'瞬間',desc:'召喚強大旋風並在施法者四個單位內施以嚴重損害'},{lv:7,name:'強力加速術',cls:'修士',cost:'MP60',dur:'2,400秒',desc:'提升移動及攻擊速度'},{lv:7,name:'狂暴術',cls:'修士',cost:'MP30',dur:'1,200秒',desc:'使其陷入狂戰士化（近距離傷害+5、降低防禦10點、無法自然恢復體力）'},{lv:7,name:'疾病術',cls:'修士',cost:'MP30',dur:'30秒',desc:'施放詛咒使其弱化（近距離命中-4、降低防禦8點）'},{lv:8,name:'全部治癒術',cls:'修士',cost:'MP30',dur:'瞬間',desc:'回復對象大量體力，用在不死系怪物則造成大量傷害'},{lv:8,name:'冰雪暴',cls:'修士',cost:'MP60',dur:'瞬間',desc:'以冰暴給畫面內所有敵人強大損害'},{lv:8,name:'隱身術',cls:'修士',cost:'HP25',dur:'依魔力持續',desc:'持續期間其他玩家或NPC看不到施法者，但施法者有任何積極動作效果就消失'},{lv:8,name:'返生術',cls:'修士',cost:'MP45',dur:'瞬間',desc:'復活對象'},{lv:8,name:'震裂術',cls:'修士',cost:'MP50',dur:'瞬間',desc:'引發放射型地震，給予範圍傷害'},{lv:8,name:'魔法封印',cls:'修士',cost:'MP40',dur:'16秒',desc:'使周邊成為真空狀態（無法使用魔法及交談）'},{lv:9,name:'雷霆風暴',cls:'修士',cost:'MP48',dur:'瞬間',desc:'呼喚大自然的閃電及狂風攻擊敵人'},{lv:9,name:'沉睡之霧',cls:'修士',cost:'MP40',dur:'1~8秒',desc:'召喚雲層使敵人或怪物進入睡眠'},{lv:9,name:'聖結界',cls:'修士',cost:'MP30',dur:'32秒',desc:'提高目標對各種傷害的抵抗力，作用期間受到傷害減少30%'},{lv:9,name:'集體傳送術',cls:'修士',cost:'MP60',dur:'瞬間',desc:'與周邊血盟成員一起移動，搭配傳送控制戒指能指定目的地'},{lv:9,name:'火風暴',cls:'修士',cost:'MP48',dur:'瞬間',desc:'在施法者周圍一定範圍內引發火屬性風暴'},{lv:10,name:'流星雨',cls:'修士',cost:'MP60',dur:'瞬間',desc:'從天空召喚流星，對目標三單元內所有敵人施以極大損害'},{lv:30,name:'衝擊之暈',cls:'武將',cost:'MP12',dur:'4秒以下',desc:'一定機率使目標暈眩，並造成傷害'},{lv:30,name:'增幅防禦',cls:'武將',cost:'MP10',dur:'1,200秒',desc:'以精神力吸收傷害（傷害減少+1，自50級起每5級增加1）'},{lv:30,name:'尖刺盔甲',cls:'武將',cost:'MP10',dur:'1,200秒',desc:'在雙手賦予力量（近距離命中+5）'},{lv:40,name:'堅固防護',cls:'武將',cost:'HP30・MP5',dur:'180秒',desc:'把精神集中在迴避上（ER+15，50級時額外+5，51～55級每級+1，最多+25）'},{lv:15,name:'精準目標',cls:'宗主',cost:'MP1',dur:'16秒',desc:'生成追蹤對象的標誌'},{lv:40,name:'灼熱靈氣',cls:'宗主',cost:'MP30',dur:'1,200秒',desc:'近距離傷害+1、近距離命中+1'},{lv:30,name:'呼喚盟友',cls:'宗主',cost:'MP25',dur:'瞬間',desc:'將1名血盟成員召喚到自身的位置'},{lv:50,name:'勇敢靈氣',cls:'宗主',cost:'MP40',dur:'1,200秒',desc:'近距離傷害+3、近距離命中+3'},{lv:45,name:'援護盟友',cls:'宗主',cost:'MP30',dur:'瞬間',desc:'傳送到指定的血盟成員身邊'},{lv:1,name:'魔法防禦',cls:'獵戶',cost:'MP10',dur:'1,200秒',desc:'增加魔法防禦力（魔法抵抗+10%）'},{lv:1,name:'心靈轉換',cls:'獵戶',cost:'HP8',dur:'瞬間',desc:'消耗體力來恢復精神（恢復魔力2）'},{lv:1,name:'世界樹的呼喚',cls:'獵戶',cost:'MP10',dur:'瞬間',desc:'移動至世界樹'},{lv:2,name:'淨化精神',cls:'獵戶',cost:'MP10',dur:'1,200秒',desc:'提升精神3點'},{lv:2,name:'屬性防禦',cls:'獵戶',cost:'MP5',dur:'1,200秒',desc:'增加屬性防禦（所有屬性防禦+10）'},{lv:3,name:'釋放元素',cls:'獵戶',cost:'MP30',dur:'瞬間',desc:'消除召喚的手下'},{lv:3,name:'魂體轉換',cls:'獵戶',cost:'HP50',dur:'瞬間',desc:'消耗體力來恢復精神（恢復魔力15）'},{lv:3,name:'單屬性防禦',cls:'獵戶',cost:'MP10',dur:'1,200秒',desc:'增加自身所屬屬性的抵抗力（屬性防禦+50）'},{lv:3,name:'三重矢',cls:'獵戶',cost:'MP15',dur:'瞬間',desc:'以極快的速度射出三隻箭'},{lv:4,name:'魔法消除',cls:'獵戶',cost:'MP30',dur:'16秒',desc:'1次為限，魔法抵抗減少約1/2'},{lv:4,name:'召喚屬性精靈',cls:'獵戶',cost:'MP20',dur:'3,600秒',desc:'召喚自身所屬屬性的精靈'},{lv:5,name:'封印禁地',cls:'獵戶',cost:'MP40',dur:'1~8秒',desc:'以一定機率所有非玩家操縱之角色或玩家無法使用魔法及聊天'},{lv:5,name:'召喚強力屬性精靈',cls:'獵戶',cost:'MP20',dur:'3,600秒',desc:'召喚自身所屬屬性的上級精靈'},{lv:3,name:'風之神射',cls:'獵戶',cost:'MP15',dur:'1,200秒',desc:'借助風的攻擊力（遠距離命中+5）'},{lv:3,name:'風之疾走',cls:'獵戶',cost:'MP20',dur:'1,200秒',desc:'提升移動速度'},{lv:4,name:'暴風之眼',cls:'獵戶',cost:'MP40',dur:'1,200秒',desc:'借助風的攻擊力（遠距離傷害+2、遠距離命中+2）'},{lv:5,name:'暴風神射',cls:'獵戶',cost:'MP30',dur:'1,200秒',desc:'借助風的攻擊力（遠距離傷害+4、遠距離命中+2）'},{lv:3,name:'大地防護',cls:'獵戶',cost:'MP15',dur:'1,200秒',desc:'借助大地的防禦力（提升防禦4點）'},{lv:3,name:'地面障礙',cls:'獵戶',cost:'MP20',dur:'30秒',desc:'用樹枝綁住腳步（減少移動速度）'},{lv:4,name:'大地的祝福',cls:'獵戶',cost:'MP35',dur:'1,200秒',desc:'借助大地的防禦力（提升防禦5點）'},{lv:4,name:'大地屏障',cls:'獵戶',cost:'MP50',dur:'8秒以下',desc:'使目標束縛（束縛中不受任何傷害及無法行動）'},{lv:5,name:'鋼鐵防護',cls:'獵戶',cost:'MP30',dur:'1,200秒',desc:'借助大地的防禦力（提升防禦7點）'},{lv:3,name:'火焰武器',cls:'獵戶',cost:'MP20',dur:'1,200秒',desc:'借助火焰的攻擊力（近距離傷害+3）'},{lv:4,name:'舞躍之火',cls:'獵戶',cost:'MP30',dur:'1,200秒',desc:'借助火焰的攻擊力（近距離傷害+3）'},{lv:5,name:'烈炎武器',cls:'獵戶',cost:'MP30',dur:'1,200秒',desc:'借助火焰的攻擊力（近距離傷害+5、近距離命中+3）'},{lv:4,name:'生命之泉',cls:'獵戶',cost:'MP50',dur:'瞬間',desc:'借助水的恢復力（恢復大量的體力）'},{lv:5,name:'生命的祝福',cls:'獵戶',cost:'MP30',dur:'瞬間',desc:'借助水的恢復力（恢復所有隊員一定量的體力）'}];
+const MAGE_SPELLS=[{lv:1,name:'初級治癒術',cls:'宗主,劍修,弓修,法修',cost:'MP4',dur:'瞬間',desc:'恢復目標少量體力（對不死系給予少量傷害）'},{lv:1,name:'日光術',cls:'宗主,劍修,弓修,法修',cost:'MP4',dur:'7,200秒',desc:'持續期間製造光源照亮施法者周圍'},{lv:1,name:'保護罩',cls:'宗主,劍修,弓修,法修',cost:'MP2',dur:'1,200秒',desc:'強化防禦力（增加防禦2點）'},{lv:1,name:'光箭',cls:'宗主,劍修,弓修,法修',cost:'MP3',dur:'瞬間',desc:'壓縮射出魔法能量，讓對方受到些許傷害'},{lv:1,name:'傳送術',cls:'宗主,劍修,弓修,法修',cost:'MP5',dur:'瞬間',desc:'傳送到任意場所，或用傳送控制戒指傳送到記憶場所'},{lv:1,name:'冰箭',cls:'宗主,劍修,弓修,法修',cost:'MP3',dur:'瞬間',desc:'利用冰短劍，讓對方受到些許傷害'},{lv:1,name:'風刃',cls:'宗主,劍修,弓修,法修',cost:'MP3',dur:'瞬間',desc:'利用風鋸齒，讓對方受到些許傷害'},{lv:1,name:'神聖武器',cls:'宗主,劍修,弓修,法修',cost:'MP10',dur:'1,200秒',desc:'在武器上賦予神聖咒語（追加傷害+1、近距離命中+1、不死族追加傷害）'},{lv:2,name:'解毒術',cls:'宗主,弓修,法修',cost:'MP8',dur:'瞬間',desc:'中和對象所中的毒'},{lv:2,name:'寒冷戰慄',cls:'宗主,弓修,法修',cost:'MP9',dur:'瞬間',desc:'奪走對象一些體力'},{lv:2,name:'毒咒',cls:'宗主,弓修,法修',cost:'MP10',dur:'30秒',desc:'使對象中毒，緩慢減少體力'},{lv:2,name:'擬似魔法武器',cls:'宗主,弓修,法修',cost:'MP20',dur:'1,800秒',desc:'在武器上賦予魔法（追加傷害+2）'},{lv:2,name:'無所遁形術',cls:'宗主,弓修,法修',cost:'MP8',dur:'瞬間',desc:'找出隱身的對象'},{lv:2,name:'負重強化',cls:'宗主,弓修,法修',cost:'MP10',dur:'1,800秒',desc:'減少持有道具的重量'},{lv:2,name:'火箭',cls:'宗主,弓修,法修',cost:'MP3',dur:'瞬間',desc:'利用火炎箭，讓對方受到些許傷害'},{lv:2,name:'地獄之牙',cls:'宗主,弓修,法修',cost:'MP3',dur:'瞬間',desc:'利用石柱，讓對方受到些許傷害'},{lv:3,name:'極光雷電',cls:'弓修,法修',cost:'MP13',dur:'瞬間',desc:'射出閃電傷害前方敵人'},{lv:3,name:'起死回生術',cls:'弓修,法修',cost:'MP15',dur:'瞬間',desc:'一定機率破壞不死系怪物（也有機率引起狂暴憤怒）'},{lv:3,name:'中級治癒術',cls:'弓修,法修',cost:'MP11',dur:'瞬間',desc:'恢復對象較多體力（對不死族給予一定傷害）'},{lv:3,name:'闇盲咒術',cls:'弓修,法修',cost:'MP20',dur:'10秒',desc:'一定機率使敵人盲目'},{lv:3,name:'鎧甲護持',cls:'弓修,法修',cost:'MP20',dur:'1,800秒',desc:'在盔甲上賦予魔法（增加防禦3點）'},{lv:3,name:'寒冰氣息',cls:'弓修,法修',cost:'MP9',dur:'瞬間',desc:'利用冰雲給予範圍傷害'},{lv:3,name:'能量感測',cls:'弓修,法修',cost:'MP8',dur:'瞬間',desc:'查看對象弱點屬性（地、火、風、水）'},{lv:4,name:'燃燒的火球',cls:'弓修,法修',cost:'MP16',dur:'瞬間',desc:'給予投擲火球範圍內所有敵人傷害'},{lv:4,name:'通暢氣脈術',cls:'弓修,法修',cost:'MP35',dur:'1,200秒',desc:'提升敏捷（敏捷+5）'},{lv:4,name:'壞物術',cls:'弓修,法修',cost:'MP25',dur:'瞬間',desc:'損害對象角色的武器'},{lv:4,name:'吸血鬼之吻',cls:'弓修,法修',cost:'MP13',dur:'瞬間',desc:'吸取攻擊對象的體力'},{lv:4,name:'緩速術',cls:'弓修,法修',cost:'MP20',dur:'30秒',desc:'降低對象的移動及攻擊速度'},{lv:4,name:'岩牢',cls:'弓修,法修',cost:'MP11',dur:'瞬間',desc:'利用刺藤蔓給予範圍傷害'},{lv:4,name:'魔法屏障',cls:'弓修,法修',cost:'MP20・HP40',dur:'16秒',desc:'使魔法傷害無效化1次（部分除外）'},{lv:4,name:'冥想術',cls:'弓修,法修',cost:'MP10',dur:'600秒',desc:'透過冥想集中精神（服用魔力回復藥水時增幅）'},{lv:5,name:'木乃伊的詛咒',cls:'弓修,法修',cost:'MP35',dur:'4秒',desc:'一定機率麻痺對象使其無法動彈（石化狀態）'},{lv:5,name:'極道落雷',cls:'弓修,法修',cost:'MP25',dur:'瞬間',desc:'從天空呼叫閃電在對象上施以嚴重損害'},{lv:5,name:'高級治癒術',cls:'弓修,法修',cost:'MP20',dur:'瞬間',desc:'恢復施法者體力（對不死系給予一定傷害）'},{lv:5,name:'迷魅術',cls:'弓修,法修',cost:'MP30',dur:'3,600秒',desc:'一定機率迷惑對象使其跟隨施法者命令'},{lv:5,name:'聖潔之光',cls:'弓修,法修',cost:'MP10',dur:'瞬間',desc:'解除詛咒'},{lv:5,name:'冰錐',cls:'弓修,法修',cost:'MP21',dur:'瞬間',desc:'用冰圓錐給予大傷害'},{lv:5,name:'魔力奪取',cls:'弓修,法修',cost:'HP50',dur:'瞬間',desc:'吸收對象的魔力'},{lv:5,name:'黑闇之影',cls:'弓修,法修',cost:'MP25',dur:'20秒',desc:'施放魔法使其失明（暗黑狀態）'},{lv:6,name:'造屍術',cls:'弓修,法修',cost:'MP35',dur:'3,600秒',desc:'從對象屍體創造人形殭屍，依施法者等級決定殭屍強度'},{lv:6,name:'體魄強健術',cls:'弓修,法修',cost:'MP40',dur:'1,200秒',desc:'提高力量5點'},{lv:6,name:'加速術',cls:'弓修,法修',cost:'MP40',dur:'1,200秒',desc:'對象的移動及攻擊速度上升'},{lv:6,name:'魔法相消術',cls:'弓修,法修',cost:'MP40',dur:'瞬間',desc:'消除對象身上所有魔法效果（部分除外）'},{lv:6,name:'地裂術',cls:'弓修,法修',cost:'MP25',dur:'瞬間',desc:'崩裂地塊撞擊對象施以損害'},{lv:6,name:'烈炎術',cls:'弓修,法修',cost:'MP30',dur:'瞬間',desc:'透過凝聚的爆炸給予大傷害'},{lv:6,name:'弱化術',cls:'弓修,法修',cost:'MP25',dur:'30秒',desc:'施放詛咒使其弱化（近距離傷害-4、近距離命中-2）'},{lv:6,name:'祝福魔法武器',cls:'弓修,法修',cost:'MP20',dur:'1,200秒',desc:'在武器上賦予魔法（追加傷害+2、近距離命中+2）'},{lv:7,name:'體力回復術',cls:'法修',cost:'MP35',dur:'瞬間',desc:'除施展者外同時恢復隊員體力'},{lv:7,name:'冰矛圍籬',cls:'法修',cost:'MP30',dur:'瞬間',desc:'對目標給予水屬性魔法傷害（一定機率冰凍）'},{lv:7,name:'召喚術',cls:'法修',cost:'MP50',dur:'3,600秒',desc:'依魅力召喚複數怪物（依等級可召喚怪物不同）'},{lv:7,name:'神聖疾走',cls:'法修',cost:'MP15',dur:'64秒',desc:'提升移動速度'},{lv:7,name:'龍捲風',cls:'法修',cost:'MP45',dur:'瞬間',desc:'召喚強大旋風並在施法者四個單位內施以嚴重損害'},{lv:7,name:'強力加速術',cls:'法修',cost:'MP60',dur:'2,400秒',desc:'提升移動及攻擊速度'},{lv:7,name:'狂暴術',cls:'法修',cost:'MP30',dur:'1,200秒',desc:'使其陷入狂戰士化（近距離傷害+5、降低防禦10點、無法自然恢復體力）'},{lv:7,name:'疾病術',cls:'法修',cost:'MP30',dur:'30秒',desc:'施放詛咒使其弱化（近距離命中-4、降低防禦8點）'},{lv:8,name:'全部治癒術',cls:'法修',cost:'MP30',dur:'瞬間',desc:'回復對象大量體力，用在不死系怪物則造成大量傷害'},{lv:8,name:'冰雪暴',cls:'法修',cost:'MP60',dur:'瞬間',desc:'以冰暴給畫面內所有敵人強大損害'},{lv:8,name:'隱身術',cls:'法修',cost:'HP25',dur:'依魔力持續',desc:'持續期間其他玩家或NPC看不到施法者，但施法者有任何積極動作效果就消失'},{lv:8,name:'返生術',cls:'法修',cost:'MP45',dur:'瞬間',desc:'復活對象'},{lv:8,name:'震裂術',cls:'法修',cost:'MP50',dur:'瞬間',desc:'引發放射型地震，給予範圍傷害'},{lv:8,name:'魔法封印',cls:'法修',cost:'MP40',dur:'16秒',desc:'使周邊成為真空狀態（無法使用魔法及交談）'},{lv:9,name:'雷霆風暴',cls:'法修',cost:'MP48',dur:'瞬間',desc:'呼喚大自然的閃電及狂風攻擊敵人'},{lv:9,name:'沉睡之霧',cls:'法修',cost:'MP40',dur:'1~8秒',desc:'召喚雲層使敵人或怪物進入睡眠'},{lv:9,name:'聖結界',cls:'法修',cost:'MP30',dur:'32秒',desc:'提高目標對各種傷害的抵抗力，作用期間受到傷害減少30%'},{lv:9,name:'集體傳送術',cls:'法修',cost:'MP60',dur:'瞬間',desc:'與周邊血盟成員一起移動，搭配傳送控制戒指能指定目的地'},{lv:9,name:'火風暴',cls:'法修',cost:'MP48',dur:'瞬間',desc:'在施法者周圍一定範圍內引發火屬性風暴'},{lv:10,name:'流星雨',cls:'法修',cost:'MP60',dur:'瞬間',desc:'從天空召喚流星，對目標三單元內所有敵人施以極大損害'},{lv:30,name:'衝擊之暈',cls:'劍修',cost:'MP12',dur:'4秒以下',desc:'一定機率使目標暈眩，並造成傷害'},{lv:30,name:'增幅防禦',cls:'劍修',cost:'MP10',dur:'1,200秒',desc:'以精神力吸收傷害（傷害減少+1，自50級起每5級增加1）'},{lv:30,name:'尖刺盔甲',cls:'劍修',cost:'MP10',dur:'1,200秒',desc:'在雙手賦予力量（近距離命中+5）'},{lv:40,name:'堅固防護',cls:'劍修',cost:'HP30・MP5',dur:'180秒',desc:'把精神集中在迴避上（ER+15，50級時額外+5，51～55級每級+1，最多+25）'},{lv:15,name:'精準目標',cls:'宗主',cost:'MP1',dur:'16秒',desc:'生成追蹤對象的標誌'},{lv:40,name:'灼熱靈氣',cls:'宗主',cost:'MP30',dur:'1,200秒',desc:'近距離傷害+1、近距離命中+1'},{lv:30,name:'呼喚盟友',cls:'宗主',cost:'MP25',dur:'瞬間',desc:'將1名血盟成員召喚到自身的位置'},{lv:50,name:'勇敢靈氣',cls:'宗主',cost:'MP40',dur:'1,200秒',desc:'近距離傷害+3、近距離命中+3'},{lv:45,name:'援護盟友',cls:'宗主',cost:'MP30',dur:'瞬間',desc:'傳送到指定的血盟成員身邊'},{lv:1,name:'魔法防禦',cls:'弓修',cost:'MP10',dur:'1,200秒',desc:'增加魔法防禦力（魔法抵抗+10%）'},{lv:1,name:'心靈轉換',cls:'弓修',cost:'HP8',dur:'瞬間',desc:'消耗體力來恢復精神（恢復魔力2）'},{lv:1,name:'世界樹的呼喚',cls:'弓修',cost:'MP10',dur:'瞬間',desc:'移動至世界樹'},{lv:2,name:'淨化精神',cls:'弓修',cost:'MP10',dur:'1,200秒',desc:'提升精神3點'},{lv:2,name:'屬性防禦',cls:'弓修',cost:'MP5',dur:'1,200秒',desc:'增加屬性防禦（所有屬性防禦+10）'},{lv:3,name:'釋放元素',cls:'弓修',cost:'MP30',dur:'瞬間',desc:'消除召喚的手下'},{lv:3,name:'魂體轉換',cls:'弓修',cost:'HP50',dur:'瞬間',desc:'消耗體力來恢復精神（恢復魔力15）'},{lv:3,name:'單屬性防禦',cls:'弓修',cost:'MP10',dur:'1,200秒',desc:'增加自身所屬屬性的抵抗力（屬性防禦+50）'},{lv:3,name:'三重矢',cls:'弓修',cost:'MP15',dur:'瞬間',desc:'以極快的速度射出三隻箭'},{lv:4,name:'魔法消除',cls:'弓修',cost:'MP30',dur:'16秒',desc:'1次為限，魔法抵抗減少約1/2'},{lv:4,name:'召喚屬性精靈',cls:'弓修',cost:'MP20',dur:'3,600秒',desc:'召喚自身所屬屬性的精靈'},{lv:5,name:'封印禁地',cls:'弓修',cost:'MP40',dur:'1~8秒',desc:'以一定機率所有非玩家操縱之角色或玩家無法使用魔法及聊天'},{lv:5,name:'召喚強力屬性精靈',cls:'弓修',cost:'MP20',dur:'3,600秒',desc:'召喚自身所屬屬性的上級精靈'},{lv:3,name:'風之神射',cls:'弓修',cost:'MP15',dur:'1,200秒',desc:'借助風的攻擊力（遠距離命中+5）'},{lv:3,name:'風之疾走',cls:'弓修',cost:'MP20',dur:'1,200秒',desc:'提升移動速度'},{lv:4,name:'暴風之眼',cls:'弓修',cost:'MP40',dur:'1,200秒',desc:'借助風的攻擊力（遠距離傷害+2、遠距離命中+2）'},{lv:5,name:'暴風神射',cls:'弓修',cost:'MP30',dur:'1,200秒',desc:'借助風的攻擊力（遠距離傷害+4、遠距離命中+2）'},{lv:3,name:'大地防護',cls:'弓修',cost:'MP15',dur:'1,200秒',desc:'借助大地的防禦力（提升防禦4點）'},{lv:3,name:'地面障礙',cls:'弓修',cost:'MP20',dur:'30秒',desc:'用樹枝綁住腳步（減少移動速度）'},{lv:4,name:'大地的祝福',cls:'弓修',cost:'MP35',dur:'1,200秒',desc:'借助大地的防禦力（提升防禦5點）'},{lv:4,name:'大地屏障',cls:'弓修',cost:'MP50',dur:'8秒以下',desc:'使目標束縛（束縛中不受任何傷害及無法行動）'},{lv:5,name:'鋼鐵防護',cls:'弓修',cost:'MP30',dur:'1,200秒',desc:'借助大地的防禦力（提升防禦7點）'},{lv:3,name:'火焰武器',cls:'弓修',cost:'MP20',dur:'1,200秒',desc:'借助火焰的攻擊力（近距離傷害+3）'},{lv:4,name:'舞躍之火',cls:'弓修',cost:'MP30',dur:'1,200秒',desc:'借助火焰的攻擊力（近距離傷害+3）'},{lv:5,name:'烈炎武器',cls:'弓修',cost:'MP30',dur:'1,200秒',desc:'借助火焰的攻擊力（近距離傷害+5、近距離命中+3）'},{lv:4,name:'生命之泉',cls:'弓修',cost:'MP50',dur:'瞬間',desc:'借助水的恢復力（恢復大量的體力）'},{lv:5,name:'生命的祝福',cls:'弓修',cost:'MP30',dur:'瞬間',desc:'借助水的恢復力（恢復所有隊員一定量的體力）'}];
 /* R6：由魔法資料自動建立「魔法書/技術書/精靈水晶」道具、預設吉倫販售、以及學習魔法 */
 /* ===== 77) 異常狀態／強化／套裝／休眠任務與合成 ===== */
 var MOB_ST={'人形殭屍':['poison',0.15,8000],'杜賓犬':['slow',0.20,4000],'飄浮之眼':['freeze',0.15,1500],'石頭高崙':['stone',0.10,2000],'狼人':['broken',0.10,10000]};
@@ -9997,7 +9997,7 @@ function enhPick(id){ var scroll=enhScrollId; if(!scroll)return;
   if((S.inv[scroll]||0)<=0){ sysMsg('卷軸已用完，強化模式結束。'); }
   enhKind=null; enhScrollId=null; }   // 每次強化後都需重新雙擊卷軸才能再次強化，避免連續手滑
 const SETS_PX={"皮套裝":{"items":["皮帽子","皮涼鞋","皮盾牌","皮背心"],"ac":3,"hp":0,"mp":0},"歐西斯套裝":{"items":["歐西斯頭盔","歐西斯環甲","歐西斯斗篷","阿克海盾牌"],"ac":3,"hp":0,"mp":0},"侏儒套裝":{"items":["侏儒鐵盔","侏儒斗篷","侏儒圓盾"],"ac":1,"hp":5,"mp":0},"銀釘套裝":{"items":["銀釘皮帽","銀釘皮涼鞋","銀釘皮盾","銀釘皮背心"],"ac":3,"hp":0,"mp":0},"骷髏套裝":{"items":["骷髏頭盔","骷髏盾牌","骷髏盔甲"],"ac":2,"hp":10,"mp":0},"鋼鐵套裝":{"items":["鋼鐵手套","鋼鐵頭盔","鋼鐵盾牌","鋼鐵長靴","鋼鐵金屬盔甲"],"ac":3,"hp":0,"mp":0},"法師套裝":{"items":["法師之帽","法師長袍"],"ac":0,"hp":0,"mp":50},"死亡騎士套裝":{"items":["死亡騎士手套","死亡騎士盔甲","死亡騎士長靴","死亡騎士頭盔"],"ac":4,"hp":0,"mp":0},"克特套裝":{"items":["克特手套","克特盔甲","克特長靴","克特頭盔"],"ac":4,"hp":0,"mp":0},"抗魔套裝":{"items":["抗魔戒指","抗魔項鍊","抗魔皮帶"],"ac":0,"hp":0,"mp":0},"守護套裝":{"items":["守護戒指","守護項鍊","守護皮帶"],"ac":1,"hp":0,"mp":0}};
-const TRIAL50_PX={"knight":{"npc":"迪嘉勒廷","stages":[{"item":"丹特斯的召書","cnt":1,"hint":"擊殺黑暗獵戶將軍"},{"item":"精靈的私語","cnt":10,"hint":"擊殺精靈墓穴的怪物"}]},"elf":{"npc":"迪嘉勒廷","stages":[{"item":"古代黑妖之秘笈","cnt":1,"hint":"擊殺巨大兵蟻"},{"item":"密封的情報書","cnt":1,"hint":"於大洞穴隱遁者村莊地區擊殺魔族暗殺團"}]},"mage":{"npc":"迪嘉勒廷","stages":[{"item":"間諜報告書","cnt":1,"hint":"於大洞穴隱遁者村莊地區擊殺魔族暗殺團"}]},"dark":{"npc":"布魯迪卡","stages":[{"item":"混沌鑰匙","cnt":1,"hint":"擊殺黑暗棲林者"}]}};
+const TRIAL50_PX={"knight":{"npc":"迪嘉勒廷","stages":[{"item":"丹特斯的召書","cnt":1,"hint":"擊殺黑暗弓修將軍"},{"item":"精靈的私語","cnt":10,"hint":"擊殺精靈墓穴的怪物"}]},"elf":{"npc":"迪嘉勒廷","stages":[{"item":"古代黑妖之秘笈","cnt":1,"hint":"擊殺巨大兵蟻"},{"item":"密封的情報書","cnt":1,"hint":"於大洞穴隱遁者村莊地區擊殺魔族暗殺團"}]},"mage":{"npc":"迪嘉勒廷","stages":[{"item":"間諜報告書","cnt":1,"hint":"於大洞穴隱遁者村莊地區擊殺魔族暗殺團"}]},"dark":{"npc":"布魯迪卡","stages":[{"item":"混沌鑰匙","cnt":1,"hint":"擊殺黑暗棲林者"}]}};
 const REDQ_PX=[["魔法寶石",100],["黑暗棲林者戒指",1],["馴獸師戒指",1],["精靈使戒指",1],["喚獸師戒指",1],["黑法師戒指",1]];
 const CRAFT_PX={"npc_flame_shadow":[{"result":"炎魔的血光斗篷","req":[["墮落鐮刀",1],["墮落首級",1]]}],"npc_imp":[{"result":"惡魔之劍","req":[["墮落之毒",1],["惡魔的黑色腳鐐",5],["惡魔的紅色腳鐐",10],["惡魔的藍色腳鐐",5],["惡魔的白色腳鐐",5]]},{"result":"惡魔鋼爪","req":[["墮落之手",1],["惡魔的黑色腳鐐",5],["惡魔的紅色腳鐐",5],["惡魔的藍色腳鐐",5],["惡魔的白色腳鐐",10]]},{"result":"惡魔雙刀","req":[["墮落之牙",1],["惡魔的黑色腳鐐",5],["惡魔的紅色腳鐐",5],["惡魔的藍色腳鐐",10],["惡魔的白色腳鐐",5]]},{"result":"惡魔十字弓","req":[["墮落之舌",1],["惡魔的黑色腳鐐",10],["惡魔的紅色腳鐐",5],["惡魔的藍色腳鐐",5],["惡魔的白色腳鐐",5]]}],"npc_tas":[{"result":"萬能藥(STR)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(DEX)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(INT)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(CON)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(WIS)","req":[["純白的萬能藥",3]]},{"result":"萬能藥(CHA)","req":[["純白的萬能藥",3]]}],"npc_brabo":[{"result":"覆上米索莉的角","req":[["潘的角",2],["純粹的米索莉塊",80]]},{"result":"覆上奧里哈魯根的角","req":[["潘的角",4],["奧里哈魯根",80],["紅寶石",3]]},{"result":"短劍的劍身","req":[["精靈羽翼",1],["純粹的米索莉塊",50]]},{"result":"長劍的劍身","req":[["精靈羽翼",3],["純粹的米索莉塊",150]]},{"result":"奧里哈魯根的劍身","req":[["精靈羽翼",3],["紅寶石",3],["奧里哈魯根",150]]}],"npc_finn":[{"result":"銀釘皮帽","req":[["皮帽子",1],["高級皮革",2],["金屬塊",10]]},{"result":"銀釘皮盾","req":[["皮盾牌",1],["高級皮革",5],["金屬塊",20]]},{"result":"銀釘皮涼鞋","req":[["皮涼鞋",1],["高級皮革",3],["金屬塊",12]]},{"result":"銀釘皮背心","req":[["皮背心",1],["高級皮革",2],["金屬塊",10]]}],"npc_nalien":[{"result":"魔法笛子","req":[["安特的樹皮",1],["奧里哈魯根",10]]}],"npc_rekne":[{"result":"線","req":[["潘的鬃毛",1]]},{"result":"米索莉線","req":[["線",1],["純粹的米索莉塊",5]]},{"result":"芮克妮的網","req":[["安特的樹枝",2]]},{"result":"芮克妮的蛻皮","req":[["安特的樹皮",3]]}],"npc_narupa":[{"result":"吉薩","req":[["短劍的劍身",1],["安特的樹枝",10],["純粹的米索莉塊",90],["芮克妮的網",10]]},{"result":"木甲","req":[["安特的樹皮",2],["潘的鬃毛",5]]},{"result":"木製的夾克","req":[["安特的樹枝",10],["線",6]]},{"result":"木盾","req":[["安特的樹皮",1],["安特的樹枝",5],["芮克妮的網",5]]},{"result":"細劍","req":[["奧里哈魯根的劍身",1],["精靈羽翼",2],["芮克妮的網",25],["奧里哈魯根",50],["品質紅寶石",1]]},{"result":"鎖子甲破壞者","req":[["短劍的劍身",1],["覆上米索莉的角",1],["安特的樹枝",10],["芮克妮的網",50],["鑽石",1]]},{"result":"木棒","req":[["安特的樹枝",10],["芮克妮的網",5]]},{"result":"米索莉箭","req":[["安特的樹枝",1],["純粹的米索莉塊",1]]},{"result":"長靴","req":[["芮克妮的蛻皮",2],["線",10]]},{"result":"艾爾穆的祝福","req":[["精靈皮盔",1],["奧里哈魯根金屬板",3],["米索莉線",150],["魔法寶石",5],["品質藍寶石",1],["品質綠寶石",1],["品質鑽石",1]]},{"result":"精靈皮盔","req":[["安特的樹皮",2],["精靈羽翼",1],["潘的鬃毛",10],["芮克妮的網",20]]},{"result":"精靈短劍","req":[["長劍的劍身",1],["安特的樹枝",5],["純粹的米索莉塊",150],["芮克妮的網",50]]},{"result":"精靈匕首","req":[["安特的樹枝",1],["粗糙的米索莉塊",1]]},{"result":"精靈斗篷","req":[["米索莉線",10],["魔法寶石",2],["元素石",6]]},{"result":"精靈盾牌","req":[["木盾",1],["米索莉金屬板",2],["芮克妮的網",5]]},{"result":"精靈鏈甲","req":[["米索莉金屬板",4],["米索莉線",10]]},{"result":"精靈之矛","req":[["覆上米索莉的角",1],["安特的樹枝",10],["芮克妮的網",30]]},{"result":"精靈金屬盔甲","req":[["奧里哈魯根金屬板",8],["米索莉線",20],["高品質鑽石",1]]},{"result":"精靈弓","req":[["安特的樹枝",10],["粗糙的米索莉塊",1],["芮克妮的蛻皮",2],["線",2]]},{"result":"精靈護胸金屬板","req":[["芮克妮的蛻皮",2],["線",10]]},{"result":"尤米弓","req":[["奧里哈魯根金屬板",6],["覆上奧里哈魯根的角",1],["米索莉線",40],["芮克妮的蛻皮",5],["品質綠寶石",2],["品質鑽石",1]]},{"result":"戰斧","req":[["短劍的劍身",1],["安特的樹枝",10],["粗糙的米索莉塊",3],["芮克妮的網",5]]},{"result":"短統靴","req":[["安特的樹皮",2],["線",4]]},{"result":"十字弓","req":[["奧里哈魯根金屬板",3],["精靈羽翼",8],["米索莉線",20],["芮克妮的網",30]]},{"result":"力量手套","req":[["米索莉線",20],["芮克妮的蛻皮",5],["品質鑽石",1],["食人巨魔的血",1]]},{"result":"法丘","req":[["精靈之矛",1],["覆上奧里哈魯根的角",1],["奧里哈魯根",60],["芮克妮的網",50],["品質紅寶石",1]]},{"result":"箭","req":[["安特的樹枝",10]]},{"result":"弓","req":[["安特的樹枝",1],["線",5]]},{"result":"腕甲","req":[["安特的樹皮",3],["米索莉線",20]]}],"npc_elfqueen":[{"result":"奧里哈魯根","req":[["純粹的米索莉塊",10]]}],"npc_elf":[{"result":"純粹的米索莉塊","req":[["粗糙的米索莉塊",1]]},{"result":"精靈粉末","req":[["元素石",1]]},{"result":"精靈羽翼","req":[["米索莉線",5],["元素石",2]]}],"npc_ent":[{"result":"安特的樹皮","req":[["蘑菇汁",1]]}],"npc_pan":[{"result":"米索莉金屬板","req":[["純粹的米索莉塊",50],["芮克妮的蛻皮",1]]},{"result":"奧里哈魯根金屬板","req":[["奧里哈魯根",30],["芮克妮的蛻皮",1]]},{"result":"潘的角","req":[["魔法笛子",1]]}],"npc_robinson":[{"result":"熾炎天使弓","req":[["神聖獨角獸之角",4],["風之氣息",30],["水之氣息",30],["火之氣息",30],["土之氣息",30],["格利芬羽毛",30],["品質鑽石",10],["品質紅寶石",10],["品質藍寶石",10],["品質綠寶石",10],["高品質鑽石",1],["高品質紅寶石",1],["高品質藍寶石",1],["高品質綠寶石",1],["精靈玉",1000]]}],"npc_kupu":[{"result":"黑暗鋼爪","req":[["高級皮革",10],["金屬塊",10],["三級黑魔石",5],["二級黑魔石",100]]},{"result":"銀光鋼爪","req":[["黑暗鋼爪",1],["高級皮革",10],["銀",30],["金屬塊",10],["四級黑魔石",1],["二級黑魔石",40],["鑽石",1]]},{"result":"幽暗鋼爪","req":[["黑暗鋼爪",1],["高級皮革",10],["金屬塊",10],["四級黑魔石",10],["三級黑魔石",100]]},{"result":"黑暗雙刀","req":[["高級皮革",20],["金屬塊",10],["二級黑魔石",100]]},{"result":"銀光雙刀","req":[["黑暗雙刀",1],["高級皮革",20],["銀",20],["金屬塊",10],["四級黑魔石",1],["二級黑魔石",50],["鑽石",1]]},{"result":"幽暗雙刀","req":[["黑暗雙刀",1],["高級皮革",20],["金屬塊",10],["四級黑魔石",5],["三級黑魔石",100]]},{"result":"黑暗十字弓","req":[["高級皮革",30],["金屬塊",10],["三級黑魔石",10],["二級黑魔石",100]]},{"result":"幽暗十字弓","req":[["黑暗十字弓",1],["高級皮革",30],["金屬塊",10],["四級黑魔石",20],["三級黑魔石",100]]}],"npc_moliya":[{"result":"法師之帽","req":[["白色布料",1],["紅色布料",1],["藍色布料",1],["魔法寶石",20],["品質綠寶石",2]]},{"result":"法師長袍","req":[["白色布料",2],["高品質藍寶石",1],["藍色布料",4],["魔法寶石",25]]}],"npc_lumiel":[{"result":"深水長靴","req":[["長靴",1],["光明的鱗片",30],["人魚之鱗",30]]},{"result":"伊娃之盾","req":[["塔盾",1],["人魚之鱗",100],["水龍鱗",10]]}],"npc_ibelbin":[{"result":"瑟魯基之劍","req":[["阿西塔基奧的灰燼",300],["奧里哈魯根",500],["高品質紅寶石",5],["高品質藍寶石",5],["高品質綠寶石",5],["高品質鑽石",5],["火龍鱗",3]]},{"result":"水龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["水龍鱗",15]]},{"result":"火龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["火龍鱗",15]]},{"result":"地龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["地龍鱗",15]]},{"result":"風龍鱗盔甲","req":[["阿西塔基奧的灰燼",150],["奧里哈魯根",1000],["高品質紅寶石",3],["高品質藍寶石",3],["高品質綠寶石",3],["高品質鑽石",3],["米索莉線",500],["風龍鱗",15]]}],"npc_lentis":[{"result":"地靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["魔獸軍王徽印",1]]},{"result":"水靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["法令軍王徽印",1]]},{"result":"風靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["暗殺軍王徽印",1]]},{"result":"火靈戒指","req":[["冥法軍團印記",10],["法令軍團印記",10],["魔獸軍團印記",10],["暗殺軍團印記",10],["冥法軍王徽印",1]]}]};
 const QUEST_MATS=["萬能藥(STR)","萬能藥(DEX)","萬能藥(INT)","萬能藥(CON)","萬能藥(WIS)","萬能藥(CHA)"];
@@ -10007,7 +10007,7 @@ function qWin(){ var w=document.getElementById('questw'); if(!w){ w=document.cre
   document.getElementById('frame').appendChild(w);} return w; }
 function qClose(){ var w=document.getElementById('questw'); if(w)w.style.display='none'; if(typeof navClear==='function')navClear(); }
 function qHdr(t){ return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="color:#e8c060">'+t+'</b><button class="sx" onclick="qClose()">關閉</button></div>'; }
-function openTrial50(){ var map={'武將':'knight','獵戶':'elf','修士':'mage'}; var cls=map[S.cls]; var w=qWin();
+function openTrial50(){ var map={'劍修':'knight','弓修':'elf','法修':'mage'}; var cls=map[S.cls]; var w=qWin();
   if(!cls||!TRIAL50_PX[cls]){ w.innerHTML=qHdr('50 級職業試煉')+'<div style="font-size:16px">你的職業目前沒有開放試煉。</div>'; w.style.display='block'; return; }
   var cfg=TRIAL50_PX[cls]; if(!S.trial50)S.trial50={stage:0,done:false};
   var h=qHdr('50 級職業試煉 · '+cfg.npc);
@@ -10018,7 +10018,7 @@ function openTrial50(){ var map={'武將':'knight','獵戶':'elf','修士':'mage
       +'<div style="font-size:16px">持有：'+(S.inv[st.item]||0)+'/'+st.cnt+'</div>'
       +'<button class="sbuybtn" style="margin-top:6px" onclick="trialSubmit()">提交</button>'; }
   w.innerHTML=h; w.style.display='block'; if(typeof navBuildPanel==='function')navBuildPanel('questw'); }
-function trialSubmit(){ var map={'武將':'knight','獵戶':'elf','修士':'mage'}; var cfg=TRIAL50_PX[map[S.cls]]; if(!cfg||!S.trial50)return;
+function trialSubmit(){ var map={'劍修':'knight','弓修':'elf','法修':'mage'}; var cfg=TRIAL50_PX[map[S.cls]]; if(!cfg||!S.trial50)return;
   var st=cfg.stages[S.trial50.stage]; if((S.inv[st.item]||0)<st.cnt){ sysMsg('材料不足'); return; }
   removeItem(st.item,st.cnt); S.trial50.stage++;
   if(S.trial50.stage>=cfg.stages.length){ S.trial50.done=true; goldMsg('★ 完成 50 級職業試煉！'); }
@@ -10170,10 +10170,10 @@ MOB_DROPS_PX['哥布林']=[['闊劍',3],['木棒',5],['頭盔',3],['短統靴',3
 /* 巴風特二段／克特二段沒有獨立的掉落表：擊敗牠們掉落的寶物，改在killMob()裡動態
    查詢phase1(巴風特／克特)的MOB_DROPS_PX，理由見下方PHASE2_LOOT_SOURCE的說明 */
 const ITEM_WT_FB={"弓":30,"精靈弓":30,"歐西斯弓":30,"尤米弓":40,"短弓":20,"十字弓":50,"獵人之弓":30,"赤焰之弓":30,"熾炎天使弓":25,"武士刀":40,"長劍":40,"闊劍":70,"精靈匕首":10,"歐西斯匕首":10,"匕首":10,"彎刀":40,"小侏儒短劍":40,"精靈短劍":20,"歐西斯短劍":30,"短劍":30,"瑟魯基之劍":120,"紅騎士之劍":40,"侵略者之劍":40,"骰子匕首":10,"大馬士革刀":45,"短劍的劍身":20,"長劍的劍身":30,"奧里哈魯根的劍身":35,"細劍":60,"鎖子甲破壞者":40,"銀長劍":50,"銀劍":40,"赤焰之劍":40,"橡木魔法杖":15,"美基魔法杖":20,"巫術魔法杖":15,"力量魔法杖":15,"瑪那魔杖":15,"水晶魔杖":15,"冰之女王魔杖":20,"巴風特魔杖":15,"巴列斯魔杖":15,"雙手劍":150,"矛":80,"巴迪須":120,"柴刀":120,"貝卡合金":100,"法丘":60,"闊矛":75,"吉薩":80,"戟":150,"槍":180,"露西錘":150,"帕提森":80,"精靈之矛":30,"歐西斯之矛":30,"三叉戟":25,"潘的角":9,"覆上米索莉的角":24,"覆上奧里哈魯根的角":55,"深紅長矛":100,"亞連":10,"斧":60,"釘錘":30,"戰斧":120,"木棒":30,"弗萊爾":15,"戰錘":50,"流星錘":120,"巨斧":250,"狂戰士斧":200,"銀斧":270,"精靈皮盔":3,"歐西斯頭盔":30,"侏儒鐵盔":40,"頭盔":30,"騎士面甲":40,"抗魔法頭盔":35,"艾爾穆的祝福":13,"治癒魔法頭盔":50,"敏捷魔法頭盔":50,"力量魔法頭盔":50,"皮帽子":10,"銀釘皮帽":20,"皮頭盔":30,"骷髏頭盔":30,"鋼鐵頭盔":50,"法師之帽":20,"死亡騎士頭盔":50,"精靈敏捷頭盔":13,"精靈體質頭盔":13,"騎士頭巾":0,"紅騎士頭巾":20,"巴土瑟之帽":20,"卡士柏之帽":20,"馬庫爾之帽":20,"西瑪之帽":20,"克特頭盔":50,"淨化頭飾":0,"金屬盔甲":450,"水晶盔甲":350,"青銅盔甲":450,"藤甲":400,"皮甲":350,"鏈甲":300,"歐西斯鏈甲":300,"鱗甲":250,"銀釘皮甲":150,"環甲":250,"歐西斯環甲":250,"小藤甲":70,"皮夾克":30,"抗魔法鏈甲":300,"綿質長袍":10,"木甲":80,"精靈護胸金屬板":100,"精靈金屬盔甲":250,"精靈鏈甲":150,"木製的夾克":40,"皮背心":30,"皮盔甲":50,"銀釘皮背心":130,"硬皮背心":150,"骷髏盔甲":150,"鋼鐵金屬盔甲":470,"法師長袍":60,"水龍鱗盔甲":300,"地龍鱗盔甲":300,"火龍鱗盔甲":300,"風龍鱗盔甲":300,"死亡騎士盔甲":250,"黑長者長袍":30,"克特盔甲":250,"T恤":5,"精靈T恤":5,"精靈斗篷":10,"歐西斯斗篷":10,"侏儒斗篷":10,"保護者斗篷":10,"隱身斗篷":10,"抗魔法斗篷":10,"瑪那斗篷":10,"短統靴":10,"長靴":15,"皮涼鞋":8,"銀釘皮涼鞋":10,"皮長靴":10,"鋼鐵長靴":50,"深水長靴":15,"死亡騎士長靴":15,"黑長者涼鞋":10,"克特長靴":15,"手套":10,"腕甲":10,"力量手套":18,"鋼鐵手套":40,"水晶手套":20,"死亡騎士手套":15,"保護者手套":10,"克特手套":15,"小盾牌":30,"精靈盾牌":50,"阿克海盾牌":50,"大盾牌":100,"侏儒圓盾":100,"反射之盾":50,"伊娃之盾":50,"塔盾":120,"木盾":25,"銀騎士之盾":100,"皮盾牌":25,"銀釘皮盾":35,"骷髏盾牌":30,"鋼鐵盾牌":140,"受詛咒的魔法書":0,"魔法能量之書":20,"紅騎士盾牌":50,"瑪那水晶球":50,"力量項鍊":5,"敏捷項鍊":5,"體質項鍊":5,"智力項鍊":5,"精神項鍊":5,"魅力項鍊":5,"妖魔戰士項鍊":5,"守護項鍊":3,"長老項鍊":3,"抗魔項鍊":3,"傳送控制戒指":3,"變形控制戒指":3,"抗魔戒指":3,"滅魔戒指":3,"火靈戒指":3,"水靈戒指":3,"地靈戒指":3,"風靈戒指":3,"守護戒指":3,"長者戒指":3,"老舊的精神腰帶":50,"身體腰帶":50,"精神腰帶":50,"靈魂腰帶":50,"多羅皮帶":50,"歐吉皮帶":50,"勇敢皮帶":50,"光明身體腰帶":50,"光明精神腰帶":50,"光明靈魂腰帶":50,"守護皮帶":50,"抗魔皮帶":50};
-function spellBookSuffix(cls){ var p=String(cls||'').split(',').map(function(x){return x.trim();}).filter(Boolean); if(p.length===1&&p[0]==='武將')return '技術書'; if(p.length===1&&p[0]==='獵戶')return '精靈水晶'; return '魔法書'; }
+function spellBookSuffix(cls){ var p=String(cls||'').split(',').map(function(x){return x.trim();}).filter(Boolean); if(p.length===1&&p[0]==='劍修')return '技術書'; if(p.length===1&&p[0]==='弓修')return '精靈水晶'; return '魔法書'; }
 function spellBookName(s){ return spellBookSuffix(s.cls)+'('+s.name+')'; }
 if(typeof MAGE_SPELLS!=='undefined'&&typeof DI==='function'){ MAGE_SPELLS.forEach(function(s){ var bn=spellBookName(s); if(typeof ITEM_DEF!=='undefined'&&!ITEM_DEF[bn]) DI(bn,'spellbook',(s.lv||1)*(s.lv||1)*100,{spell:s.name,learn:true,spellCls:s.cls||'',spellLv:s.lv||1}); });
-  if(typeof SHOPS!=='undefined') SHOPS['吉倫']=MAGE_SPELLS.filter(function(s){return String(s.cls||'').split(',').map(function(x){return x.trim();}).indexOf('修士')>=0 && (s.lv||1)<=3;}).map(function(s){return spellBookName(s);});
+  if(typeof SHOPS!=='undefined') SHOPS['吉倫']=MAGE_SPELLS.filter(function(s){return String(s.cls||'').split(',').map(function(x){return x.trim();}).indexOf('法修')>=0 && (s.lv||1)<=3;}).map(function(s){return spellBookName(s);});
   if(typeof SHOPS!=='undefined'){ SHOPS['琳達']=['精靈水晶(世界樹的呼喚)','精靈水晶(心靈轉換)','精靈水晶(魔法防禦)','精靈水晶(淨化精神)','精靈水晶(屬性防禦)','精靈水晶(單屬性防禦)','精靈水晶(風之神射)','精靈水晶(大地防護)','精靈水晶(火焰武器)']; // 琳達：依參考資料校正的固定清單(等級一500／二2000／三10000金幣)
     ['精靈水晶(世界樹的呼喚)','精靈水晶(心靈轉換)','精靈水晶(魔法防禦)'].forEach(function(n){ if(ITEM_DEF[n]) ITEM_DEF[n].price=500; });
     ['精靈水晶(淨化精神)','精靈水晶(屬性防禦)'].forEach(function(n){ if(ITEM_DEF[n]) ITEM_DEF[n].price=2000; });
@@ -10207,8 +10207,8 @@ let adminCat='shop', magicSub='royal';
     ['gloves','手套'],['shield','盾牌'],['necklace','項鍊'],['ring','戒指'],['belt','腰帶']];
   const ITEM_SUBS=[['potion','藥水'],['scroll','卷軸'],['tool','道具']];
   const ITEM_CATS={tool:['tool','food','etc']};        // 道具書籤收納 工具/食物/雜項材料（箭矢改歸弓、不再收 ammo）
-  const MAG_SUBS =[['royal','宗主魔法'],['knight','武將技術書'],['elf','精靈水晶'],['mage','魔法']];
-  const MAG_CLS  ={royal:'宗主',knight:'武將',elf:'獵戶',mage:'修士'};
+  const MAG_SUBS =[['royal','宗主魔法'],['knight','劍修技術書'],['elf','精靈水晶'],['mage','魔法']];
+  const MAG_CLS  ={royal:'宗主',knight:'劍修',elf:'弓修',mage:'法修'};
 
   /* --- 村莊NPC --- */
   const SHOP_NPCS=[['pandora','潘朵拉'],['gillon','吉倫'],['basin','巴辛']];
@@ -10239,9 +10239,9 @@ let adminCat='shop', magicSub='royal';
   const saveDrop =()=>{try{localStorage.setItem(DROP_OV_KEY ,JSON.stringify(_drop ));}catch(e){}};
 
   function spellByName(nm){ return (typeof MAGE_SPELLS!=='undefined')?(MAGE_SPELLS.find(s=>s.name===nm)||null):null; }
-  // 職業歸類：修士＝一般魔法（含共用低階，凡 cls 含「修士」皆屬之）；宗主/武將/獵戶只收「職業專屬」（cls 僅該職業）
+  // 職業歸類：法修＝一般魔法（含共用低階，凡 cls 含「法修」皆屬之）；宗主/劍修/弓修只收「職業專屬」（cls 僅該職業）
   function clsMatch(cls, clsName){ const parts=String(cls||'').split(',').map(x=>x.trim()).filter(Boolean);
-    if(clsName==='修士') return parts.indexOf('修士')>=0;
+    if(clsName==='法修') return parts.indexOf('法修')>=0;
     return parts.length===1 && parts[0]===clsName; }
   function statObj(scope,id){ if(scope==='mob')return (typeof MOBS!=='undefined')?MOBS[id]:null; if(scope==='item')return (typeof ITEM_DEF!=='undefined')?ITEM_DEF[id]:null; if(scope==='spell')return spellByName(id); return null; }
 
@@ -10426,7 +10426,7 @@ let adminCat='shop', magicSub='royal';
       const list=(SHOPS[shopKey]||[]); const cur=list.length;
       h+='<div class="aed-count" id="adminCount">梅林（雜貨店）　目前販售 '+cur+' 項　（勾選＝加入販售清單，立即生效） <button class="aed-reset" style="font-size:14px;padding:3px 10px" onclick="resetMerchantShop(\'梅林\',this)">↺ 恢復預設值</button></div>';
       h+=subbar(ITEM_SUBS,seg,'setAdminShopSeg','sub2')+shopGrid(shopKey,ids);
-    } else if(_shopNpc==='linda'){ // 琳達：精靈水晶（獵戶職 lv≤3 魔法書）→ SHOPS['琳達']
+    } else if(_shopNpc==='linda'){ // 琳達：精靈水晶（弓修職 lv≤3 魔法書）→ SHOPS['琳達']
       const ids=(typeof MAGE_SPELLS!=='undefined'&&typeof spellBookName==='function')?MAGE_SPELLS
         .filter(function(s){ return spellBookSuffix(s.cls)==='精靈水晶'; })
         .map(function(s){ return spellBookName(s); })
@@ -10451,7 +10451,7 @@ let adminCat='shop', magicSub='royal';
     return Object.keys(ITEM_DEF).filter(id=>{ const d=ITEM_DEF[id];
       if(cat==='weapon'){ if(d.cat==='ammo')return sub==='bow'; if(d.cat!=='weapon')return false; const kinds=WPN_KINDS[sub]||[sub]; return kinds.includes(d.kind||''); }
       if(cat==='armor'){ if(d.cat!=='armor')return false; return (d.slot||'')===sub; }
-      if(cat==='magic'){ if(d.cat!=='spellbook')return false; return clsMatch(d.spellCls,MAG_CLS[sub]||'修士'); }   // 魔法書/技術書/精靈水晶：依職業比對(跟「魔法」分頁的四個書籤用同一套規則)
+      if(cat==='magic'){ if(d.cat!=='spellbook')return false; return clsMatch(d.spellCls,MAG_CLS[sub]||'法修'); }   // 魔法書/技術書/精靈水晶：依職業比對(跟「魔法」分頁的四個書籤用同一套規則)
       const cats=ITEM_CATS[sub]||[sub]; return cats.includes(d.cat); });
   }
   function renderAdminItems(cat){
@@ -10511,9 +10511,9 @@ let adminCat='shop', magicSub='royal';
     const cur=(sub&&MAG_CLS[sub])?sub:MAG_SUBS[0][0]; _sub=cur;
     const label=MAG_SUBS.filter(x=>x[0]===cur)[0][1];
     const bar=subbar(MAG_SUBS,cur,'setAdminSub');
-    // 宗主/武將/獵戶 先留空白，待使用者填入各職業專屬魔法資料；「魔法」＝法師魔法（現有資料）
+    // 宗主/劍修/弓修 先留空白，待使用者填入各職業專屬魔法資料；「魔法」＝法師魔法（現有資料）
     if(typeof MAGE_SPELLS==='undefined'){ body.innerHTML='<div class="aed-count" id="adminCount"></div>'+bar+'<div class="aed-empty">尚無魔法資料，待你更新後即可於此編輯。</div>'; navBuildPanel('adminw'); return; }
-    const clsName=MAG_CLS[cur]||'修士';
+    const clsName=MAG_CLS[cur]||'法修';
     const list=MAGE_SPELLS.filter(s=>clsMatch(s.cls,clsName));
     if(!list.length){ body.innerHTML='<div class="aed-count" id="adminCount">'+label+'　目前沒有資料</div>'+bar+'<div class="aed-empty">此類目前沒有資料，待你更新資料後即會顯示。</div>'; navBuildPanel('adminw'); return; }
     let h='<div class="aed-count" id="adminCount">'+label+'　共 '+list.length+' 個（修改即時生效並自動儲存）</div>'+bar;
@@ -10735,7 +10735,7 @@ function backToTitle(){ document.getElementById('selectw').classList.remove('on'
   document.getElementById('titlew').style.display='flex'; navBuild('title'); }
 function selPageGo(d){ selPage=(selPage+d+3)%3; selIndex=-1; renderSlots(); }
 const CLASS_FACTION={};   // 所屬勢力：留給之後的血盟系統，加入血盟前顯示空白
-const CLASS_DRAWFN={'宗主':drawCrown,'武將':drawHelmet,'獵戶':drawWings,'修士':drawCandle};
+const CLASS_DRAWFN={'宗主':drawCrown,'劍修':drawHelmet,'弓修':drawWings,'法修':drawCandle};
 function drawArchFigure(canvas,cls,gender){
   const x=canvas.getContext('2d'); const CW=canvas.width, CH=canvas.height; x.clearRect(0,0,CW,CH);
   const port=(typeof CREATE_PORTRAIT_IMG!=='undefined')?CREATE_PORTRAIT_IMG[cls+"_"+(gender||'male')]:null;
@@ -10780,7 +10780,7 @@ function selConfirm(){ if(selIndex<0) return; const data=SAVES[selIndex];
 function openCreate(){ navClear(); document.getElementById('selectw').classList.remove('on');
   cc={cls:null,attrs:{},bonus:0,gender:'male'};
   const w=document.getElementById('createw'); w.style.display=''; w.classList.add('on');
-  pickClass('武將'); navBuildPanel('createw'); }   // 預設顯示武將男性
+  pickClass('劍修'); navBuildPanel('createw'); }   // 預設顯示劍修男性
 function selDelete(){ if(selIndex<0||!SAVES[selIndex]) return; SAVES[selIndex]=null; persistSaves(); renderSlots(); }
 function quitGame(){ document.body.classList.remove('ingame'); try{ window.close(); }catch(e){}
   document.getElementById('titlew').innerHTML='<div style="margin:auto;text-align:center;color:#e8c060">'
@@ -10850,7 +10850,7 @@ function enterGame(){ navClear(); document.body.classList.add('ingame');
 /* 選角畫面的小人 / 插劍 繪製 */
 function drawSprOn(c,spr,sx,sy,pal,px){ for(let y=0;y<spr.length;y++){ const row=spr[y];
   for(let X=0;X<row.length;X++){ const col=pal[row[X]]; if(col){ c.fillStyle=col; c.fillRect((sx+X*px)|0,(sy+y*px)|0,px,px); } } } }
-const CLS_SPR={武將:[KNIGHT,KNIGHT_PAL],宗主:[HERO,HERO_PAL],獵戶:[ELF,ELF_PAL],修士:[MAGE,MAGE_PAL]};
+const CLS_SPR={劍修:[KNIGHT,KNIGHT_PAL],宗主:[HERO,HERO_PAL],弓修:[ELF,ELF_PAL],法修:[MAGE,MAGE_PAL]};
 function drawSlotFigure(x,data){ x.clearRect(0,0,200,200);
   const cx=100, base=172;
   for(let i=0;i<26;i++){ const fx=cx-34+Math.random()*68, fy=base-Math.random()*20;
@@ -10869,7 +10869,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v85.1-0';
+const GAME_VER='v85.2-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
