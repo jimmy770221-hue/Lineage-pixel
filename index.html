@@ -3163,7 +3163,7 @@ function buildWorld(){
   if(WORLD_BLANK_SLATE){                                                  // 全新島：整張地圖重畫成台北市輪廓；舊的區域、村莊、道路全部不用
     const rowsI=ISLAND_MASK_RLE.split('|');
     for(let y=0;y<H;y++){ let x=0; (rowsI[y]||('0'+W)).split(',').forEach(function(tk){ const c=tk[0], n=parseInt(tk.slice(1),10); for(let i=0;i<n&&x<W;i++,x++){
-        let t=T_WATER; if(c==='1'){ t=T_GRASS; if(tbNoise(x*0.09,y*0.09,41)>0.62 && tileRand(x,y,43)<0.55) t=T_TREE; } else if(c==='2') t=T_ROCK; g[y][x]=t; } }); }
+        let t=T_WATER; if(c==='1'){ t=T_GRASS; { const _n=tbNoise(x*0.09,y*0.09,41), _p=_n>0.62?0.07:0.012; if(tileRand(x,y,43)<_p && g[y][x-1]!==T_TREE && g[y-1][x]!==T_TREE && g[y-1][x-1]!==T_TREE && g[y-1][x+1]!==T_TREE && g[y][x-2]!==T_TREE && g[y-2][x]!==T_TREE) t=T_TREE; } } else if(c==='2') t=T_ROCK; g[y][x]=t; } }); }
   }
   beachify(g,W,H);                                                         // 水岸自動鋪沙灘
   /* 6d) 淺水漸層：離岸越近越淺(顏色偏青綠)，離岸越遠越深；只存資料，由地面繪製與交界重畫時上色 */
@@ -4090,7 +4090,7 @@ function treeKindAt(tx,ty){                                          // 這一�
 }
 function isLandmarkAt(id,tx,ty){ if(!WORLD||!WORLD.landmarks) return false; for(let k=0;k<WORLD.landmarks.length;k++){ const m=WORLD.landmarks[k]; if(m.id===id&&m.x===tx&&m.y===ty) return true; } return false; }
 function drawTreeIso(cx,cy){
-  if(curMap&&curMap.world){ const kc=treeKindAt(_objTX,_objTY), sp=TREE_SP[kc>>2]; if(v2Draw('tree_'+sp+'0',cx,cy+4,0.8,(kc&1)===1&&tileRand(_objTX,_objTY,94)<0.5)) return; if(natDraw('tree_'+sp+(kc&3),cx,cy+4)) return; }   // 桃花島：多樹種美術
+  if(curMap&&curMap.world){ const kc=treeKindAt(_objTX,_objTY), sp=TREE_SP[kc>>2]; if(v2Draw('tree_'+sp+'0',cx,cy+4,1.45,(kc&1)===1&&tileRand(_objTX,_objTY,94)<0.5)) return; if(natDraw('tree_'+sp+(kc&3),cx,cy+4)) return; }   // 桃花島：多樹種美術
   shadow(cx,cy,16,7);
   ctx.fillStyle='#7a4a22'; sp(cx-3,cy-18,6,20);           // 樹幹
   ctx.fillStyle='#245e22'; ctx.beginPath(); ctx.arc(cx,cy-30,15,0,7); ctx.fill();
@@ -11456,7 +11456,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v83.2-0';
+const GAME_VER='v83.3-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
