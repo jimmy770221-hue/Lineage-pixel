@@ -2872,8 +2872,8 @@ function buildVillage(){ const W=56,H=50,g=NG(W,H),ex={},houses=[];
    （village / cross_n / port_n …），所以怪物出沒設定、安全區判斷、擊殺計數等都不用改。
    ===================================================================== */
 /* ★ 桃花島：各區域的顯示名稱集中在這裡，要改名只改這一張表(也會同步傳送選單、出生地選單、地圖標題) */
-const MAP_NAME={village:'桃源村', cross_n:'迎春嶺', port_n:'北海渡口', north_island:'落英谷', cross_w:'翠竹徑', scarecrow:'桃林修練場',
-  cross_e:'東市口', port_e:'桃花渡船頭', cross_s:'梅香坡', hunt_w:'青竹林', hunt_s:'碧潮灘', hunt_e:'亂石崗'};
+const MAP_NAME={village:'桃源村', cross_n:'渡溪坡', port_n:'', north_island:'雲隱嶺', cross_w:'落英谷', scarecrow:'',
+  cross_e:'青陵原', port_e:'', cross_s:'梅香坡', hunt_w:'翠竹徑', hunt_s:'落霞山', hunt_e:'東籬坡'};
 const ISLAND_NAME='桃花島';
 /* 地貌欄位(座標都是相對區域中心的格數)：mount=[[x,y,半徑]]山脈 / farm=[[x,y,寬,高]]田地 / market=[x,y]小市集 / bloom=桃花密度 */
 const WORLD_DEF=[
@@ -3183,7 +3183,7 @@ function buildWorld(){
           const t=g[y][x]; if(t===T_WATER||t===T_ROCK||t===T_SAND) continue; g[y][x]=T_PATH; } } } };
     _road([[172,128],[176,150],[175,172],[175,188],[168,191],[_G.n.x,_G.n.y-1]],2.4);                      // 主幹道：北邊山腳→過橋→村口牌樓
     _road([[165,243],[168,258],[178,270]],2.4);                                                          // 村子南側出口往南
-    _road([[191,218],[205,212],[235,222]],2.2); _road([[134,219],[128,220]],2.2);                        // 東側、西側出口(沒有城門)
+    _road([[191,218],[205,212],[235,222]],2.2); _road([[134,219],[128,221],[122,227],[116,235],[110,243]],2.2);                        // 東側、西側出口(沒有城門)
     _road([[175,150],[145,140],[125,150]],2.2);                                                           // 北岸往西北
     for(let y=175;y<=185;y++)for(let x=174;x<=176;x++){ if(g[y][x]===T_WATER||g[y][x]===T_SAND||g[y][x]===T_GRASS||g[y][x]===T_TREE) g[y][x]=T_PATH; }   // 橋面：橫過河的3格寬可走路面
     BRIDGES=[{x:175,y:180}];
@@ -3223,11 +3223,19 @@ function buildWorld(){
       const NEWR={ village:['桃源村',null,null,30], cross_n:['渡溪坡',172,160,24], north_island:['雲隱嶺',190,95,40], cross_w:['落英谷',130,150,26], cross_e:['青陵原',225,150,30],
         hunt_w:['翠竹徑',122,226,18], hunt_e:['東籬坡',228,228,28], cross_s:['梅香坡',170,262,24], hunt_s:['落霞山',182,292,28] };
       regions.forEach(function(R){ const d=NEWR[R.id]; if(!d){ R.cx=-9999; R.cy=-9999; R.r=1; R.name=''; MAP_NAME[R.id]=''; return; }
-        R.name=d[0]; MAP_NAME[R.id]=d[0]; if(d[1]!==null){ R.cx=d[1]; R.cy=d[2]; } R.r=d[3]; });
+        R.name=d[0]; MAP_NAME[R.id]=d[0]; if(d[1]!==null){ R.cx=d[1]; R.cy=d[2]; } else if(R.id==='village'){ R.cx=WORLD_V.vx0+28; R.cy=WORLD_V.vy0+26; } R.r=d[3]; });
       const _vcx=WORLD_V.vx0+28, _vcy=WORLD_V.vy0+25.5;                       // 村子範圍＝竹圍牆圈起來的圓角區域
       for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const i=y*W+x; inside[i]=(Math.pow(Math.abs((x-_vcx)/26),4)+Math.pow(Math.abs((y-_vcy)/22.5),4)<=1)?1:0; }
       for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const i=y*W+x; if(inside[i]){ rid[i]=V.idx; continue; }
         let best=1e9, bi=0; for(let k=0;k<regions.length;k++){ const R=regions[k]; if(R.id==='village') continue; const dd=Math.hypot(x-R.cx,y-R.cy)/R.r; if(dd<best){ best=dd; bi=k; } } rid[i]=bi; }
+      /* 怪物出生點：從村子裡一個走得到的格子出發，能走到、且在村外的格子才算(怪物不會被關在水或樹圍成的死角) */
+      { const _rc=new Uint8Array(W*H), _q=[]; let _sx=Math.floor(_vcx), _sy=Math.floor(_vcy), _f=false;
+        for(let rr=0;rr<14&&!_f;rr++)for(let dy=-rr;dy<=rr&&!_f;dy++)for(let dx=-rr;dx<=rr&&!_f;dx++){ const xx=_sx+dx, yy=_sy+dy; if(xx>0&&yy>0&&xx<W-1&&yy<H-1&&!T_SOLID.has(g[yy][xx])){ _sx=xx; _sy=yy; _f=true; } }
+        _rc[_sy*W+_sx]=1; _q.push(_sx,_sy);
+        for(let qi=0;qi<_q.length;qi+=2){ const x=_q[qi], y=_q[qi+1];
+          for(let d=0;d<4;d++){ const nx=x+(d===0?1:d===1?-1:0), ny=y+(d===2?1:d===3?-1:0); if(nx<1||ny<1||nx>=W-1||ny>=H-1) continue; const ni=ny*W+nx;
+            if(_rc[ni]||T_SOLID.has(g[ny][nx])) continue; _rc[ni]=1; _q.push(nx,ny); } }
+        for(let y=2;y<H-2;y++)for(let x=2;x<W-2;x++){ const i=y*W+x; if(_rc[i]&&!inside[i]) WORLD.spawnTiles[rid[i]].push(i); } }
     }
   }
   return {name:WORLD_BLANK_SLATE?'':V.name,id:'world',world:true,wild:false,grid:g,houses:houses,exits:{},px:V.cx*TS,py:V.cy*TS,W:W,H:H};
@@ -5011,7 +5019,7 @@ const WORLD_MOBS_PER_REGION=24;
 function spawnWorldMobs(){
   mobs=[];
   WORLD.regions.forEach(function(R){
-    if(!R.wild) return;
+    if(!R.wild || R.cx<-1000) return;   // 沒用到的地區(已移到海外)不放怪
     if(R.id==='scarecrow'){ const _sm=MOBS['稻草人']; const g0x=R.cx-10, g0y=R.cy-10;      // 訓練場：只有稻草人(6×6=36隻)，固定佈局
       for(let r=0;r<6;r++)for(let c=0;c<6;c++){ const gx=g0x+c*4, gy=g0y+r*4;
         if(MAP[gy]&&MAP[gy][gx]!=null&&T_SOLID.has(MAP[gy][gx])) MAP[gy][gx]=T_GRASS;
@@ -8785,7 +8793,7 @@ function toggleWin(id){ const el=document.getElementById(id); el.classList.toggl
   if(id==='mapw'&&el.classList.contains('on')) drawMiniMap();
   if(id==='inv'&&!el.classList.contains('on')) invMove=null;
   if(el.classList.contains('on')) navBuildPanel(id); else navClear(); }
-const TELE_REGIONS=[];   // 傳送卷軸地點：全部清空，等新地區定義好再逐一加入
+const TELE_REGIONS=[['桃花島',['桃源村','渡溪坡','落英谷','青陵原','梅香坡','翠竹徑','東籬坡','落霞山','雲隱嶺']]];   // 傳送卷軸地點：桃源村＋8個新地區(由近到遠)
 let teleCollapsed={};   // 地區收摺狀態（收摺後只顯示地區名）
 function openTeleport(){ const w=document.getElementById('teleportw'), list=document.getElementById('teleList'); if(!list)return;
   list.innerHTML='';
@@ -11489,7 +11497,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v84.7-0';
+const GAME_VER='v84.8-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
