@@ -3392,11 +3392,27 @@ function loadMap(id, entrySide, explicitSpawn){
   else if(entrySide==='s'&&ex.s){ px=ex.s.col*TS; py=(MAPH-3)*TS; }
   else if(entrySide==='w'&&ex.w){ px=2*TS; py=ex.w.row*TS; }
   else if(entrySide==='e'&&ex.e){ px=(MAPW-3)*TS; py=ex.e.row*TS; }
-  // 保險：不論是走地圖出口、走樓梯、或用傳送卷軸過來，只要落點卡在牆裡就挪到最近的可站立格
-  { const gx=Math.floor((px+16)/TS), gy=Math.floor((py+28)/TS);
-    if(gy>=0&&gy<MAPH&&gx>=0&&gx<MAPW&&T_SOLID.has(MAP[gy][gx])){
-      const w=findNearestWalkable(MAP,gx,gy);
-      px=w.x*TS; py=w.y*TS;
+  // 保險：不論是走地圖出口、走樓梯、或用傳送卷軸過來，落點要同時滿足：①人物的四個碰撞點都不在牆裡(跟走路用的判定一樣) ②不是被牆圍起來的小死角(要能走到一大片連通的地方)，否則就挪到最近的合格格子
+  { const _fits=function(x,y){ return !solidAt(x+4,y+player.h-2)&&!solidAt(x+player.w-4,y+player.h-2)&&!solidAt(x+4,y+8)&&!solidAt(x+player.w-4,y+8); };
+    const _open=function(gx,gy){            // 從這格出發能走到至少150格 = 不是封閉小死角
+      if(gx<0||gy<0||gx>=MAPW||gy>=MAPH||T_SOLID.has(MAP[gy][gx])) return false;
+      const seen=new Set([gy*MAPW+gx]), q=[[gx,gy]]; let n=0;
+      while(q.length&&n<150){ const c=q.pop(); n++;
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){ const nx=c[0]+d[0], ny=c[1]+d[1];
+          if(nx<0||ny<0||nx>=MAPW||ny>=MAPH) return; const k=ny*MAPW+nx;
+          if(seen.has(k)||T_SOLID.has(MAP[ny][nx])) return; seen.add(k); q.push([nx,ny]); }); }
+      return n>=150; };
+    const gx0=Math.floor((px+16)/TS), gy0=Math.floor((py+28)/TS);
+    if(!(_fits(px,py)&&_open(gx0,gy0))){
+      let done=false;
+      for(let r=0;r<30&&!done;r++){
+        for(let dy=-r;dy<=r&&!done;dy++)for(let dx=-r;dx<=r&&!done;dx++){
+          if(Math.max(Math.abs(dx),Math.abs(dy))!==r) continue;
+          const cx=gx0+dx, cy=gy0+dy;
+          if(cx<1||cy<1||cx>=MAPW-1||cy>=MAPH-1) continue;
+          if(_fits(cx*TS,cy*TS)&&_open(cx,cy)){ px=cx*TS; py=cy*TS; done=true; }
+        }
+      }
     } }
   player.x=px; player.y=py; moveTarget=null; attackTarget=null;
   if(S) S.mapId=curMapId;
@@ -11199,7 +11215,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.36-21';
+const GAME_VER='v80.36-22';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
