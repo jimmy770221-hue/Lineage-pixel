@@ -3880,7 +3880,7 @@ function poly(pts,fill,stroke){ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();} }
 /* 中式木屋美術(assets/objects/houses)：每種都有固定的地基格數(w x d)，錨點＝圖內「最靠近鏡頭的前角」落地點；樣式=農舍/民宅/商鋪/鐵匠/藥鋪/客棧/長老屋/倉房/仙觀/涼亭 */
 /* v2 美術(assets/v2/obj)：PixelLab 重新製作的桃花島素材；錨點＝透明邊界裁切後的「底部中央」，用 v2Draw(key,落地x,落地y,縮放,是否水平翻轉) 貼圖 */
-const V2_META={"big_peach":{"w":192,"h":192,"bx0":10,"by0":10,"bx1":182,"by1":182},"bridge":{"w":192,"h":128,"bx0":8,"by0":23,"bx1":190,"by1":117},"bush0":{"w":64,"h":64,"bx0":6,"by0":7,"bx1":58,"by1":55},"cabin_shingle":{"w":192,"h":192,"bx0":10,"by0":9,"bx1":182,"by1":168},"cabin_thatch":{"w":192,"h":192,"bx0":7,"by0":21,"bx1":185,"by1":175},"crops":{"w":128,"h":96,"bx0":30,"by0":25,"bx1":100,"by1":72},"dock":{"w":192,"h":192,"bx0":28,"by0":28,"bx1":170,"by1":160},"elder":{"w":192,"h":192,"bx0":7,"by0":32,"bx1":185,"by1":157},"fence_picket":{"w":64,"h":64,"bx0":11,"by0":5,"bx1":52,"by1":59},"fence_rail":{"w":64,"h":64,"bx0":9,"by0":4,"bx1":56,"by1":60},"gate":{"w":192,"h":192,"bx0":10,"by0":22,"bx1":181,"by1":169},"gate_iso":{"w":192,"h":192,"bx0":16,"by0":4,"bx1":176,"by1":188},"granary":{"w":160,"h":192,"bx0":5,"by0":16,"bx1":153,"by1":166},"inn":{"w":256,"h":224,"bx0":29,"by0":6,"bx1":227,"by1":209},"medic":{"w":192,"h":192,"bx0":22,"by0":12,"bx1":171,"by1":162},"pavilion":{"w":160,"h":192,"bx0":9,"by0":11,"bx1":148,"by1":181},"rock0":{"w":192,"h":192,"bx0":26,"by0":14,"bx1":165,"by1":187},"scarecrow":{"w":96,"h":128,"bx0":2,"by0":5,"bx1":94,"by1":128},"shop":{"w":192,"h":192,"bx0":6,"by0":9,"bx1":186,"by1":181},"smith":{"w":192,"h":192,"bx0":8,"by0":12,"bx1":187,"by1":181},"temple":{"w":192,"h":192,"bx0":30,"by0":24,"bx1":164,"by1":160},"tree_bamboo0":{"w":128,"h":160,"bx0":20,"by0":12,"bx1":108,"by1":149},"tree_broad0":{"w":128,"h":160,"bx0":10,"by0":8,"bx1":120,"by1":150},"tree_peach0":{"w":128,"h":160,"bx0":14,"by0":25,"bx1":114,"by1":135},"tree_pine0":{"w":128,"h":160,"bx0":22,"by0":6,"bx1":106,"by1":154},"tree_willow0":{"w":128,"h":160,"bx0":13,"by0":7,"bx1":115,"by1":153},"wall_stone":{"w":64,"h":64,"bx0":5,"by0":5,"bx1":58,"by1":58},"well":{"w":96,"h":128,"bx0":13,"by0":7,"bx1":83,"by1":118}};
+const V2_META={"big_peach":{"w":192,"h":192,"bx0":10,"by0":10,"bx1":182,"by1":182},"bridge":{"w":192,"h":128,"bx0":8,"by0":23,"bx1":190,"by1":117},"bush0":{"w":64,"h":64,"bx0":6,"by0":7,"bx1":58,"by1":55},"cabin_shingle":{"w":192,"h":192,"bx0":10,"by0":9,"bx1":182,"by1":168},"cabin_thatch":{"w":192,"h":192,"bx0":7,"by0":21,"bx1":185,"by1":175},"crops":{"w":128,"h":96,"bx0":30,"by0":25,"bx1":100,"by1":72},"dock":{"w":192,"h":192,"bx0":28,"by0":28,"bx1":170,"by1":160},"elder":{"w":192,"h":192,"bx0":7,"by0":32,"bx1":185,"by1":157},"fence_picket":{"w":64,"h":64,"bx0":11,"by0":5,"bx1":52,"by1":59},"fence_rail":{"w":64,"h":64,"bx0":9,"by0":4,"bx1":56,"by1":60},"gate":{"w":192,"h":192,"bx0":10,"by0":22,"bx1":181,"by1":169},"gate_iso":{"w":192,"h":192,"bx0":16,"by0":4,"bx1":176,"by1":188},"granary":{"w":160,"h":192,"bx0":5,"by0":16,"bx1":153,"by1":166},"inn":{"w":256,"h":224,"bx0":29,"by0":6,"bx1":227,"by1":209},"medic":{"w":192,"h":192,"bx0":22,"by0":12,"bx1":171,"by1":162},"pavilion":{"w":160,"h":192,"bx0":9,"by0":11,"bx1":148,"by1":181},"rock0":{"w":192,"h":192,"bx0":26,"by0":14,"bx1":165,"by1":187},"scarecrow":{"w":96,"h":128,"bx0":2,"by0":5,"bx1":94,"by1":128},"shop":{"w":192,"h":192,"bx0":6,"by0":9,"bx1":186,"by1":181},"smith":{"w":192,"h":192,"bx0":8,"by0":12,"bx1":187,"by1":181},"temple":{"w":192,"h":192,"bx0":30,"by0":24,"bx1":164,"by1":160},"tree_bamboo0":{"w":128,"h":160,"bx0":20,"by0":12,"bx1":108,"by1":149},"tree_broad0":{"w":128,"h":160,"bx0":10,"by0":8,"bx1":120,"by1":150},"tree_peach0":{"w":128,"h":160,"bx0":14,"by0":25,"bx1":114,"by1":135},"tree_pine0":{"w":128,"h":160,"bx0":22,"by0":6,"bx1":106,"by1":154},"tree_willow0":{"w":128,"h":160,"bx0":13,"by0":7,"bx1":115,"by1":153},"wall_stone":{"w":64,"h":64,"bx0":5,"by0":5,"bx1":58,"by1":58},"well":{"w":96,"h":128,"bx0":13,"by0":7,"bx1":83,"by1":118},"mt_peak":{"w":192,"h":192,"bx0":13,"by0":6,"bx1":185,"by1":181},"mt_ridge":{"w":192,"h":192,"bx0":5,"by0":3,"bx1":186,"by1":181},"mt_hill":{"w":128,"h":128,"bx0":8,"by0":16,"bx1":119,"by1":105}};
 const V2_IMGS={}; Object.keys(V2_META).forEach(function(k){ const im=new Image(); im.src="assets/v2/obj/"+k+".png"; V2_IMGS[k]=im; });
 function v2Draw(key,x,y,sc,flip){ const im=V2_IMGS[key], m=V2_META[key]; if(!im||!im.complete||!im.naturalWidth) return false; sc=sc||1;
   const bw=(m.bx1-m.bx0)*sc, bh=(m.by1-m.by0)*sc, dx=x-bw/2, dy=y-bh;
@@ -3957,9 +3957,18 @@ function drawHouse(h){
 
 /* 立體物件：牆、屋頂、樹、柵欄、水井、招牌 */
 let _objTX=0,_objTY=0;
+let _mtCache=null, _mtRef=null;
+function mtAnchor(tx,ty){                                          // 山岩區每3x3格選一格當山峰落點(該區內隨機值最小的山岩格)
+  if(_mtRef!==MAP){ _mtRef=MAP; _mtCache=new Map(); }
+  const bx=Math.floor(tx/3), by=Math.floor(ty/3), key=bx*100003+by; let v=_mtCache.get(key);
+  if(v===undefined){ let best=1e9, bi=-1; for(let y=by*3;y<by*3+3;y++)for(let x=bx*3;x<bx*3+3;x++){ if(y<0||x<0||y>=MAPH||x>=MAPW||MAP[y][x]!==T_ROCK) continue; const r=tileRand(x,y,91); if(r<best){ best=r; bi=y*MAPW+x; } } v=bi; _mtCache.set(key,v); }
+  return v===ty*MAPW+tx;
+}
 function drawIsoObject(t,cx,cy,treeScale,fenceNb){
-  if(t===T_ROCK && curMap && curMap.world && V2_IMGS.rock0 && V2_IMGS.rock0.complete){   // 全新島：山只用 PixelLab 岩山素材(每格一座小岩丘，彼此疊起來成山)
-    const rr=tileRand(_objTX,_objTY,77); v2Draw('rock0',cx+(rr-0.5)*14,cy+10,0.78+0.3*rr,rr<0.5); return; }
+  if(t===T_ROCK && curMap && curMap.world){                        // 世界地圖的山：只用 PixelLab 整座山峰素材，每3x3格的山岩區放一座，彼此重疊連成山脈
+    if(!mtAnchor(_objTX,_objTY)) return;
+    const rr=tileRand(_objTX,_objTY,93), key=rr<0.55?'mt_ridge':rr<0.88?'mt_peak':'mt_hill', sc=key==='mt_hill'?1.1:(1.15+0.35*tileRand(_objTX,_objTY,94));
+    v2Draw(key,cx,cy+36*sc,sc,tileRand(_objTX,_objTY,95)<0.5); return; }
   if(t===T_ROCK){                                           // 山岩：每格高度依雜訊起伏(22~62)，連成高低不一的山脈；高處偏淺灰，低處偏苔綠
     const nz=tbNoise(_objTX*0.28,_objTY*0.28,71), h=Math.round(20+46*nz+8*tbHash(_objTX,_objTY,72));
     const hi=h>46;
@@ -11447,7 +11456,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v83.1-0';
+const GAME_VER='v83.2-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
