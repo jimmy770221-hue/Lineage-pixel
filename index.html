@@ -2521,7 +2521,7 @@ const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 const VX0=28,VX1=52,VY0=24,VY1=48;
 const GATE_NX=[39,40], GATE_SX=[39,40], GATE_WY=[35,36], GATE_EY=[35,36];
 function inVillage(px,py){ if(!curMap) return true; if(curMap.world && px!=null){ const R=worldRegionAt(Math.floor(px/TS),Math.floor(py/TS)); return R?!R.wild:true; } return !curMap.wild; }
-const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20,T_STAIRUP=22,T_SAND=23,T_ROCK=24;   // T_ROCK：山岩(不可走，高低不一的山脈，桃花島用)；   // T_STAIRUP：立體的「往上/入口」石階結構(用於冒險洞穴入口、2樓落點)，T_STAIRS則是平面的「往下地窖」樣式；T_SAND：沙灘(可走)，由beachify()在陸地緊鄰海水處自動鋪設
+const T_GRASS=0,T_DIRT=1,T_TREE=2,T_ROOF=3,T_WALL=4,T_FENCE=5,T_WATER=6,T_FLOWER=7,T_PATH=8,T_DOORMAT=9,T_WELL=10,T_SIGN=11,T_TOWNWALL=12,T_GATE=13,T_BIGTREE=14,T_HOUSE=15,T_MOTHERTREE=16,T_STONEWALL=17,T_MAGICCIRCLE=18,T_ALTAR=19,T_STAIRS=20,T_STAIRUP=22,T_SAND=23,T_ROCK=24,T_BRIDGE=25;   // T_BRIDGE：橋下的河面格(畫面當水，但可以走)；   // T_ROCK：山岩(不可走，高低不一的山脈，桃花島用)；   // T_STAIRUP：立體的「往上/入口」石階結構(用於冒險洞穴入口、2樓落點)，T_STAIRS則是平面的「往下地窖」樣式；T_SAND：沙灘(可走)，由beachify()在陸地緊鄰海水處自動鋪設
 const T_BOSSPORTAL=21;              // 惡魔召喚魔法陣（進入王座之間）：一律以 2x2 共4格為一組
 const T_SOLID=new Set([T_TREE,T_ROOF,T_WALL,T_FENCE,T_WATER,T_WELL,T_SIGN,T_TOWNWALL,T_BIGTREE,T_HOUSE,T_MOTHERTREE,T_STONEWALL,T_ROCK]);   // T_STAIRUP改為可走(不在此清單)：它本身就是真正的樓梯出入口，玩家要能踩上去
 
@@ -3102,7 +3102,7 @@ function buildWorld(){
     _road([[160,249],[166,258],[178,270]],2.4);                                                          // 村子南側出口往南
     _road([[201,218],[210,214],[235,222]],2.2); _road([[134,219],[128,221],[122,227],[116,235],[110,243]],2.2);                        // 東側、西側出口(沒有城門)
     _road([[175,150],[145,140],[125,150]],2.2);                                                           // 北岸往西北
-    for(let y=175;y<=185;y++)for(let x=169;x<=171;x++){ if(g[y][x]===T_WATER||g[y][x]===T_SAND||g[y][x]===T_GRASS||g[y][x]===T_TREE) g[y][x]=T_PATH; }   // 橋面：橫過河的3格寬可走路面
+    var _brW=[]; for(let y=175;y<=185;y++)for(let x=169;x<=171;x++){ if(g[y][x]===T_WATER) _brW.push([x,y]); else if(g[y][x]===T_SAND||g[y][x]===T_GRASS||g[y][x]===T_TREE) g[y][x]=T_PATH; }   // 橋面：橫過河的3格寬可走路面
     BRIDGES=[{x:170,y:180}];
     { const _TM={'.':T_GRASS,'d':T_DIRT,'p':T_PATH,'~':T_WATER,'T':T_TREE,'s':T_SAND,'H':T_HOUSE,'F':T_FENCE,'W':T_WELL,'f':T_FLOWER};   // 全新小村莊：照草圖整片蓋上去
       houses.length=0;
@@ -3118,6 +3118,7 @@ function buildWorld(){
   for(let qi=0;qi<dq.length;qi+=2){ const x=dq[qi], y=dq[qi+1], dv=dist[y*W+x]; if(dv>=6) continue;
     for(let d=0;d<4;d++){ const nx=x+(d===0?1:d===1?-1:0), ny=y+(d===2?1:d===3?-1:0); if(nx<0||ny<0||nx>=W||ny>=H) continue; const ni=ny*W+nx; if(dist[ni]!==255) continue; dist[ni]=dv+1; dq.push(nx,ny); } }
   for(let i=0;i<W*H;i++){ const dv=dist[i]; shallow[i]=(g[(i/W)|0][i%W]===T_WATER&&dv<255)?(dv<=1?4:dv<=2?3:dv<=3?2:dv<=5?1:0):0; }
+  if(typeof _brW!=='undefined') _brW.forEach(function(q){ g[q[1]][q[0]]=T_BRIDGE; });   // 橋下的河水留著(橋是跨在河上)，但這幾格可以走過橋
   if(!WORLD_BLANK_SLATE){
   /* 7) 冒險洞穴入口（原本在西方岔路南邊的出口）：改成一座看得見的階梯 */
   for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){ const x=caveX+dx, y=caveY+dy; if(Math.hypot(dx,dy)<=2.7 && g[y][x]!==T_WATER && g[y][x]!==T_HOUSE) g[y][x]=T_DIRT; }
@@ -3736,6 +3737,7 @@ function drawFlowerDecor(cx,cy,tx,ty){ if(tx!==undefined&&natDraw('dec_flowers'+
   const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
   sp(cx-8+i*7,cy-2+((i%2)*4),4,4); ctx.fillStyle='#ffe27a'; sp(cx-7+i*7,cy-1+((i%2)*4),2,2);} }
 function drawIsoFloor(t,cx,cy,tx,ty){
+  if(t===T_BRIDGE) t=T_WATER;   // 橋下的格子畫成河水
   if(t===T_PATH && ROAD_TEX.complete && ROAD_TEX.naturalWidth){             // 道路：貼上PixelLab生成的石板路材質，取代原本純色程序繪製
     ctx.imageSmoothingEnabled=false; ctx.drawImage(ROAD_TEX, roadVariant(tx,ty)*PITCHX,0,TEXW,TEXH, cx-HW, cy-HH, HW*2, HH*2);
     return;
@@ -6436,7 +6438,7 @@ openDialog=function(name,lines){ lines.forEach(l=>pushChat('💬 '+l,'sys')); };
 const TB_FLOOR=new Set([T_GRASS,T_DIRT,T_PATH,T_WATER,T_FLOWER,T_DOORMAT,T_MAGICCIRCLE,T_ALTAR,T_STAIRS,T_SAND]);
 const TB_DYN=new Set([T_MAGICCIRCLE,T_ALTAR,T_STAIRS]);          // 會動(脈動發光)的地磚：烘焙後每影格仍要即時重畫
 let _tbCache=null, _tbFailed=false;
-function tbFloorOf(t){ return t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_STAIRUP ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (TB_FLOOR.has(t)?t:T_GRASS); }
+function tbFloorOf(t){ return t===T_BRIDGE ? T_WATER : t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_STAIRUP ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (TB_FLOOR.has(t)?t:T_GRASS); }
 function tbClassOf(f){ return (f===T_GRASS||f===T_FLOWER)?0 : f===T_SAND?1 : (f===T_DIRT||f===T_DOORMAT)?2 : f===T_PATH?3 : f===T_WATER?4 : -1; }   // -1=特殊地磚(魔法陣/祭壇/地窖)，不參與柔化
 function tbHash(ix,iy,s){ let h=Math.imul(ix,374761393)^Math.imul(iy,668265263)^Math.imul(s,1274126177); h=Math.imul(h^(h>>>13),1274126177); h^=h>>>16; return (h>>>0)/4294967295; }
 function tbNoise(x,y,s){ const ix=Math.floor(x), iy=Math.floor(y), fx=x-ix, fy=y-iy, u=fx*fx*(3-2*fx), v=fy*fy*(3-2*fy);
@@ -6577,7 +6579,7 @@ function render(){
   for(let tx=_a;tx<=_b;tx++){
     const t=MAP[ty][tx]; const s=tileCenter(tx,ty);
     if(s.x<-HW-4||s.x>VW+HW+4||s.y<-HH-4||s.y>VH+HH+4) continue;
-    const under = t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_STAIRUP ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (FLOOR.has(t)?t:T_GRASS);   // 城門下鋪石板；薄石牆/立體石階下鋪泥土(地牢地板)；魔法陣下鋪該地圖原本的地面
+    const under = t===T_GATE ? T_PATH : t===T_STONEWALL ? T_DIRT : t===T_STAIRUP ? T_DIRT : t===T_BOSSPORTAL ? ((curMap&&curMap.dungeon)?T_DIRT:T_GRASS) : (t===T_BRIDGE?T_WATER:FLOOR.has(t)?t:T_GRASS);   // 城門下鋪石板；薄石牆/立體石階下鋪泥土(地牢地板)；魔法陣下鋪該地圖原本的地面
     drawIsoFloor(under, s.x, s.y, tx, ty);
   } } }
 
@@ -10883,7 +10885,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v87.0-0';
+const GAME_VER='v87.1-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
