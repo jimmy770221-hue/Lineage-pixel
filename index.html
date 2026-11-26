@@ -3784,6 +3784,8 @@ const ROAD_TEX=new Image(); ROAD_TEX.src="assets/tiles/road.png";
 function tileRand(tx,ty,salt){ const v=Math.sin((tx||0)*127.1+(ty||0)*311.7+salt*74.7)*43758.5453; return v-Math.floor(v); }   // 依格子座標算出的固定亂數(0~1)，同一格每次畫都一樣，不同格彼此不同，避免紋理規律成格線
 /* 地面材質圖集：8欄x4列，每格128x64、格距129x65；由左至右=8款變化，由上至下=草地/沙地/泥地/海水；road.png=4款青石板 */
 const GROUND_TEX=new Image(); GROUND_TEX.src="assets/tiles/ground.png";
+const PL_SEA=new Image(); PL_SEA.src="assets/v2/tiles/pl_sea.png"; const PL_SAND=new Image(); PL_SAND.src="assets/v2/tiles/pl_sand.png";   // PixelLab 等距地形組(各16張自動接合)：沙↔海、草↔沙；索引=上*8+右*4+左*2+下(該角為第一地形則為1)
+function wangOK(){ return PL_SEA.complete&&PL_SEA.naturalWidth&&PL_SAND.complete&&PL_SAND.naturalWidth; }
 function groundVariant(tx,ty,salt,avoidDark){                                    // 每類地面8款：0~2素面(3x3小塊共用主款)、3~7裝飾款(三葉草/花瓣/苔石/貝殼/裂紋等，約11%)
   const bx=Math.floor(tx/3), by=Math.floor(ty/3);
   const base=Math.floor(tileRand(bx,by,salt+40)*3)%3;
@@ -7013,16 +7015,33 @@ function tbPrepare(){
 function tbBakeChunk(T,ccx,ccy){
   const W=T.W, H=T.H, cls=T.cls, floors=T.floors, isB=T.isB;
   const tx0=ccx*TB_CHUNK, ty0=ccy*TB_CHUNK, tx1=Math.min(W,tx0+TB_CHUNK), ty1=Math.min(H,ty0+TB_CHUNK);
-  const xmin=(tx0-(ty1-1))*HW-HW-2, xmax=((tx1-1)-ty0)*HW+HW+2, ymin=(tx0+ty0)*HH-2, ymax=((tx1-1)+(ty1-1)+2)*HH+2;
+  const _wang=!!(curMap&&curMap.world&&wangOK());
+  let xmin=(tx0-(ty1-1))*HW-HW-2, xmax=((tx1-1)-ty0)*HW+HW+2, ymin=(tx0+ty0)*HH-2, ymax=((tx1-1)+(ty1-1)+2)*HH+2;
+  if(_wang){ xmin-=HW; xmax+=HW; ymax+=HH; }
   const bw=xmax-xmin, bh=ymax-ymin, offX=-xmin, offY=-ymin;
   const cvb=document.createElement('canvas'); cvb.width=bw; cvb.height=bh;
   const bx=cvb.getContext('2d'); bx.imageSmoothingEnabled=false;
   const mainCtx=ctx; ctx=bx;
   try{
+    if(_wang){                                                    // 世界地圖：對偶格接合(每個頂點取周圍4格的海/沙/草，從PixelLab接合圖組挑一張)
+      const lv=(x,y)=>{ if(x<0||y<0||x>=W||y>=H) return 0; const f=floors[y*W+x]; return f===T_WATER?0:(f===T_SAND?1:2); };
+      for(let j=ty0;j<=ty1;j++)for(let i=tx0;i<=tx1;i++){
+        const a=lv(i-1,j-1), r=lv(i,j-1), l=lv(i-1,j), b=lv(i,j), mn=Math.min(a,r,l,b);
+        const cx=(i-j)*HW+offX, cy=(i+j)*HH+offY;
+        if(mn===0 && Math.max(a,r,l,b)===0){ const _sl=shallowAt(Math.min(W-1,i),Math.min(H-1,j)); drawGroundTex(_sl>=2?3:_sl===1?4:5,cx,cy,i,j,14); continue; }
+        if(mn===2){ drawGroundTex(0,cx,cy,i,j,11,true); continue; }
+        if(mn===1&&Math.max(a,r,l,b)===1){ drawGroundTex(1,cx,cy,i,j,12); continue; }
+        let img,k;
+        if(mn===0){ img=PL_SEA; k=(a>=1?8:0)+(r>=1?4:0)+(l>=1?2:0)+(b>=1?1:0); }
+        else { img=PL_SAND; k=(a>=2?8:0)+(r>=2?4:0)+(l>=2?2:0)+(b>=2?1:0); }
+        bx.drawImage(img,k*64,0,64,32,cx-HW,cy-HH,64,32);
+      }
+      for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++){ const f=floors[ty*W+tx]; if(f!==T_WATER&&f!==T_SAND&&f!==T_GRASS&&f!==T_FLOWER) drawIsoFloor(f,(tx-ty)*HW+offX,(tx+ty+1)*HH+offY,tx,ty); }
+    } else
     for(let ty=ty0;ty<ty1;ty++)for(let tx=tx0;tx<tx1;tx++) drawIsoFloor(floors[ty*W+tx],(tx-ty)*HW+offX,(tx+ty+1)*HH+offY,tx,ty);
   } finally { ctx=mainCtx; }
   const gimg=_tbTex.g, rimg=_tbTex.r;
-  let any=false; for(let ty=ty0;ty<ty1&&!any;ty++)for(let tx=tx0;tx<tx1;tx++){ if(isB[ty*W+tx]){ any=true; break; } }
+  let any=false; for(let ty=ty0;ty<ty1&&!any&&!_wang;ty++)for(let tx=tx0;tx<tx1;tx++){ if(isB[ty*W+tx]){ any=true; break; } }
   if(any){
   const ID=bx.getImageData(0,0,bw,bh), D=ID.data;
   const BIAS=[0.030,0.010,0.015,0,0];                             // 草地稍微往外侵蝕泥地/沙地/道路邊緣；水沙之間對稱
@@ -7063,6 +7082,7 @@ let _tbFrame=0;
 function tbDraw(){
   if(_tbFailed || !curMap || curMap.dungeon) return false;
   if(!(GROUND_TEX.complete&&GROUND_TEX.naturalWidth&&ROAD_TEX.complete&&ROAD_TEX.naturalWidth)) return false;
+  if(curMap&&curMap.world&&!wangOK()) return false;
   _tbFrame++;
   const nowT=performance.now();
   if(!_tbT || _tbT.mapRef!==MAP || nowT>_tbCheckAt){                // 換圖立刻檢查；同一張圖(例如魔法陣出現)每0.8秒檢查一次有沒有被改動
@@ -11427,7 +11447,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v83.0-2';
+const GAME_VER='v83.1-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
