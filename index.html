@@ -2878,17 +2878,17 @@ const ISLAND_NAME='桃花島';
 /* 地貌欄位(座標都是相對區域中心的格數)：mount=[[x,y,半徑]]山脈 / farm=[[x,y,寬,高]]田地 / market=[x,y]小市集 / bloom=桃花密度 */
 const WORLD_DEF=[
   {id:'village',      name:MAP_NAME.village,      wild:false, cx:108,cy:96, r:33, lc:[27,24], tree:0.72, scat:0.012},
-  {id:'cross_n',      name:MAP_NAME.cross_n,      wild:true,  cx:108,cy:48, r:25, lc:[19,16], tree:0.68, scat:0.018, bloom:0.55, mount:[[-15,-10,8]]},
-  {id:'port_n',       name:MAP_NAME.port_n,       wild:true,  cx:108,cy:8,  r:25, lc:[20,17], tree:0.72, scat:0.012, dock:'n'},
-  {id:'north_island', name:MAP_NAME.north_island, wild:true,  cx:62, cy:52, r:25, lc:[20,17], tree:0.68, scat:0.018, ponds:[[-3,3,6.5]], bloom:0.40, mount:[[-11,-9,9]]},
-  {id:'cross_w',      name:MAP_NAME.cross_w,      wild:true,  cx:62, cy:96, r:25, lc:[19,16], tree:0.74, scat:0.018, farm:[[-14,-10,11,7]]},
-  {id:'scarecrow',    name:MAP_NAME.scarecrow,    wild:true,  cx:20, cy:96, r:24, lc:[20,17], tree:0.80, scat:0.006, bloom:0.45},
-  {id:'cross_e',      name:MAP_NAME.cross_e,      wild:true,  cx:156,cy:96, r:25, lc:[19,16], tree:0.68, scat:0.018, ponds:[[9,-8,4.5]], market:[-2,4], farm:[[-17,-13,9,6]]},
-  {id:'port_e',       name:MAP_NAME.port_e,       wild:true,  cx:198,cy:96, r:24, lc:[20,17], tree:0.72, scat:0.012, dock:'e'},
-  {id:'cross_s',      name:MAP_NAME.cross_s,      wild:true,  cx:108,cy:146,r:25, lc:[19,16], tree:0.68, scat:0.018, bloom:0.65, farm:[[6,5,11,7]]},
-  {id:'hunt_w',       name:MAP_NAME.hunt_w,       wild:true,  cx:64, cy:148,r:25, lc:[20,17], tree:0.58, scat:0.026, mount:[[-13,9,8]]},
-  {id:'hunt_s',       name:MAP_NAME.hunt_s,       wild:true,  cx:108,cy:192,r:25, lc:[20,17], tree:0.60, scat:0.026, ponds:[[-10,5,5]], bloom:0.30},
-  {id:'hunt_e',       name:MAP_NAME.hunt_e,       wild:true,  cx:154,cy:146,r:25, lc:[20,17], tree:0.62, scat:0.026, mount:[[9,-7,11],[-11,9,7]]},
+  {id:'cross_n',      name:MAP_NAME.cross_n,      wild:true,  cx:96,cy:46, r:25, lc:[19,16], tree:0.68, scat:0.018, bloom:0.55, mount:[[-15,-10,8]]},
+  {id:'port_n',       name:MAP_NAME.port_n,       wild:true,  cx:132,cy:10,  r:25, lc:[20,17], tree:0.72, scat:0.012, dock:'n'},
+  {id:'north_island', name:MAP_NAME.north_island, wild:true,  cx:48,cy:44, r:25, lc:[20,17], tree:0.68, scat:0.018, ponds:[[-3,3,6.5]], bloom:0.40, mount:[[-11,-9,9]]},
+  {id:'cross_w',      name:MAP_NAME.cross_w,      wild:true,  cx:56,cy:112, r:25, lc:[19,16], tree:0.74, scat:0.018, farm:[[-14,-10,11,7]]},
+  {id:'scarecrow',    name:MAP_NAME.scarecrow,    wild:true,  cx:12,cy:84, r:24, lc:[20,17], tree:0.80, scat:0.006, bloom:0.45},
+  {id:'cross_e',      name:MAP_NAME.cross_e,      wild:true,  cx:162,cy:84, r:25, lc:[19,16], tree:0.68, scat:0.018, ponds:[[9,-8,4.5]], market:[-2,4], farm:[[-17,-13,9,6]]},
+  {id:'port_e',       name:MAP_NAME.port_e,       wild:true,  cx:206,cy:112, r:24, lc:[20,17], tree:0.72, scat:0.012, dock:'e'},
+  {id:'cross_s',      name:MAP_NAME.cross_s,      wild:true,  cx:122,cy:148,r:25, lc:[19,16], tree:0.68, scat:0.018, bloom:0.65, farm:[[6,5,11,7]]},
+  {id:'hunt_w',       name:MAP_NAME.hunt_w,       wild:true,  cx:66,cy:168,r:25, lc:[20,17], tree:0.58, scat:0.026, mount:[[-13,9,8]]},
+  {id:'hunt_s',       name:MAP_NAME.hunt_s,       wild:true,  cx:92,cy:198,r:25, lc:[20,17], tree:0.60, scat:0.026, ponds:[[-10,5,5]], bloom:0.30},
+  {id:'hunt_e',       name:MAP_NAME.hunt_e,       wild:true,  cx:172,cy:164,r:25, lc:[20,17], tree:0.62, scat:0.026, mount:[[9,-7,11],[-11,9,7]]},
 ];
 const WORLD_LINKS=[['village','cross_n'],['village','cross_w'],['village','cross_s'],['village','cross_e'],
   ['cross_n','port_n'],['cross_n','north_island'],['cross_w','north_island'],['cross_w','scarecrow'],
@@ -2943,6 +2943,8 @@ function buildWorld(){
   MAP_WARPS['world']=[];
   const links=WORLD_LINKS.map(function(l){ return [byId[l[0]],byId[l[1]]]; });
   const segDist=function(x,y,A,B){ const vx=B.cx-A.cx, vy=B.cy-A.cy, t=Math.max(0,Math.min(1,((x-A.cx)*vx+(y-A.cy)*vy)/(vx*vx+vy*vy))); return Math.hypot(x-(A.cx+vx*t), y-(A.cy+vy*t)); };
+  const V0c=byId.village;
+  const COAST_T=[[0,98],[25,90],[45,124],[65,92],[90,104],[110,98],[130,66],[155,100],[180,106],[205,94],[235,106],[260,112],[285,94],[305,60],[330,98],[350,108]];
   /* 1) 領地(各區域不規則的勢力範圍)與陸地遮罩(不規則的海岸線) */
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const wx=x+7*(2*N(x*0.045,y*0.045,1)-1), wy=y+7*(2*N(x*0.045+50,y*0.045+50,2)-1);
@@ -2951,6 +2953,10 @@ function buildWorld(){
     rid[y*W+x]=bi;
     const coast=best+0.30*(2*N(x*0.05,y*0.05,3)-1)+0.10*(2*N(x*0.14,y*0.14,4)-1)+0.04*(2*N(x*0.31,y*0.31,6)-1);   // 海岸線：大的海灣/半島＋中等起伏＋細碎的小彎
     let isLand=coast<1.14;
+    { const dx=x-(V0c.cx), dy=y-(V0c.cy), dd=Math.hypot(dx,dy), an=((Math.atan2(dy,dx)*180/Math.PI)+360)%360;        // 島形：以村莊為中心的極座標海岸線表，造出東南大岬角、西南深海灣、東北小海灣
+      let k0=0; while(k0<COAST_T.length-1&&COAST_T[k0+1][0]<=an) k0++; const A=COAST_T[k0], B=COAST_T[(k0+1)%COAST_T.length], span=((B[0]-A[0]+360)%360)||360, f=((an-A[0]+360)%360)/span, fe=(1-Math.cos(f*Math.PI))/2;
+      const R0=A[1]*(1-fe)+B[1]*fe + 7*(2*N(x*0.06,y*0.06,81)-1) + 2.5*(2*N(x*0.17,y*0.17,82)-1);
+      isLand=(dd<R0); if(!isLand && best<0.62) isLand=true; }                                                      // 區域核心一定是陸地
     if(!isLand){ for(let k=0;k<links.length;k++){ if(segDist(x,y,links[k][0],links[k][1])<5.5+2*N(x*0.1,y*0.1,5)){ isLand=true; break; } } }
     land[y*W+x]=isLand?1:0;
   }
@@ -11397,7 +11403,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v81.0-3';
+const GAME_VER='v81.0-4';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
