@@ -3691,27 +3691,22 @@ function sp(x,y,w,h){ ctx.fillRect(x|0,y|0,w,h); }
 /* 道路材質貼圖：來自PixelLab生成的石板路，用菱形裁切套用在T_PATH地板磚上；其餘地形(草地/土地/水)維持原本程序繪製 */
 const ROAD_TEX=new Image(); ROAD_TEX.src="assets/tiles/road.png";
 function tileRand(tx,ty,salt){ const v=Math.sin((tx||0)*127.1+(ty||0)*311.7+salt*74.7)*43758.5453; return v-Math.floor(v); }   // 依格子座標算出的固定亂數(0~1)，同一格每次畫都一樣，不同格彼此不同，避免紋理規律成格線
-/* 地面材質圖集(PixelLab)：131x131，4x4共16格，每格32x32、格間1px透明縫；由左至右4欄=紋理變化度，由上至下4列=草地/沙地/泥地/海水 */
+/* 地面材質圖集：8欄x4列，每格128x64、格距129x65；由左至右=8款變化，由上至下=草地/沙地/泥地/海水；road.png=4款青石板 */
 const GROUND_TEX=new Image(); GROUND_TEX.src="assets/tiles/ground.png";
-function groundVariant(tx,ty,salt,avoidDark){                                    // 以3x3小塊為單位決定主紋理，塊內大多沿用同一款，形成自然色塊而非逐格獨立亂數的雜訊棋盤紋
-  if(avoidDark){                                                                 // 草地專用：完全不用第0欄的深色款，只在淺色系(1淺綠/2淺綠帶三葉草/3淺綠帶小花)裡挑
-    const r=tileRand(tx,ty,salt);
-    if(r<0.80) return 1;                                                        // 80%用素面淺綠打底
-    if(r<0.92) return 2;                                                        // 12%三葉草叢裝飾
-    return 3;                                                                   // 8%小花點綴
-  }
+function groundVariant(tx,ty,salt,avoidDark){                                    // 每類地面8款：0~2素面(3x3小塊共用主款)、3~7裝飾款(三葉草/花瓣/苔石/貝殼/裂紋等，約11%)
   const bx=Math.floor(tx/3), by=Math.floor(ty/3);
-  const base=tileRand(bx,by,salt+40)<0.5?0:1;                                    // 這一小塊(約3x3格)共用的主要紋理(基本款0或1)
+  const base=Math.floor(tileRand(bx,by,salt+40)*3)%3;
   const r=tileRand(tx,ty,salt);
-  if(r<0.74) return base;                                                        // 74%沿用區塊主紋理
-  if(r<0.88) return base===0?1:0;                                                // 14%切到另一款基本紋理，增加層次但不搶眼
-  if(r<0.95) return 2;                                                           // 5%裝飾款1(花草/貝殼/嫩芽/浪花，較稀疏)
-  return 3;                                                                      // 5%裝飾款2(更稀疏)
+  if(r<0.76) return base;
+  if(r<0.89) return (base+1+(tileRand(tx,ty,salt+3)<0.5?0:1))%3;
+  return 3+Math.floor(tileRand(tx,ty,salt+7)*5)%5;
 }
-function drawGroundTex(row,cx,cy,tx,ty,salt,avoidDark){                           // 從圖集裁切一格(32x32)貼到菱形地磚範圍(64x32)，外擴2px蓋掉相鄰磚反鋸齒接縫
-  const col=groundVariant(tx,ty,salt,avoidDark), sx=col*33, sy=row*33;
-  ctx.save(); diamondPath(cx,cy,2); ctx.clip();
-  ctx.drawImage(GROUND_TEX, sx,sy,32,32, cx-HW-2,cy-HH-1, HW*2+4,HH*2+2);
+const TEXW=128, TEXH=64, PITCHX=129, PITCHY=65;                                   // 地面圖集：每格128x64(2:1)，格距129x65
+function roadVariant(tx,ty){ return Math.floor(tileRand(tx,ty,15)*4)%4; }        // 青石板路4款(幾何相同可無縫相接)
+function drawGroundTex(row,cx,cy,tx,ty,salt,avoidDark){                           // 從圖集裁切一格(128x64)貼到菱形地磚範圍，外擴2px蓋掉相鄰磚反鋸齒接縫
+  const col=groundVariant(tx,ty,salt,avoidDark), sx=col*PITCHX, sy=row*PITCHY;
+  ctx.save(); diamondPath(cx,cy,2); ctx.clip(); ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(GROUND_TEX, sx,sy,TEXW,TEXH, cx-HW-2,cy-HH-1, HW*2+4,HH*2+2);
   ctx.restore();
 }
 function drawFlowerDecor(cx,cy){ const cols=['#e05a7a','#ffd23a','#e8e8f0']; for(let i=0;i<3;i++){ ctx.fillStyle=cols[i];
@@ -3719,7 +3714,7 @@ function drawFlowerDecor(cx,cy){ const cols=['#e05a7a','#ffd23a','#e8e8f0']; for
 function drawIsoFloor(t,cx,cy,tx,ty){
   if(t===T_PATH && ROAD_TEX.complete && ROAD_TEX.naturalWidth){             // 道路：貼上PixelLab生成的石板路材質，取代原本純色程序繪製
     ctx.save(); diamondPath(cx,cy,2); ctx.clip();                          // 外擴2px裁切+貼圖放大，讓相鄰道路磚重疊、蓋掉反鋸齒接縫
-    ctx.drawImage(ROAD_TEX, cx-HW-2, cy-HH-1, HW*2+4, HH*2+2);
+    ctx.imageSmoothingEnabled=true; ctx.drawImage(ROAD_TEX, roadVariant(tx,ty)*PITCHX,0,TEXW,TEXH, cx-HW-2, cy-HH-1, HW*2+4, HH*2+2);
     ctx.restore();
     return;
   }
@@ -6891,11 +6886,14 @@ function tbBakeChunk(T,ccx,ccy){
       let best=home, bv=-1; for(let c=0;c<5;c++){ const v=votes[c]+BIAS[c]*tot; if(v>bv){ bv=v; best=c; } }
       if(best===home && floors[ty*W+tx]===T_FLOWER) continue;       // 花朵地磚保留原本畫好的花；其餘交界格全部用乾淨紋理重寫，順便蓋掉舊磚邊的反鋸齒細線
       let r,g,b,a; const u=px-(cx-HW-2), v=py-(cy-HH-1);
-      if(best===3){ const sxp=Math.min(rimg.width-1,Math.floor((u+0.5)*rimg.width/(HW*2+4))), syp=Math.min(rimg.height-1,Math.floor((v+0.5)*rimg.height/(HH*2+2))), o=(syp*rimg.width+sxp)*4;
-        r=rimg.data[o]; g=rimg.data[o+1]; b=rimg.data[o+2]; a=rimg.data[o+3]; }
-      else { if(vc[best]<0) vc[best]=groundVariant(tx,ty,TB_SALT[best],best===0);
-        const sxp=vc[best]*33+Math.min(31,Math.floor((u+0.5)*32/(HW*2+4))), syp=TB_ROW[best]*33+Math.min(31,Math.floor((v+0.5)*32/(HH*2+2))), o=(syp*gimg.width+sxp)*4;
-        r=gimg.data[o]; g=gimg.data[o+1]; b=gimg.data[o+2]; a=gimg.data[o+3]; }
+      let ox0=0, oy0=0, bw0, bh0, img, tex;
+      if(best===3){ img=rimg; ox0=roadVariant(tx,ty)*PITCHX; oy0=0; }
+      else { if(vc[best]<0) vc[best]=groundVariant(tx,ty,TB_SALT[best],best===0); img=gimg; ox0=vc[best]*PITCHX; oy0=TB_ROW[best]*PITCHY; }
+      { let sr=0,sg=0,sb=0,sa=0; for(let k=0;k<4;k++){                       // 4點取樣平均(超取樣)，把128x64高解析圖縮到64x32仍保持細緻
+          const uu=u+0.25+(k&1)*0.5, vv=v+0.25+(k>>1)*0.5;
+          const xx=ox0+Math.min(TEXW-1,Math.floor(uu*TEXW/(HW*2+4))), yy=oy0+Math.min(TEXH-1,Math.floor(vv*TEXH/(HH*2+2))), o=(yy*img.width+xx)*4;
+          sr+=img.data[o]; sg+=img.data[o+1]; sb+=img.data[o+2]; sa+=img.data[o+3]; }
+        r=sr>>2; g=sg>>2; b=sb>>2; a=sa>>2; }
       if(a<128) continue;
       const po=(py*bw+px)*4; D[po]=r; D[po+1]=g; D[po+2]=b; D[po+3]=255;
     }
@@ -11272,7 +11270,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v80.37-2';
+const GAME_VER='v80.37-3';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
