@@ -4062,7 +4062,24 @@ function v2Line(key,sc,cx,cy,nb){                                          // v2
   if(ax||!ay){ if(!v2Draw(key,cx,cy+3,sc,true)) return false; }
   if(ay){ if(!v2Draw(key,cx,cy+3,sc,false)) return false; }
   return true; }
+/* 竹籬自動銜接：每個節點都有立柱，連線畫成一段段。連線由「較靠後」的格子負責畫：
+   ↘(+1,0)、↙(0,+1)、畫面正下(+1,+1)、畫面正右(+1,-1)，共8方向(含斜線)，立柱最後畫。*/
+const BF_META={ne:{w:32,h:50,ay:49.84},h:{w:64,h:38,ay:35.64},v:{w:8,h:64,ax:4,ay:37},post:{w:10,h:42,ax:5,ay:39}};
+const BF_IMGS={}; ['ne','h','v','post'].forEach(function(k){ const im=new Image(); im.src="assets/v2/obj/bfence_"+k+".png"; BF_IMGS[k]=im; });
+function bfPut(k,axx,ayy,x,y,fl){ const im=BF_IMGS[k]; if(!im.complete||!im.naturalWidth) return false;
+  if(fl){ ctx.save(); ctx.translate(Math.round(x),0); ctx.scale(-1,1); ctx.drawImage(im,-Math.round(axx),Math.round(y-ayy)); ctx.restore(); }
+  else ctx.drawImage(im,Math.round(x-axx),Math.round(y-ayy)); return true; }
+function drawFenceAuto(cx,cy,nb){
+  const M=BF_META; if(!BF_IMGS.post.complete||!BF_IMGS.post.naturalWidth) return false;
+  cy+=3;
+  if(nb.e) bfPut('ne',32,M.ne.ay-16,cx,cy,true);                         // ↘ 鏡像
+  if(nb.s) bfPut('ne',0,M.ne.ay,cx-32,cy+16,false);                      // ↙
+  if(nb.dse) bfPut('v',M.v.ax,M.v.ay,cx,cy,false);                      // 畫面正下
+  if(nb.dne) bfPut('h',0,M.h.ay,cx,cy,false);                           // 畫面正右
+  bfPut('post',M.post.ax,M.post.ay,cx,cy,false);
+  return true; }
 function drawFenceIso(cx,cy,nb){
+  if(drawFenceAuto(cx,cy,nb||{})) return;
   if(v2Line('fence_picket',0.8,cx,cy,nb)) return;                                         // 竹籬笆：粗竹立柱＋兩道竹橫桿＋一排尖頭竹片，竹節與麻繩綁帶
   nb=nb||{};
   const RAIL='#c4cf78', RAIL2='#9aab4a', PK='#b2c262', PK2='#8c9e44', POST='#a6b552', NODE='rgba(70,86,30,.55)', ROPE='#d9c58a';
@@ -6611,6 +6628,7 @@ function render(){
     const _fade=_wallOccludes(tx,ty);                          // 會擋到角色 → 用40%不透明度畫，看得到後面的人
     const _ts=(t===T_BIGTREE)?bigTreeScaleAt(tx,ty):1;              // 只有村莊正中央那棵大樹會放大
     const _fn=(t===T_FENCE||t===T_TOWNWALL)?{                       // 柵欄/城牆：查四方同類鄰居，決定連接方向
+      dse:(t===T_FENCE&&MAP[ty+1]&&MAP[ty+1][tx+1]===t), dne:(t===T_FENCE&&MAP[ty-1]&&MAP[ty-1][tx+1]===t),
       e:(MAP[ty]&&(MAP[ty][tx+1]===t||(t===T_TOWNWALL&&MAP[ty][tx+1]===T_GATE))), w:(MAP[ty]&&(MAP[ty][tx-1]===t||(t===T_TOWNWALL&&MAP[ty][tx-1]===T_GATE))),
       s:(MAP[ty+1]&&(MAP[ty+1][tx]===t||(t===T_TOWNWALL&&MAP[ty+1][tx]===T_GATE))), n:(MAP[ty-1]&&(MAP[ty-1][tx]===t||(t===T_TOWNWALL&&MAP[ty-1][tx]===T_GATE)))}:null;
     talls.push({d:tx+ty, f:()=>{ _objTX=tx; _objTY=ty; if(_fade){ ctx.save(); ctx.globalAlpha=0.4; drawIsoObject(t,s.x,s.y,_ts,_fn); ctx.restore(); } else drawIsoObject(t,s.x,s.y,_ts,_fn); }});
@@ -10851,7 +10869,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v84.9-0';
+const GAME_VER='v85.0-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
