@@ -6374,7 +6374,9 @@ function pickup(dp){ if(dp.kind==='gold'){ var _ga=Math.round(dp.amt*((typeof SE
   else { const id=dp.kind==='potion'?'紅色藥水':dp.kind; addItem(id,1); sysMsg('撿到 '+itemName(id)); }
   recalcStats(); refreshUI(); }
 function addItem(id,q){ const had=(S.inv[id]||0)>0; S.inv[id]=(S.inv[id]||0)+q; if(!had) placeInOrder(id); }
-function removeItem(id,q){ S.inv[id]=(S.inv[id]||0)-q; if(S.inv[id]<=0){ delete S.inv[id];
+const TEST_INFINITE=new Set(['紅色藥水','自我加速藥水','惡魔之血','勇敢藥水','精靈餅乾']);   // 測試用：這三種藥水用不完(使用、賣出都不會減少)；要恢復正常把這行改成 new Set([]) 即可
+function removeItem(id,q){ if(TEST_INFINITE.has(id)&&(S.inv[id]||0)>0) return;   // 測試用：無限藥水不扣數量
+  S.inv[id]=(S.inv[id]||0)-q; if(S.inv[id]<=0){ delete S.inv[id];
   if(S.invOrder){ const i=S.invOrder.indexOf(id); if(i>=0)S.invOrder.splice(i,1); }
   let un=false; for(const s in S.equip){ if(S.equip[s]===id){ S.equip[s]=null; un=true; } } if(un) recalcStats(); } }
 
@@ -9256,6 +9258,9 @@ function startGame(){ if(!cc.cls) return;
   const startWpn = cc.cls==='弓修' ? '弓' : '匕首';
   S.inv={'金幣':200,'新手裝備箱':1,'新手戒指箱':1,'新手武器箱':1,[startWpn]:1,'皮夾克':1,'蠟燭':2,'說話之島卷軸':1};
   if(cc.cls==='弓修') S.inv['箭']=30;               // 弓修附帶一些箭矢
+  S.inv['紅色藥水']=999; S.inv['自我加速藥水']=999;   // 測試用：新角色預設帶紅色藥水、一段加速藥水(自我加速藥水)，且用不完
+  { const _h2={'宗主':'惡魔之血','劍修':'勇敢藥水','弓修':'精靈餅乾'}[cc.cls]; if(_h2) S.inv[_h2]=999; }   // 二段加速藥水是各職業專用：宗主=惡魔之血、劍修=勇敢藥水、弓修=精靈餅乾(法修沒有二段加速藥水)
+  learnSpell('傳送術');                              // 測試用：新角色預設已學會瞬間移動(傳送術)
   equipItem(startWpn); equipItem('皮夾克'); recalcStats();
   S.mapId = 'village';  // 出生地：所有職業都從桃源村開始
   buildHotbar();
@@ -10891,7 +10896,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v87.3-0';
+const GAME_VER='v87.4-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
