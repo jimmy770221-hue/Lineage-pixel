@@ -2516,6 +2516,8 @@ function drawWeaponInHand(kind,cx,cy,dir,px){
 }
 
 /* ============ 世界（GBA 磚塊）============ */
+/* 底圖測試(網址加 ?imgmap=1 才啟用；?imgscale=5 調放大倍率)：把GPT做的桃花島整張圖鋪在地面上，人可以隨處走動，用來看圖夠不夠大、是否可用；預設關閉，不影響原本遊戲 */
+const IMGMAP=/[?&]imgmap=1/.test(location.search); const IMGSCALE=parseFloat((location.search.match(/[?&]imgscale=([0-9.]+)/)||[])[1])||5; const IMGMAP_IMG=new Image(); if(IMGMAP) IMGMAP_IMG.src='assets/ref/taohua_island.png';
 const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 // 村莊範圍（圍牆內）與四個村口
 const VX0=28,VX1=52,VY0=24,VY1=48;
@@ -3438,6 +3440,7 @@ function loadMap(id, entrySide, explicitSpawn){
   portalAnchors=[];                      // 換地圖：先清空，再由建圖流程中的placeBossCircle()重新登記
   if(typeof bubbles!=='undefined') bubbles=[];   // 換地圖：清空聊天氣泡，避免舊地圖(例如史萊姆競技場賭客閒聊)的氣泡殘留、延遲消失、甚至疊在新地圖錯的座標上
   curMap=b(); curMapId=id; MAP=curMap.grid; MAPW=curMap.W; MAPH=curMap.H; houses=curMap.houses;
+  if(IMGMAP&&curMap.world){ houses=curMap.houses=[]; for(let y=0;y<MAPH;y++)for(let x=0;x<MAPW;x++){ const t=MAP[y][x]; if(t===T_TREE||t===T_BIGTREE||t===T_HOUSE||t===T_FENCE||t===T_WELL||t===T_FLOWER||t===T_ROCK||t===T_SAND||t===T_DIRT||t===T_PATH) MAP[y][x]=T_GRASS; } }   // 底圖測試：地面清成單純草地
   }
   let px=curMap.px, py=curMap.py; const ex=curMap.exits;
   if(curMap.world){
@@ -3605,6 +3608,7 @@ function house(x,y){ houses.push({x,y,w:5,d:3,big:false}); stampHouse(x,y,5,3); 
 function smallHouse(x,y){ houses.push({x,y,w:3,d:2,big:false}); stampHouse(x,y,3,2); }    // 小屋
 function bigHouse(x,y){ houses.push({x,y,w:6,d:4,big:true}); stampHouse(x,y,6,4); }        // 大屋
 function solidAt(px,py){
+  if(IMGMAP&&curMap&&curMap.world) return false;   // 底圖測試：隨處可走
   const gx=Math.floor(px/TS), gy=Math.floor(py/TS);
   if(gx<0||gy<0||gx>=MAPW||gy>=MAPH) return true;
   return T_SOLID.has(MAP[gy][gx]);
@@ -6599,6 +6603,8 @@ function render(){
   }
 
 
+  if(IMGMAP&&curMap&&curMap.world&&IMGMAP_IMG.complete&&IMGMAP_IMG.naturalWidth){ const _s=tileCenter(curMap.px/TS,curMap.py/TS), _w=IMGMAP_IMG.naturalWidth*IMGSCALE, _h=IMGMAP_IMG.naturalHeight*IMGSCALE;   // 底圖：圖上的村莊(約寬50%、高85%處)對到遊戲的村莊中心
+    ctx.imageSmoothingEnabled=IMGSCALE<3; ctx.drawImage(IMGMAP_IMG,Math.round(_s.x-_w*0.50),Math.round(_s.y-_h*0.85),_w,_h); }
   // 2) 掉落物（貼地）
   drops.forEach(dp=>{ const s=groundScreen(dp.x+8,dp.y+10);
     if(dp.kind==='gold') drawSpr(COIN,s.x-9,s.y-12,COIN_PAL,3);
@@ -10885,7 +10891,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v87.2-0';
+const GAME_VER='v87.3-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
