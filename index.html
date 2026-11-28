@@ -2517,7 +2517,7 @@ function drawWeaponInHand(kind,cx,cy,dir,px){
 
 /* ============ 世界（GBA 磚塊）============ */
 /* 底圖測試(網址加 ?imgmap=1 才啟用；?imgscale=5 調放大倍率)：把GPT做的桃花島整張圖鋪在地面上，人可以隨處走動，用來看圖夠不夠大、是否可用；預設關閉，不影響原本遊戲 */
-const IMGMAP=/[?&]imgmap=1/.test(location.search); const IMGSCALE=parseFloat((location.search.match(/[?&]imgscale=([0-9.]+)/)||[])[1])||5; const IMGMAP_IMG=new Image(); if(IMGMAP) IMGMAP_IMG.src='assets/ref/taohua_island.png';
+const IMGMAP=/[?&]imgmap=1/.test(location.search); const IMGSCALE=parseFloat((location.search.match(/[?&]imgscale=([0-9.]+)/)||[])[1])||1.4; const IMGMAP_IMG=new Image(); if(IMGMAP) IMGMAP_IMG.src='assets/map/taohua_world.png';
 const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 // 村莊範圍（圍牆內）與四個村口
 const VX0=28,VX1=52,VY0=24,VY1=48;
@@ -6606,7 +6606,7 @@ function render(){
 
 
   if(IMGMAP&&curMap&&curMap.world&&IMGMAP_IMG.complete&&IMGMAP_IMG.naturalWidth){ const _s=tileCenter(curMap.px/TS,curMap.py/TS), _w=IMGMAP_IMG.naturalWidth*IMGSCALE, _h=IMGMAP_IMG.naturalHeight*IMGSCALE;   // 底圖：圖上的村莊(約寬50%、高85%處)對到遊戲的村莊中心
-    ctx.imageSmoothingEnabled=IMGSCALE<3; ctx.drawImage(IMGMAP_IMG,Math.round(_s.x-_w*0.50),Math.round(_s.y-_h*0.85),_w,_h); }
+    ctx.imageSmoothingEnabled=IMGSCALE<3; ctx.drawImage(IMGMAP_IMG,Math.round(_s.x-_w*0.45),Math.round(_s.y-_h*0.80),_w,_h); }
   // 2) 掉落物（貼地）
   drops.forEach(dp=>{ const s=groundScreen(dp.x+8,dp.y+10);
     if(dp.kind==='gold') drawSpr(COIN,s.x-9,s.y-12,COIN_PAL,3);
@@ -10896,7 +10896,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v87.4-0';
+const GAME_VER='v87.5-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
