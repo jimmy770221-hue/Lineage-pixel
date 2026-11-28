@@ -7138,14 +7138,15 @@ function animReady(map,art,gender){ let im=map[art+"_"+(gender||'male')]; if((!i
 /* 畫一格動畫：frame=欄、dir=列；回傳頭頂Y(給名字/血條用) */
 function drawAnimFrame(g,img,cx,fy,scale,dir,frame){ g.imageSmoothingEnabled=false;
   const n64=(img.naturalWidth===384&&img.naturalHeight===512);   // 64格新走路圖：6格x8方向，每格64
-  const C=n64?64:ANIM_C, FT=n64?60:ANIM_FOOT, CXX=n64?32:ANIM_CX, HD=n64?3:ANIM_HEAD, sc=scale*(n64?HI64_SCALE:HI_SCALE);
+  const n128=(img.naturalHeight===1024);   // GPT 128格角色圖：8方向列，每格128，腳底y=121、中心x=64
+  const C=n64?64:(n128?128:ANIM_C), FT=n64?60:(n128?121:ANIM_FOOT), CXX=n64?32:(n128?64:ANIM_CX), HD=n64?3:(n128?12:ANIM_HEAD), sc=scale*(n64?HI64_SCALE:HI_SCALE);
   g.drawImage(img,frame*C,dir*C,C,C,Math.round(cx-CXX*sc),Math.round(fy-FT*sc),C*sc,C*sc);
   return Math.round(fy-FT*sc+HD*sc); }
 /* 依狀態挑出走路/攻擊的畫面：st={moving,atkT0}；回傳頭頂Y，沒有對應動畫圖回傳null讓呼叫端畫原本的靜態圖 */
 function drawHiState(g,art,gender,cx,fy,scale,dir,st){ const now=Date.now();
   if(st.dieT0){ const im=animReady(DIE_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.min(3,Math.floor((now-st.dieT0)/DIE_MS))); }   // 死亡：播到第4格後停住
   if(st.atkT0){ const ms=st.atkMs||ATK_MS, k=Math.floor((now-st.atkT0)/ms); const im=animReady(ATK_IMG,art,gender);   // 攻擊優先於受傷，打怪被打也看得到揮劍
-    if(im&&k<9) return drawAnimFrame(g,im,cx,fy,scale,dir,k); }
+    if(im&&k<Math.round(im.naturalWidth*8/im.naturalHeight)) return drawAnimFrame(g,im,cx,fy,scale,dir,k); }
   if(st.castT0 && now-st.castT0<CAST_MS*8){ const im=animReady(CAST_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.castT0)/CAST_MS)); }
   if(st.hurtT0 && now-st.hurtT0<HURT_MS*2){ const im=animReady(HURT_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor((now-st.hurtT0)/HURT_MS)); }
   if(st.moving){ const im=animReady(WALK_IMG,art,gender); if(im) return drawAnimFrame(g,im,cx,fy,scale,dir,Math.floor(now/WALK_MS)%(im.naturalWidth===384?6:8)); }
@@ -7191,7 +7192,7 @@ const NPC_PORTRAIT_SCALE={"瑞奇":1.15,"高特":2.9};  // 依各圖實際像素
 const MOB_SCALE={"潘朵拉":1.5,"吉倫":1.5,"妖魔商人":1.5,goblinG:2.2,"人形殭屍":1.5,"石頭高崙":2.5,"克特":2,"侏儒":1.5,"長老":1.5,"夏洛柏":2.5,"黑騎士":1.5,"骷髏":1.5,"飄浮之眼":1,"史萊姆":1,"地靈":1.5,"狼":1,"狼人":1.5,"牧羊犬":1,"杜賓犬":1,"野豬":1,"那翰":1.5,"娜魯帕":1.5,"精靈":1.5,"精靈女皇":1.5,"安特":1.5,"潘":1.5,"芮克妬":1.5,"布拉伯":1.5,"艾爾":1.5,"琳達":1.5,"艾利溫":1.5,"里迪":1.5,"骷髏弓箭手":1.5,"骷髏斧手":1.5,"骷髏槍兵":1.5,"史巴托":1.5,"巴風特":2,"食人妖精":0.85};
 const SPR_F=64, SPR_FOOT=56, SPR_CX=32, SPR_HEAD=16;
 const HI64_SCALE=0.95;   // 64格新角色(畫面約1.3倍像素)，跟房屋的像素密度對齊
-const HI_SCALE=0.4;   // 128格高解析角色相對舊64格的縮放(1.5x舊角色→0.6x新角色，畫面上高度約72px)
+const HI_SCALE=0.5;   // 128格高解析角色相對舊64格的縮放(1.5x舊角色→0.6x新角色，畫面上高度約72px)
 /* 腳底校正：程式原本假設每張sprite的腳底都畫在畫格的 y=56，但各張美術圖的實際內容底部不同，
    底部偏高的角色就會看起來浮在空中(例如潘朵拉差9px，放大後更明顯)。
    下面是用程式實際掃描每張圖8個方向後量出來的差值，繪製時據此把角色往下貼齊地面。*/
@@ -7219,7 +7220,7 @@ function drawSheetFrame(g,img,cx,fy,scale,frame,type){ g.imageSmoothingEnabled=f
   // 武俠高解析角色圖(8方向各128x128，共1024x128)：格子大小、腳底、頭頂位置與舊的64格不同，縮放比例也要換算成同樣的畫面大小
   const hi=(img.naturalHeight===128&&img.naturalWidth===1024);
   const c64=!!img._c64;   // 64格新角色：腳底在y=60、中心x=32
-  const F=hi?128:SPR_F, FT=c64?60:(hi?124:SPR_FOOT), CX=hi?64:SPR_CX, HD=c64?3:(hi?4:SPR_HEAD), sc=c64?scale*HI64_SCALE:(hi?scale*HI_SCALE:scale);
+  const F=hi?128:SPR_F, FT=c64?60:(hi?121:SPR_FOOT), CX=hi?64:SPR_CX, HD=c64?3:(hi?12:SPR_HEAD), sc=c64?scale*HI64_SCALE:(hi?scale*HI_SCALE:scale);
   const foot=FT-(type?footAdj(type):0);                    // 依該角色的實際腳底位置校正，讓腳確實踩在地上
   const dl=Math.round(cx-CX*sc), dt=Math.round(fy-foot*sc);
   g.drawImage(img,(frame||0)*F,0,F,F,dl,dt,F*sc,F*sc);
@@ -10896,7 +10897,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v87.7-0';
+const GAME_VER='v87.8-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
