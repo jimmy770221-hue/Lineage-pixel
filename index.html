@@ -2517,7 +2517,7 @@ function drawWeaponInHand(kind,cx,cy,dir,px){
 
 /* ============ 世界（GBA 磚塊）============ */
 /* 底圖測試(網址加 ?imgmap=1 才啟用；?imgscale=5 調放大倍率)：把GPT做的桃花島整張圖鋪在地面上，人可以隨處走動，用來看圖夠不夠大、是否可用；預設關閉，不影響原本遊戲 */
-const IMGMAP=/[?&]imgmap=1/.test(location.search); const IMGSCALE=parseFloat((location.search.match(/[?&]imgscale=([0-9.]+)/)||[])[1])||1.4; const IMGMAP_IMG=new Image(); if(IMGMAP) IMGMAP_IMG.src='assets/map/taohua_world.png';
+const IMGMAP=!/[?&]imgmap=0/.test(location.search);   // 預設開啟桃花島底圖；網址加 ?imgmap=0 可關閉 const IMGSCALE=parseFloat((location.search.match(/[?&]imgscale=([0-9.]+)/)||[])[1])||1.4; const IMGMAP_IMG=new Image(); if(IMGMAP) IMGMAP_IMG.src='assets/map/taohua_world.png';
 const TS=32; let MAPW=56, MAPH=50; let curMapId='village', curMap=null;
 // 村莊範圍（圍牆內）與四個村口
 const VX0=28,VX1=52,VY0=24,VY1=48;
@@ -10896,7 +10896,7 @@ function drawSlotEmpty(x){ x.clearRect(0,0,200,200); }
 })();
 /* ============ 更新系統（登入首頁） ============ */
 // 版本號：每次正式更新時，這裡和 sw.js 的 CACHE_VERSION 一起遞增
-const GAME_VER='v87.5-0';
+const GAME_VER='v87.6-0';
 let _updNew=null;
 async function checkUpdate(manual){
   const msg=document.getElementById('updMsg'), btn=document.getElementById('updBtn');
